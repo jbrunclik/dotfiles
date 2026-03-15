@@ -12,6 +12,10 @@ brew "mise"
 # Editor
 brew "neovim"
 
+# Automation
+cask "karabiner-elements"
+cask "hammerspoon"
+
 # AI
 cask "claude-code"
 

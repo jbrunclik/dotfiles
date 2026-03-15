@@ -45,8 +45,17 @@ link "$DOTFILES/config/ghostty/config"                 "$HOME/.config/ghostty/co
 link "$DOTFILES/config/nvim"                           "$HOME/.config/nvim"
 link "$DOTFILES/config/starship.toml"                  "$HOME/.config/starship.toml"
 link "$DOTFILES/config/bat/config"                     "$HOME/.config/bat/config"
+link "$DOTFILES/config/bat/themes/CatppuccinMocha.tmTheme" "$HOME/.config/bat/themes/CatppuccinMocha.tmTheme"
 link "$DOTFILES/config/mc/skins/catppuccin-mocha.ini"  "$HOME/.local/share/mc/skins/catppuccin-mocha.ini"
 link "$DOTFILES/config/vscode/settings.json"           "$HOME/Library/Application Support/Code/User/settings.json"
+link "$DOTFILES/config/karabiner/karabiner.json"       "$HOME/.config/karabiner/karabiner.json"
+# Hammerspoon doesn't follow symlinks for init.lua — use a loader file
+mkdir -p "$HOME/.hammerspoon"
+echo "dofile(\"$DOTFILES/config/hammerspoon/init.lua\")" > "$HOME/.hammerspoon/init.lua"
+echo -e "  ${GREEN}✓${RESET} $HOME/.hammerspoon/init.lua -> dofile loader"
+
+header "Building bat theme cache"
+bat cache --build
 
 header "Installing VS Code extensions"
 if command -v code &>/dev/null; then
@@ -65,4 +74,10 @@ if [ ! -f "$HOME/.ssh/config.local" ]; then
     warn "~/.ssh/config.local not found — create it with your Host entries"
 fi
 
-echo -e "${BOLD}${GREEN}==> Done!${RESET} Open a new terminal tab to apply changes."
+header "Post-install reminders"
+warn "Grant Accessibility permissions in System Settings → Privacy & Security → Accessibility for:"
+echo -e "    - Karabiner-Elements"
+echo -e "    - Karabiner-EventViewer (if installed)"
+echo -e "    - Hammerspoon"
+
+echo -e "\n${BOLD}${GREEN}==> Done!${RESET} Open a new terminal tab to apply changes."

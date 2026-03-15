@@ -320,6 +320,76 @@ visual and fast. Try it instead of `git add -p` or `git rebase -i`.
 - **`fetch.prune`** auto-cleans stale remote branches
 - **`diff.algorithm = histogram`** — better diffs for moved code
 
+## Hyper key
+
+Hyper (Cmd+Option+Ctrl+Shift) is a dedicated modifier that doesn't
+conflict with any app shortcuts. It's triggered by:
+
+| Keyboard | Key | Config |
+|---|---|---|
+| MacBook | CapsLock (hold) | Karabiner-Elements |
+| Keyboardio Model 100 | Any key (hold) | Chrysalis firmware |
+
+On MacBook, tapping CapsLock sends Escape (great for Neovim).
+
+### Navigation (Karabiner)
+
+| Shortcut | Action |
+|---|---|
+| Hyper + H | Left arrow |
+| Hyper + J | Down arrow |
+| Hyper + K | Up arrow |
+| Hyper + L | Right arrow |
+
+Works system-wide: Slack, Notion, Chrome, etc.
+
+### Window management (Hammerspoon)
+
+| Shortcut | Action |
+|---|---|
+| Hyper + A | Tile window left half |
+| Hyper + S | Maximize window (no fullscreen) |
+| Hyper + D | Tile window right half |
+| Hyper + F | Toggle native fullscreen |
+| Hyper + Tab | Toggle focus between left/right windows |
+| Hyper + Left/Right | Focus window in that direction (MacBook arrow keys) |
+
+### Layouts (Hammerspoon, bottom row)
+
+| Shortcut | Layout |
+|---|---|
+| Hyper + Z | Coding — Ghostty left, Dia right |
+| Hyper + X | Meeting — Zoom left, Notion right |
+
+### App focus (Hammerspoon)
+
+| Shortcut | App |
+|---|---|
+| Hyper + 1 | Ghostty |
+| Hyper + 2 | Dia |
+| Hyper + 3 | Chrome |
+| Hyper + 4 | Slack |
+| Hyper + 5 | Notion |
+
+### Utilities
+
+| Shortcut | Action |
+|---|---|
+| Hyper + R | Reload Hammerspoon config |
+
+### Adding a new layout
+
+Edit `config/hammerspoon/init.lua`:
+
+```lua
+hs.hotkey.bind(hyper, "d", function()
+    layout({
+        { name = "Figma",  rect = left },
+        { name = "Safari", rect = right },
+    })
+end)
+```
+
 ## Learning path
 
 Week 1:
