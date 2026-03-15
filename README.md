@@ -28,6 +28,7 @@ macOS development environment configuration. Catppuccin Mocha everywhere.
 | `top` | `btop` |
 | `diff` | `delta` |
 | `cd` | `zoxide` (`z`) |
+| `curl` | `httpie` (`http` / `https`) |
 
 ### Python toolchain
 

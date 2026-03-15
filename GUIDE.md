@@ -85,6 +85,39 @@ diff a.txt b.txt   # syntax-highlighted diff (delta)
 glow README.md     # render markdown in terminal
 ```
 
+### JSON processing (jq)
+
+```bash
+cat data.json | jq '.results[].name'    # extract nested fields
+curl -s api/endpoint | jq '.'           # pretty-print JSON
+jq -r '.[] | [.id, .name] | @csv' data.json  # convert to CSV
+```
+
+Tips:
+- `jq 'keys'` to see top-level keys in an object
+- `jq -r` for raw output (no quotes around strings)
+- `jq -e` to exit non-zero if result is null/false (useful in scripts)
+
+### HTTP requests (httpie)
+
+HTTPie is a human-friendly alternative to curl:
+
+```bash
+http GET api.example.com/users          # GET request
+http POST api.example.com/users name=Jo # POST JSON
+http -a user:pass api.example.com       # basic auth
+https api.example.com Authorization:"Bearer $TOKEN"  # custom header
+http --download example.com/file.zip    # download file
+```
+
+Tips:
+- `http` for plain HTTP, `https` for HTTPS
+- Request body: `field=value` for strings, `field:=123` for non-strings
+- `http --print=HhBb` to show request+response headers+body
+- Sessions: `http --session=myapi api.example.com` to persist auth/cookies
+
+### CLI tips
+
 Tips:
 - `bat` supports `bat file.py -l python` to force a language
 - `fd` respects `.gitignore` by default — use `fd -H` to include hidden files

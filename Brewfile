@@ -27,6 +27,10 @@ brew "dust"
 brew "btop"
 brew "git-delta"
 
+# Data + API
+brew "jq"
+brew "httpie"
+
 # Other essentials
 brew "glow"
 brew "lazygit"
