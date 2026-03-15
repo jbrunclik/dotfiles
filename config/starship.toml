@@ -20,6 +20,7 @@ $python\
 $docker_context\
 [ ](fg:surface2)\
 $cmd_duration\
+$line_break\
 $character"""
 
 palette = 'catppuccin_mocha'
