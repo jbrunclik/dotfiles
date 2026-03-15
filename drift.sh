@@ -4,30 +4,39 @@ set -euo pipefail
 DOTFILES="$(cd "$(dirname "$0")" && pwd)"
 DRIFTED=0
 
+if [[ -t 1 ]]; then
+    RED='\033[0;31m' GREEN='\033[0;32m' YELLOW='\033[0;33m'
+    BLUE='\033[0;34m' BOLD='\033[1m' RESET='\033[0m'
+else
+    RED='' GREEN='' YELLOW='' BLUE='' BOLD='' RESET=''
+fi
+
+header() { echo -e "${BOLD}${BLUE}$1${RESET}"; }
+
 check() {
     local src="$1" dst="$2"
     if [ ! -e "$dst" ]; then
-        echo "  MISSING  $dst"
+        echo -e "  ${RED}MISSING${RESET}  $dst"
         DRIFTED=1
     elif [ -L "$dst" ]; then
         local target
         target="$(readlink "$dst")"
         if [ "$target" != "$src" ]; then
-            echo "  LINK     $dst -> $target (expected $src)"
+            echo -e "  ${YELLOW}LINK${RESET}     $dst -> $target (expected $src)"
             DRIFTED=1
         fi
     elif ! diff -q "$src" "$dst" > /dev/null 2>&1; then
-        echo "  CHANGED  $dst"
+        echo -e "  ${YELLOW}CHANGED${RESET}  $dst"
         diff -u "$src" "$dst" 2>/dev/null | head -20 || true
         echo ""
         DRIFTED=1
     fi
 }
 
-echo "Checking for drift..."
+echo -e "${BOLD}Checking for drift...${RESET}"
 echo ""
 
-echo "Symlinks:"
+header "Symlinks:"
 check "$DOTFILES/bash_profile"                          "$HOME/.bash_profile"
 check "$DOTFILES/inputrc"                               "$HOME/.inputrc"
 check "$DOTFILES/gitconfig"                             "$HOME/.gitconfig"
@@ -41,19 +50,19 @@ check "$DOTFILES/config/vscode/settings.json"           "$HOME/Library/Applicati
 
 # Check local-only files exist
 echo ""
-echo "Local files (not in repo):"
+header "Local files (not in repo):"
 for f in "$HOME/.gitconfig.local" "$HOME/.ssh/config.local"; do
     if [ ! -f "$f" ]; then
-        echo "  MISSING  $f"
+        echo -e "  ${RED}MISSING${RESET}  $f"
         DRIFTED=1
     else
-        echo "  OK       $f"
+        echo -e "  ${GREEN}OK${RESET}       $f"
     fi
 done
 
 # Check Brewfile packages
 echo ""
-echo "Brewfile packages:"
+header "Brewfile packages:"
 MISSING_PKGS=""
 while IFS= read -r line; do
     if [[ "$line" =~ ^brew\ \"(.+)\" ]]; then
@@ -72,14 +81,14 @@ while IFS= read -r line; do
 done < "$DOTFILES/Brewfile"
 
 if [ -n "$MISSING_PKGS" ]; then
-    echo "  MISSING packages:$MISSING_PKGS"
+    echo -e "  ${RED}MISSING${RESET} packages:$MISSING_PKGS"
 else
-    echo "  All packages installed."
+    echo -e "  ${GREEN}All packages installed.${RESET}"
 fi
 
 # Check VS Code extensions
 echo ""
-echo "VS Code extensions:"
+header "VS Code extensions:"
 if command -v code &>/dev/null; then
     INSTALLED_EXTS="$(code --list-extensions 2>/dev/null)"
     MISSING_EXTS=""
@@ -90,18 +99,18 @@ if command -v code &>/dev/null; then
         fi
     done < "$DOTFILES/config/vscode/extensions.txt"
     if [ -n "$MISSING_EXTS" ]; then
-        echo "  MISSING extensions:$MISSING_EXTS"
+        echo -e "  ${RED}MISSING${RESET} extensions:$MISSING_EXTS"
     else
-        echo "  All extensions installed."
+        echo -e "  ${GREEN}All extensions installed.${RESET}"
     fi
 else
-    echo "  SKIPPED ('code' CLI not in PATH)"
+    echo -e "  ${YELLOW}SKIPPED${RESET} ('code' CLI not in PATH)"
 fi
 
 echo ""
 if [ "$DRIFTED" -eq 0 ]; then
-    echo "No drift detected. Everything matches."
+    echo -e "${BOLD}${GREEN}No drift detected. Everything matches.${RESET}"
 else
-    echo "Drift detected! Run ./install.sh to re-sync, or update the repo."
+    echo -e "${BOLD}${RED}Drift detected!${RESET} Run ${BOLD}./install.sh${RESET} to re-sync, or update the repo."
     exit 1
 fi

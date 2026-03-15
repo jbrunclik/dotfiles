@@ -3,25 +3,36 @@ set -euo pipefail
 
 DOTFILES="$(cd "$(dirname "$0")" && pwd)"
 
+if [[ -t 1 ]]; then
+    RED='\033[0;31m' GREEN='\033[0;32m' YELLOW='\033[0;33m'
+    BLUE='\033[0;34m' BOLD='\033[1m' RESET='\033[0m'
+else
+    RED='' GREEN='' YELLOW='' BLUE='' BOLD='' RESET=''
+fi
+
+header() { echo -e "${BOLD}${BLUE}==> $1${RESET}"; }
+warn()   { echo -e "  ${YELLOW}WARNING${RESET}: $1"; }
+err()    { echo -e "${RED}Error${RESET}: $1"; }
+
 if ! command -v brew &>/dev/null; then
-    echo "Error: Homebrew is required. Install it from https://brew.sh"
+    err "Homebrew is required. Install it from https://brew.sh"
     exit 1
 fi
 
-echo "==> Installing Homebrew packages"
+header "Installing Homebrew packages"
 brew bundle --file="$DOTFILES/Brewfile"
 
-echo "==> Linking config files"
+header "Linking config files"
 
 link() {
     local src="$1" dst="$2"
     mkdir -p "$(dirname "$dst")"
     if [ -e "$dst" ] && [ ! -L "$dst" ]; then
-        echo "  Backing up $dst -> ${dst}.bak"
+        echo -e "  ${YELLOW}Backing up${RESET} $dst -> ${dst}.bak"
         mv "$dst" "${dst}.bak"
     fi
     ln -sfn "$src" "$dst"
-    echo "  $dst -> $src"
+    echo -e "  ${GREEN}✓${RESET} $dst -> $src"
 }
 
 link "$DOTFILES/bash_profile"                          "$HOME/.bash_profile"
@@ -37,21 +48,21 @@ link "$DOTFILES/config/bat/config"                     "$HOME/.config/bat/config
 link "$DOTFILES/config/mc/skins/catppuccin-mocha.ini"  "$HOME/.local/share/mc/skins/catppuccin-mocha.ini"
 link "$DOTFILES/config/vscode/settings.json"           "$HOME/Library/Application Support/Code/User/settings.json"
 
-echo "==> Installing VS Code extensions"
+header "Installing VS Code extensions"
 if command -v code &>/dev/null; then
     while IFS= read -r ext; do
         code --install-extension "$ext" --force 2>/dev/null || true
     done < "$DOTFILES/config/vscode/extensions.txt"
 else
-    echo "  WARNING: 'code' CLI not found — install VS Code and run 'Shell Command: Install code in PATH'"
+    warn "'code' CLI not found — install VS Code and run 'Shell Command: Install code in PATH'"
 fi
 
-echo "==> Checking local config files"
+header "Checking local config files"
 if [ ! -f "$HOME/.gitconfig.local" ]; then
-    echo "  WARNING: ~/.gitconfig.local not found — create it with your [user] name/email"
+    warn "~/.gitconfig.local not found — create it with your [user] name/email"
 fi
 if [ ! -f "$HOME/.ssh/config.local" ]; then
-    echo "  WARNING: ~/.ssh/config.local not found — create it with your Host entries"
+    warn "~/.ssh/config.local not found — create it with your Host entries"
 fi
 
-echo "==> Done! Open a new terminal tab to apply changes."
+echo -e "${BOLD}${GREEN}==> Done!${RESET} Open a new terminal tab to apply changes."
