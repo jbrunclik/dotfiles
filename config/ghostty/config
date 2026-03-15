@@ -1,0 +1,53 @@
+# Ghostty Configuration
+# Reload with Cmd+Shift+, — some settings need a new window
+
+# --- Theme ---
+# Auto-switches with macOS light/dark mode
+theme = dark:Catppuccin Mocha,light:Catppuccin Latte
+
+# --- Font ---
+font-family = Maple Mono NF
+font-size = 15
+font-thicken = true
+font-feature = dlig
+adjust-cell-height = 2
+
+# --- Window ---
+window-padding-x = 8
+window-padding-y = 4
+window-padding-balance = true
+window-padding-color = extend
+macos-titlebar-style = tabs
+window-width = 140
+window-height = 40
+
+# --- Background ---
+background-opacity = 1
+
+# --- Cursor ---
+cursor-style = bar
+cursor-style-blink = false
+
+# --- Mouse ---
+mouse-hide-while-typing = true
+
+# --- Clipboard ---
+clipboard-read = allow
+clipboard-write = allow
+copy-on-select = clipboard
+
+# --- Quick Terminal (global hotkey) ---
+keybind = global:ctrl+grave_accent=toggle_quick_terminal
+quick-terminal-position = top
+quick-terminal-animation-duration = 0.15
+
+# --- Shell integration (automatic, but explicit for clarity) ---
+shell-integration = detect
+
+# --- Notifications ---
+# Notify when a command finishes while Ghostty is not focused
+notify-on-command-finish = unfocused
+notify-on-command-finish-after = 10s
+
+# --- Scrollback ---
+scrollback-limit = 100000

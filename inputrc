@@ -1,0 +1,28 @@
+# Case-insensitive tab completion
+set completion-ignore-case on
+
+# Treat hyphens and underscores as equivalent in completion
+set completion-map-case on
+
+# Show all completions on first tab (instead of requiring double tab)
+set show-all-if-ambiguous on
+
+# Show all completions if no partial completion can be made
+set show-all-if-unmodified on
+
+# Color files by type in completion (like ls)
+set colored-stats on
+
+# Append indicator (/ for dirs, * for executables, etc.) in completion
+set visible-stats on
+
+# Color the common prefix in completions
+set colored-completion-prefix on
+
+# Up/Down search history based on what's already typed
+"\e[A": history-search-backward
+"\e[B": history-search-forward
+
+# Ctrl-Left/Right to jump words
+"\e[1;5D": backward-word
+"\e[1;5C": forward-word

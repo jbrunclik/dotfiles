@@ -1,0 +1,102 @@
+{
+    // === Theme (Catppuccin to match terminal) ===
+    "workbench.colorTheme": "Catppuccin Mocha",
+    "workbench.iconTheme": "catppuccin-mocha",
+
+    // === Font (Maple Mono to match terminal) ===
+    "editor.fontFamily": "Maple Mono NF, monospace",
+    "editor.fontSize": 15,
+    "editor.fontLigatures": true,
+    "terminal.integrated.fontFamily": "Maple Mono NF",
+
+    // === Editor ===
+    "editor.rulers": [88],
+    "editor.bracketPairColorization.enabled": true,
+    "editor.guides.bracketPairs": true,
+    "editor.stickyScroll.enabled": true,
+    "editor.minimap.enabled": false,
+    "editor.renderWhitespace": "trailing",
+    "editor.cursorBlinking": "solid",
+    "editor.cursorStyle": "line",
+    "editor.linkedEditing": true,
+    "editor.wordBasedSuggestions": "off",
+    "editor.inlineSuggest.enabled": true,
+
+    // === Files ===
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.autoSave": "onFocusChange",
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/.pytest_cache": true,
+        "**/.mypy_cache": true,
+        "**/.ruff_cache": true,
+        "**/*.egg-info": true,
+        "**/.DS_Store": true
+    },
+
+    // === Python — Pylance for type checking + IntelliSense ===
+    "python.languageServer": "Pylance",
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoImportCompletions": true,
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": ["tests"],
+
+    // === Python — Ruff for linting + formatting (replaces black, isort, flake8) ===
+    "ruff.enable": true,
+    "ruff.importStrategy": "fromEnvironment",
+    "ruff.organizeImports": true,
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+        }
+    },
+
+    // === TypeScript / JavaScript — Prettier ===
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "[yaml]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    "[markdown]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+
+    // === Terminal ===
+    "terminal.integrated.defaultProfile.osx": "bash",
+    "terminal.integrated.scrollback": 100000,
+
+    // === Git ===
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "git.enableSmartCommit": true,
+
+    // === Workbench ===
+    "workbench.startupEditor": "none",
+    "workbench.editor.labelFormat": "short",
+    "breadcrumbs.enabled": true,
+
+    // === Claude Code ===
+    "claudeCode.preferredLocation": "panel"
+}
