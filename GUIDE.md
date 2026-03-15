@@ -389,12 +389,40 @@ Works system-wide: Slack, Notion, Chrome, etc.
 | Hyper + 3 | Chrome |
 | Hyper + 4 | Slack |
 | Hyper + 5 | Notion |
+| Hyper + 6 | Zoom |
+
+Press twice to maximize the focused app's window.
+
+### Zoom (Hammerspoon)
+
+| Shortcut | Action |
+|---|---|
+| Hyper + M | Toggle mute (works from any app, no focus switch) |
 
 ### Utilities
 
 | Shortcut | Action |
 |---|---|
 | Hyper + R | Reload Hammerspoon config |
+
+## Clipboard (Maccy)
+
+Maccy keeps a searchable clipboard history. Press `Cmd+Shift+V` (default)
+to open the picker, then type to fuzzy-search past copies. Configure
+the hotkey in Maccy preferences.
+
+## Screenshots (Shottr)
+
+Shottr replaces the built-in screenshot tool with annotation and OCR:
+
+| Action | Shortcut |
+|---|---|
+| Capture area | Configure in Shottr preferences |
+| Capture window | Configure in Shottr preferences |
+| Scrolling capture | Configure in Shottr preferences |
+
+After capture: annotate with arrows, boxes, blur, or text.
+Use the OCR button to extract text from any screenshot.
 
 ### Adding a new layout
 

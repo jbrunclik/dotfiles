@@ -13,6 +13,8 @@ macOS development environment configuration. Catppuccin Mocha everywhere.
 | Git | [delta](https://github.com/dandavison/delta) pager, [lazygit](https://github.com/jesseduffield/lazygit) TUI, [gh](https://cli.github.com/) CLI | `gitconfig` |
 | Keyboard | [Karabiner-Elements](https://karabiner-elements.pqrs.org/) — CapsLock as Hyper/Escape | `config/karabiner/karabiner.json` |
 | Window layouts | [Hammerspoon](https://www.hammerspoon.org/) — hotkey-triggered layouts | `config/hammerspoon/init.lua` |
+| Clipboard | [Maccy](https://maccy.app/) — clipboard history | — |
+| Screenshots | [Shottr](https://shottr.cc/) — capture, annotate, OCR | — |
 | SSH | Shared defaults (agent, keepalive, compression) | `ssh_config` |
 | File manager | [Midnight Commander](https://midnight-commander.org/) | `config/mc/skins/catppuccin-mocha.ini` |
 | Syntax highlighting | [bat](https://github.com/sharkdp/bat) | `config/bat/config` |

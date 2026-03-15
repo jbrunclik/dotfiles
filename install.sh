@@ -79,5 +79,8 @@ warn "Grant Accessibility permissions in System Settings → Privacy & Security 
 echo -e "    - Karabiner-Elements"
 echo -e "    - Karabiner-EventViewer (if installed)"
 echo -e "    - Hammerspoon"
+warn "Open and configure manually:"
+echo -e "    - Maccy — set clipboard hotkey (default: Cmd+Shift+V), launch at login"
+echo -e "    - Shottr — set screenshot hotkeys, launch at login"
 
 echo -e "\n${BOLD}${GREEN}==> Done!${RESET} Open a new terminal tab to apply changes."

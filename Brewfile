@@ -15,6 +15,10 @@ brew "neovim"
 # Automation
 cask "karabiner-elements"
 cask "hammerspoon"
+cask "maccy"
+
+# Screenshots
+cask "shottr"
 
 # AI
 cask "claude-code"
