@@ -49,8 +49,8 @@ eval "$(mise activate bash)"
 # Prompt
 eval "$(starship init bash)"
 
-# Zoxide (must be last)
-eval "$(zoxide init bash)"
+# Zoxide — replaces cd while preserving cd -, cd .., etc. (must be last)
+eval "$(zoxide init bash --cmd=cd)"
 
 # Aliases — modern CLI replacements
 alias cat='bat --paging=never'
@@ -58,7 +58,6 @@ alias ls='eza --icons --group-directories-first'
 alias ll='eza --icons --group-directories-first -la'
 alias lt='eza --icons --group-directories-first --tree --level=2'
 alias find='fd'
-alias cd='z'
 alias du='dust'
 alias top='btop'
 alias diff='delta'
