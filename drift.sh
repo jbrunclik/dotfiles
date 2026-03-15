@@ -51,6 +51,7 @@ check "$DOTFILES/config/starship.toml"                  "$HOME/.config/starship.
 check "$DOTFILES/config/bat/config"                     "$HOME/.config/bat/config"
 check "$DOTFILES/config/mc/skins/catppuccin-mocha.ini"  "$HOME/.local/share/mc/skins/catppuccin-mocha.ini"
 check "$DOTFILES/config/vscode/settings.json"           "$HOME/Library/Application Support/Code/User/settings.json"
+check "$DOTFILES/config/btop/themes/catppuccin_mocha.theme" "$HOME/.config/btop/themes/catppuccin_mocha.theme"
 check "$DOTFILES/config/karabiner/karabiner.json"       "$HOME/.config/karabiner/karabiner.json"
 check "$DOTFILES/config/bat/themes/CatppuccinMocha.tmTheme" "$HOME/.config/bat/themes/CatppuccinMocha.tmTheme"
 

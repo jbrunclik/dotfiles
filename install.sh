@@ -48,11 +48,16 @@ link "$DOTFILES/config/bat/config"                     "$HOME/.config/bat/config
 link "$DOTFILES/config/bat/themes/CatppuccinMocha.tmTheme" "$HOME/.config/bat/themes/CatppuccinMocha.tmTheme"
 link "$DOTFILES/config/mc/skins/catppuccin-mocha.ini"  "$HOME/.local/share/mc/skins/catppuccin-mocha.ini"
 link "$DOTFILES/config/vscode/settings.json"           "$HOME/Library/Application Support/Code/User/settings.json"
+link "$DOTFILES/config/btop/themes/catppuccin_mocha.theme" "$HOME/.config/btop/themes/catppuccin_mocha.theme"
 link "$DOTFILES/config/karabiner/karabiner.json"       "$HOME/.config/karabiner/karabiner.json"
 # Hammerspoon doesn't follow symlinks for init.lua — use a loader file
 mkdir -p "$HOME/.hammerspoon"
 echo "dofile(\"$DOTFILES/config/hammerspoon/init.lua\")" > "$HOME/.hammerspoon/init.lua"
 echo -e "  ${GREEN}✓${RESET} $HOME/.hammerspoon/init.lua -> dofile loader"
+
+header "Setting macOS accent color (purple — closest to Catppuccin Mocha mauve)"
+defaults write -globalDomain AppleAccentColor -int 5
+defaults write -globalDomain AppleHighlightColor -string "0.564706 0.650980 0.996078 Purple"
 
 header "Building bat theme cache"
 bat cache --build
@@ -82,5 +87,12 @@ echo -e "    - Hammerspoon"
 warn "Open and configure manually:"
 echo -e "    - Maccy — set clipboard hotkey (default: Cmd+Shift+V), launch at login"
 echo -e "    - Shottr — set screenshot hotkeys, launch at login"
+warn "Install Chrome theme from Web Store:"
+echo -e "    - Search 'Catppuccin Chrome Theme Mocha' or visit the Chrome Web Store"
+warn "Set Slack theme:"
+echo -e "    - Preferences → Themes → Create custom theme, paste:"
+echo -e "    - #1E1E2E,#F8F8FA,#CBA6F7,#1E1E2E,#11111B,#CDD6F4,#CBA6F7,#EBA0AC,#1E1E2E,#CDD6F4"
+warn "Set btop theme:"
+echo -e "    - Launch btop → Esc → Options → set color theme to catppuccin_mocha"
 
 echo -e "\n${BOLD}${GREEN}==> Done!${RESET} Open a new terminal tab to apply changes."
