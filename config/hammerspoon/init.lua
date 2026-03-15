@@ -156,10 +156,17 @@ hs.hotkey.bind(hyper, "x", function()
     end
     -- Tile: Zoom left, Notion right
     hs.application.launchOrFocus("Notion")
+    hs.application.launchOrFocus("zoom.us")
+    -- Pick the meeting window if available, otherwise the dashboard
+    local zoomWinTitle = "Zoom Meeting"
+    local z = hs.application.get("zoom.us")
+    if z and not z:getWindow("Zoom Meeting") then
+        zoomWinTitle = "Zoom Workplace"
+    end
     hs.osascript.applescript(string.format([[
         tell application "System Events"
             tell process "zoom.us"
-                set w to window "Zoom Meeting"
+                set w to window "%s"
                 set size of w to {%d, %d}
                 set position of w to {%d, %d}
                 perform action "AXRaise" of w
@@ -170,7 +177,7 @@ hs.hotkey.bind(hyper, "x", function()
                 set size of w to {%d, %d}
             end tell
         end tell
-    ]], halfW, screen.h, screen.x, screen.y,
+    ]], zoomWinTitle, halfW, screen.h, screen.x, screen.y,
        screen.x + halfW, screen.y, halfW, screen.h))
 end)
 
