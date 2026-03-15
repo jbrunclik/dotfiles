@@ -24,12 +24,16 @@ check() {
         if [ "$target" != "$src" ]; then
             echo -e "  ${YELLOW}LINK${RESET}     $dst -> $target (expected $src)"
             DRIFTED=1
+        else
+            echo -e "  ${GREEN}OK${RESET}       $dst"
         fi
     elif ! diff -q "$src" "$dst" > /dev/null 2>&1; then
         echo -e "  ${YELLOW}CHANGED${RESET}  $dst"
         diff -u "$src" "$dst" 2>/dev/null | head -20 || true
         echo ""
         DRIFTED=1
+    else
+        echo -e "  ${GREEN}OK${RESET}       $dst"
     fi
 }
 
@@ -47,6 +51,8 @@ check "$DOTFILES/config/starship.toml"                  "$HOME/.config/starship.
 check "$DOTFILES/config/bat/config"                     "$HOME/.config/bat/config"
 check "$DOTFILES/config/mc/skins/catppuccin-mocha.ini"  "$HOME/.local/share/mc/skins/catppuccin-mocha.ini"
 check "$DOTFILES/config/vscode/settings.json"           "$HOME/Library/Application Support/Code/User/settings.json"
+check "$DOTFILES/config/karabiner/karabiner.json"       "$HOME/.config/karabiner/karabiner.json"
+check "$DOTFILES/config/bat/themes/CatppuccinMocha.tmTheme" "$HOME/.config/bat/themes/CatppuccinMocha.tmTheme"
 
 # Check local-only files exist
 echo ""
@@ -60,31 +66,31 @@ for f in "$HOME/.gitconfig.local" "$HOME/.ssh/config.local"; do
     fi
 done
 
-# Check Brewfile packages
+# Check Hammerspoon loader file
+echo ""
+header "Hammerspoon:"
+HS_INIT="$HOME/.hammerspoon/init.lua"
+if [ ! -f "$HS_INIT" ]; then
+    echo -e "  ${RED}MISSING${RESET}  $HS_INIT"
+    DRIFTED=1
+elif grep -q "dofile.*$DOTFILES/config/hammerspoon/init.lua" "$HS_INIT" 2>/dev/null; then
+    echo -e "  ${GREEN}OK${RESET}       $HS_INIT (dofile loader)"
+else
+    echo -e "  ${YELLOW}CHANGED${RESET}  $HS_INIT (not pointing to dotfiles)"
+    DRIFTED=1
+fi
+
+# Check Brewfile packages (single brew command instead of per-package)
 echo ""
 header "Brewfile packages:"
-MISSING_PKGS=""
-while IFS= read -r line; do
-    if [[ "$line" =~ ^brew\ \"(.+)\" ]]; then
-        pkg="${BASH_REMATCH[1]}"
-        if ! brew list "$pkg" &>/dev/null; then
-            MISSING_PKGS="$MISSING_PKGS $pkg"
-            DRIFTED=1
-        fi
-    elif [[ "$line" =~ ^cask\ \"(.+)\" ]]; then
-        pkg="${BASH_REMATCH[1]}"
-        if ! brew list --cask "$pkg" &>/dev/null; then
-            MISSING_PKGS="$MISSING_PKGS $pkg"
-            DRIFTED=1
-        fi
-    fi
-done < "$DOTFILES/Brewfile"
-
-if [ -n "$MISSING_PKGS" ]; then
-    echo -e "  ${RED}MISSING${RESET} packages:$MISSING_PKGS"
-else
+BUNDLE_CHECK="$(brew bundle check --file="$DOTFILES/Brewfile" 2>&1)" && {
     echo -e "  ${GREEN}All packages installed.${RESET}"
-fi
+} || {
+    echo "$BUNDLE_CHECK" | grep -v "^$" | while IFS= read -r line; do
+        echo -e "  ${RED}MISSING${RESET}  $line"
+    done
+    DRIFTED=1
+}
 
 # Check VS Code extensions
 echo ""

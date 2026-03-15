@@ -35,6 +35,9 @@ brew "git-delta"
 brew "jq"
 brew "httpie"
 
+# GitHub
+brew "gh"
+
 # Other essentials
 brew "glow"
 brew "lazygit"

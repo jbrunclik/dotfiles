@@ -312,6 +312,25 @@ Essential keys:
 Lazygit makes interactive rebase, partial staging, and conflict resolution
 visual and fast. Try it instead of `git add -p` or `git rebase -i`.
 
+### GitHub CLI (gh)
+
+```bash
+gh pr list                     # list open PRs
+gh pr view 123                 # view PR details
+gh pr checkout 123             # check out a PR branch
+gh pr create                   # create PR from current branch
+gh pr review 123 --approve     # approve a PR
+gh run list                    # list recent CI runs
+gh run watch                   # live-watch current branch's CI
+gh issue list                  # list open issues
+gh dash                        # PR/issue dashboard (install: gh extension install dlvhdr/gh-dash)
+```
+
+Tips:
+- `gh pr create --fill` auto-fills title/body from commits
+- `gh pr merge --squash --delete-branch` for clean merges
+- `gh api repos/{owner}/{repo}/pulls` for raw API access
+
 ### Useful git config
 
 - **`git push`** on a new branch automatically sets upstream (no `-u origin` needed)

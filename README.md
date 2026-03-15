@@ -10,7 +10,7 @@ macOS development environment configuration. Catppuccin Mocha everywhere.
 | Shell | Bash + [Starship](https://starship.rs/) prompt | `bash_profile`, `inputrc`, `config/starship.toml` |
 | Editor | [Neovim](https://neovim.io/) with LSP, Treesitter, Copilot | `config/nvim/` |
 | IDE | [VS Code](https://code.visualstudio.com/) with Catppuccin, Ruff, Prettier | `config/vscode/` |
-| Git | [delta](https://github.com/dandavison/delta) pager, [lazygit](https://github.com/jesseduffield/lazygit) TUI | `gitconfig` |
+| Git | [delta](https://github.com/dandavison/delta) pager, [lazygit](https://github.com/jesseduffield/lazygit) TUI, [gh](https://cli.github.com/) CLI | `gitconfig` |
 | Keyboard | [Karabiner-Elements](https://karabiner-elements.pqrs.org/) — CapsLock as Hyper/Escape | `config/karabiner/karabiner.json` |
 | Window layouts | [Hammerspoon](https://www.hammerspoon.org/) — hotkey-triggered layouts | `config/hammerspoon/init.lua` |
 | SSH | Shared defaults (agent, keepalive, compression) | `ssh_config` |
