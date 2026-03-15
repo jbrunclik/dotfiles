@@ -136,7 +136,7 @@ hs.hotkey.bind(hyper, "s", function()
     if win then win:maximize() end
 end)
 
--- Hyper+1-5 = focus app
+-- Hyper+1-5 = focus app (repeat to maximize)
 local appKeys = {
     { "1", "Ghostty" },
     { "2", "Dia" },
@@ -146,7 +146,13 @@ local appKeys = {
 }
 for _, binding in ipairs(appKeys) do
     hs.hotkey.bind(hyper, binding[1], function()
-        hs.application.launchOrFocus(binding[2])
+        local app = hs.application.get(binding[2])
+        if app and app:isFrontmost() then
+            local win = app:mainWindow()
+            if win then win:maximize() end
+        else
+            hs.application.launchOrFocus(binding[2])
+        end
     end)
 end
 
