@@ -40,194 +40,86 @@ local function bestWindow(appName)
     return app:mainWindow()
 end
 
--- Move a window using AppleScript (works with apps that resist Hammerspoon's API)
-local function moveWindowAS(win, rect)
-    local screen = hs.screen.mainScreen():frame()
-    local x = math.floor(screen.x + rect.x * screen.w)
-    local y = math.floor(screen.y + rect.y * screen.h)
-    local w = math.floor(rect.w * screen.w)
-    local h = math.floor(rect.h * screen.h)
-    local title = win:title()
-    local appName = win:application():name()
-    hs.osascript.applescript(string.format([[
-        tell application "System Events"
-            tell process "%s"
-                set w to window "%s"
-                set position of w to {%d, %d}
-                set size of w to {%d, %d}
-            end tell
-        end tell
-    ]], appName, title, x, y, w, h))
-end
-
--- Layout helper: launch apps and tile them side by side
--- Waits for windows to appear rather than using a fixed delay
-local function layout(apps)
-    -- Launch/focus all apps to ensure they're running and visible
-    for _, app in ipairs(apps) do
-        hs.application.launchOrFocus(app.name)
-    end
-    local attempts = 0
-    hs.timer.doEvery(0.3, function(timer)
-        attempts = attempts + 1
-        local allReady = true
-        for _, app in ipairs(apps) do
-            if not bestWindow(app.name) then allReady = false end
-        end
-        if allReady or attempts >= 10 then
-            timer:stop()
-            local function positionAll()
-                for _, app in ipairs(apps) do
-                    local win = bestWindow(app.name)
-                    if win then
-                        if win:isFullScreen() then win:toggleFullScreen() end
-                        moveWindowAS(win, app.rect)
-                    end
-                end
-            end
-            -- Position immediately, then again after a delay
-            -- (some apps like Zoom re-maximize when focused)
-            positionAll()
-            hs.timer.doAfter(0.5, positionAll)
-        end
-    end)
-end
-
 local left  = hs.geometry.rect(0, 0, 0.5, 1)
 local right = hs.geometry.rect(0.5, 0, 0.5, 1)
 
--- Layout helper: tile two apps, then cycle focus on repeat
-local function tileLayout(leftApp, leftProcess, rightApp, rightProcess)
-    local tiled = false
-    return function()
-        local screen = hs.screen.mainScreen():frame()
-        local halfW = math.floor(screen.w / 2)
-        -- If both apps are running and one is focused, just cycle
-        local leftRunning = hs.application.get(leftApp)
-        local rightRunning = hs.application.get(rightApp)
-        if tiled and leftRunning and rightRunning then
-            if leftRunning:isFrontmost() then
-                hs.application.launchOrFocus(rightApp)
-                return
-            elseif rightRunning:isFrontmost() then
-                hs.application.launchOrFocus(leftApp)
-                return
+-- Check if a window occupies a given unit rect AND is the topmost window there.
+-- Position-only checks are fooled by windows stacked at the same coordinates
+-- (e.g. Slack and Dia both tiled right, with one covering the other).
+local function isTiled(win, unitRect)
+    if not win then return false end
+    local f = win:frame()
+    local s = win:screen():frame()
+    local threshold = 20
+    local inPosition = math.abs(f.x - (s.x + unitRect.x * s.w)) < threshold
+        and math.abs(f.y - (s.y + unitRect.y * s.h)) < threshold
+        and math.abs(f.w - unitRect.w * s.w) < threshold
+        and math.abs(f.h - unitRect.h * s.h) < threshold
+    if not inPosition then return false end
+    -- Check that no other standard window is above this one at the same position
+    for _, w in ipairs(hs.window.orderedWindows()) do
+        if w == win then return true end
+        if w:isStandard() then
+            local wf = w:frame()
+            if math.abs(wf.x - f.x) < threshold and math.abs(wf.w - f.w) < threshold then
+                return false -- another window is above ours at the same spot
             end
         end
-        -- Otherwise, tile and focus the left app
-        hs.application.launchOrFocus(rightApp)
-        hs.application.launchOrFocus(leftApp)
-        hs.osascript.applescript(string.format([[
-            tell application "System Events"
-                tell process "%s"
-                    set w to front window
-                    set position of w to {%d, %d}
-                    set size of w to {%d, %d}
-                end tell
-                tell process "%s"
-                    set w to front window
-                    set position of w to {%d, %d}
-                    set size of w to {%d, %d}
-                end tell
-            end tell
-        ]], rightProcess, screen.x + halfW, screen.y, halfW, screen.h,
-           leftProcess, screen.x, screen.y, halfW, screen.h))
-        tiled = true
     end
+    return true
 end
 
--- Layouts (bottom row: Z, X, V, B, ...)
-hs.hotkey.bind(hyper, "z", tileLayout("Ghostty", "ghostty", "Dia", "Dia"))
-
-hs.hotkey.bind(hyper, "x", function()
-    local screen = hs.screen.mainScreen():frame()
-    local halfW = math.floor(screen.w / 2)
-    -- Cycle focus if both are running and one is focused
-    local zoom = hs.application.get("zoom.us")
-    local notion = hs.application.get("Notion")
-    if zoom and notion then
-        if zoom:isFrontmost() then
-            hs.application.launchOrFocus("Notion")
-            return
-        elseif notion:isFrontmost() then
-            hs.application.launchOrFocus("zoom.us")
-            return
-        end
+-- Tile two apps side by side; repeat press cycles focus.
+--
+-- KEY PRINCIPLE: never rely on memoized state — always derive from live window
+-- positions. Memoized flags (like "tiled = true") go stale when the user moves
+-- or maximizes windows between presses.
+--
+-- Cycle-vs-tile decision uses isTiled() on BOTH windows: only cycles when both
+-- the expected apps are actually in position. This also handles layout switching
+-- (e.g. Hyper+V then Hyper+C) correctly — a leftover window from a previous
+-- layout won't match because isTiled checks the specific app's window.
+--
+-- Rapid focus() calls race with the macOS window server — the second call
+-- lands before the first is processed, so the final z-order is unpredictable.
+-- A 50 ms gap between focus(right) and focus(left) lets each call settle.
+-- This is imperceptible to humans but enough for the window server.
+--
+-- The 0.3 s delay in the launch path lets launchOrFocus() finish creating the
+-- window before we try to move it — only fires when an app wasn't running yet.
+-- When both apps are already running, tiling takes ~50 ms (one timer tick).
+local function tilePair(leftApp, rightApp)
+    local lw = bestWindow(leftApp)
+    local rw = bestWindow(rightApp)
+    -- If both windows are already in position, cycle focus
+    if isTiled(lw, left) and isTiled(rw, right) then
+        local la = hs.application.get(leftApp)
+        if la and la:isFrontmost() then rw:focus() else lw:focus() end
+        return
     end
-    -- Tile: Zoom left, Notion right
-    hs.application.launchOrFocus("Notion")
-    hs.application.launchOrFocus("zoom.us")
-    -- Pick the meeting window if available, otherwise the dashboard
-    local zoomWinTitle = "Zoom Meeting"
-    local z = hs.application.get("zoom.us")
-    if z and not z:getWindow("Zoom Meeting") then
-        zoomWinTitle = "Zoom Workplace"
+    -- Launch any app that isn't running yet
+    if not lw then hs.application.launchOrFocus(leftApp) end
+    if not rw then hs.application.launchOrFocus(rightApp) end
+    -- Position windows and set z-order with a gap between focus calls
+    local function tile()
+        lw = lw or bestWindow(leftApp)
+        rw = rw or bestWindow(rightApp)
+        if lw then lw:move(left) end
+        if rw then rw:move(right) end
+        -- Focus right first (brings above old occupant), then left after a tick
+        if rw then rw:focus() end
+        hs.timer.doAfter(0.05, function()
+            if lw then lw:focus() end
+        end)
     end
-    hs.osascript.applescript(string.format([[
-        tell application "System Events"
-            tell process "zoom.us"
-                set w to window "%s"
-                set size of w to {%d, %d}
-                set position of w to {%d, %d}
-                perform action "AXRaise" of w
-            end tell
-            tell process "Notion"
-                set w to front window
-                set position of w to {%d, %d}
-                set size of w to {%d, %d}
-            end tell
-        end tell
-    ]], zoomWinTitle, halfW, screen.h, screen.x, screen.y,
-       screen.x + halfW, screen.y, halfW, screen.h))
-end)
-
--- Zoom+right-app layout factory: Zoom meeting left, companion app right, focus cycling
-local function zoomLayout(companionApp, companionProcess)
-    return function()
-        local screen = hs.screen.mainScreen():frame()
-        local halfW = math.floor(screen.w / 2)
-        -- Cycle focus if both are running and one is focused
-        local zoom = hs.application.get("zoom.us")
-        local companion = hs.application.get(companionApp)
-        if zoom and companion then
-            if zoom:isFrontmost() then
-                hs.application.launchOrFocus(companionApp)
-                return
-            elseif companion:isFrontmost() then
-                hs.application.launchOrFocus("zoom.us")
-                return
-            end
-        end
-        -- Tile: Zoom left, companion right
-        hs.application.launchOrFocus(companionApp)
-        hs.application.launchOrFocus("zoom.us")
-        -- Pick the meeting window if available, otherwise the dashboard
-        local zoomWinTitle = "Zoom Meeting"
-        local z = hs.application.get("zoom.us")
-        if z and not z:getWindow("Zoom Meeting") then
-            zoomWinTitle = "Zoom Workplace"
-        end
-        hs.osascript.applescript(string.format([[
-            tell application "System Events"
-                tell process "zoom.us"
-                    set w to window "%s"
-                    set size of w to {%d, %d}
-                    set position of w to {%d, %d}
-                    perform action "AXRaise" of w
-                end tell
-                tell process "%s"
-                    set w to front window
-                    set position of w to {%d, %d}
-                    set size of w to {%d, %d}
-                end tell
-            end tell
-        ]], zoomWinTitle, halfW, screen.h, screen.x, screen.y,
-           companionProcess, screen.x + halfW, screen.y, halfW, screen.h))
-    end
+    if lw and rw then tile() else hs.timer.doAfter(0.3, tile) end
 end
 
-hs.hotkey.bind(hyper, "c", zoomLayout("Slack", "Slack"))
-hs.hotkey.bind(hyper, "v", zoomLayout("Dia", "Dia"))
+-- Layouts (bottom row: Z, X, C, V)
+hs.hotkey.bind(hyper, "z", function() tilePair("Ghostty", "Dia") end)
+hs.hotkey.bind(hyper, "x", function() tilePair("zoom.us", "Notion") end)
+hs.hotkey.bind(hyper, "c", function() tilePair("zoom.us", "Slack") end)
+hs.hotkey.bind(hyper, "v", function() tilePair("zoom.us", "Dia") end)
 
 -- Hyper+Tab = toggle focus between left and right windows
 hs.hotkey.bind(hyper, "tab", function()
