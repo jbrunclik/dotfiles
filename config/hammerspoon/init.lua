@@ -181,6 +181,54 @@ hs.hotkey.bind(hyper, "x", function()
        screen.x + halfW, screen.y, halfW, screen.h))
 end)
 
+-- Zoom+right-app layout factory: Zoom meeting left, companion app right, focus cycling
+local function zoomLayout(companionApp, companionProcess)
+    return function()
+        local screen = hs.screen.mainScreen():frame()
+        local halfW = math.floor(screen.w / 2)
+        -- Cycle focus if both are running and one is focused
+        local zoom = hs.application.get("zoom.us")
+        local companion = hs.application.get(companionApp)
+        if zoom and companion then
+            if zoom:isFrontmost() then
+                hs.application.launchOrFocus(companionApp)
+                return
+            elseif companion:isFrontmost() then
+                hs.application.launchOrFocus("zoom.us")
+                return
+            end
+        end
+        -- Tile: Zoom left, companion right
+        hs.application.launchOrFocus(companionApp)
+        hs.application.launchOrFocus("zoom.us")
+        -- Pick the meeting window if available, otherwise the dashboard
+        local zoomWinTitle = "Zoom Meeting"
+        local z = hs.application.get("zoom.us")
+        if z and not z:getWindow("Zoom Meeting") then
+            zoomWinTitle = "Zoom Workplace"
+        end
+        hs.osascript.applescript(string.format([[
+            tell application "System Events"
+                tell process "zoom.us"
+                    set w to window "%s"
+                    set size of w to {%d, %d}
+                    set position of w to {%d, %d}
+                    perform action "AXRaise" of w
+                end tell
+                tell process "%s"
+                    set w to front window
+                    set position of w to {%d, %d}
+                    set size of w to {%d, %d}
+                end tell
+            end tell
+        ]], zoomWinTitle, halfW, screen.h, screen.x, screen.y,
+           companionProcess, screen.x + halfW, screen.y, halfW, screen.h))
+    end
+end
+
+hs.hotkey.bind(hyper, "c", zoomLayout("Slack", "Slack"))
+hs.hotkey.bind(hyper, "v", zoomLayout("Dia", "Dia"))
+
 -- Hyper+Tab = toggle focus between left and right windows
 hs.hotkey.bind(hyper, "tab", function()
     local screen = hs.screen.mainScreen()
