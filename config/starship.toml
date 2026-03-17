@@ -3,22 +3,22 @@
 # Gradient: mauve → blue → sapphire → surface2 → surface1
 # Bright accents for identity/navigation, muted tones for context
 format = """
-[](mauve)\
+[](mauve)\
 $os\
 $username\
 $hostname\
-[](bg:blue fg:mauve)\
+[](bg:blue fg:mauve)\
 $directory\
-[](bg:sapphire fg:blue)\
+[](bg:sapphire fg:blue)\
 $git_branch\
 $git_status\
-[](fg:sapphire bg:surface2)\
+[](fg:sapphire bg:surface2)\
 $rust\
 $golang\
 $nodejs\
 $python\
 $docker_context\
-[ ](fg:surface2)\
+[ ](fg:surface2)\
 $cmd_duration\
 $line_break\
 $character"""
