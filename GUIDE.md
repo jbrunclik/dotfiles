@@ -378,7 +378,9 @@ Works system-wide: Slack, Notion, Chrome, etc.
 | Shortcut | Layout |
 |---|---|
 | Hyper + Z | Coding — Ghostty left, Dia right |
-| Hyper + X | Meeting — Zoom left, Notion right |
+| Hyper + X | Meeting + notes — Zoom left, Notion right |
+| Hyper + C | Meeting + chat — Zoom left, Slack right |
+| Hyper + V | Meeting + browsing — Zoom left, Dia right |
 
 ### App focus (Hammerspoon)
 
@@ -404,6 +406,19 @@ Press twice to maximize the focused app's window.
 | Shortcut | Action |
 |---|---|
 | Hyper + R | Reload Hammerspoon config |
+
+### Debugging
+
+The `hs` CLI lets you query Hammerspoon from the terminal:
+
+```bash
+hs -c 'hs.window.focusedWindow():frame()'   # inspect focused window
+hs -c 'hs.application.get("Slack"):allWindows()'  # list app windows
+```
+
+If an app's windows are invisible to Hammerspoon (returns 0 windows),
+restart the app — Electron apps like Slack can lose their accessibility
+registration after updates.
 
 ## Clipboard (Maccy)
 

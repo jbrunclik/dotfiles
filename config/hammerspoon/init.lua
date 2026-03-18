@@ -3,6 +3,8 @@
 --   MacBook:    CapsLock (remapped by Karabiner-Elements)
 --   Keyboardio: Any key (configured in Chrysalis firmware)
 
+require("hs.ipc")
+
 local hyper = { "cmd", "alt", "ctrl", "shift" }
 
 -- Find the best window for an app (handles Zoom's multiple windows)
