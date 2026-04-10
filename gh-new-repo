@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Create a new GitHub repo with sane defaults:
+#   - Created from jbrunclik/template (MIT license, Dependabot, PR template)
+#   - Squash-merge only, delete branch on merge
+#   - Branch ruleset: owner bypasses, others need PRs
+#
+# Usage:
+#   gh-new-repo my-project "Short description"
+#   gh-new-repo my-project "Short description" --private
+
+REPO_NAME="${1:?Usage: gh-new-repo <name> [description] [--private]}"
+DESCRIPTION="${2:-}"
+VISIBILITY="--public"
+if [[ "${3:-}" == "--private" ]]; then
+    VISIBILITY="--private"
+fi
+
+OWNER="jbrunclik"
+
+echo "Creating repo ${OWNER}/${REPO_NAME}..."
+gh repo create "${OWNER}/${REPO_NAME}" \
+    --template "${OWNER}/template" \
+    ${VISIBILITY} \
+    --description "${DESCRIPTION}" \
+    --clone
+
+echo "Applying repo settings..."
+gh repo edit "${OWNER}/${REPO_NAME}" \
+    --enable-squash-merge \
+    --delete-branch-on-merge \
+    --enable-merge-commit=false \
+    --enable-rebase-merge=false
+
+# Create branch ruleset — owner can push/force-push, others need PRs
+echo "Creating branch ruleset..."
+gh api "repos/${OWNER}/${REPO_NAME}/rulesets" \
+    --method POST \
+    --input - <<'EOF'
+{
+  "name": "Protect main",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "include": ["refs/heads/main"],
+      "exclude": []
+    }
+  },
+  "bypass_actors": [
+    {
+      "actor_id": 5,
+      "actor_type": "RepositoryRole",
+      "bypass_mode": "always"
+    }
+  ],
+  "rules": [
+    {"type": "deletion"},
+    {"type": "non_fast_forward"},
+    {
+      "type": "pull_request",
+      "parameters": {
+        "required_approving_review_count": 0,
+        "dismiss_stale_reviews_on_push": false,
+        "require_code_owner_review": false,
+        "require_last_push_approval": false,
+        "required_review_thread_resolution": false
+      }
+    }
+  ]
+}
+EOF
+
+echo "Done! Repo ready at https://github.com/${OWNER}/${REPO_NAME}"
+echo "  cd ${REPO_NAME} to get started"

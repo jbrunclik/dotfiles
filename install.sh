@@ -50,6 +50,7 @@ link "$DOTFILES/config/mc/skins/catppuccin-mocha.ini"  "$HOME/.local/share/mc/sk
 link "$DOTFILES/config/vscode/settings.json"           "$HOME/Library/Application Support/Code/User/settings.json"
 link "$DOTFILES/config/btop/themes/catppuccin_mocha.theme" "$HOME/.config/btop/themes/catppuccin_mocha.theme"
 link "$DOTFILES/config/karabiner/karabiner.json"       "$HOME/.config/karabiner/karabiner.json"
+link "$DOTFILES/gh-new-repo"                           "$HOME/.local/bin/gh-new-repo"
 # Hammerspoon doesn't follow symlinks for init.lua — use a loader file
 mkdir -p "$HOME/.hammerspoon"
 echo "dofile(\"$DOTFILES/config/hammerspoon/init.lua\")" > "$HOME/.hammerspoon/init.lua"
