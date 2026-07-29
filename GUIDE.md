@@ -441,16 +441,16 @@ Use the OCR button to extract text from any screenshot.
 
 ### Adding a new layout
 
-Edit `config/hammerspoon/init.lua`:
+Edit `config/hammerspoon/init.lua` and bind a key to `tilePair(leftApp, rightApp)`.
+Use the app's exact name as macOS reports it (`Ghostty`, `zoom.us`, `Google Chrome`):
 
 ```lua
-hs.hotkey.bind(hyper, "d", function()
-    layout({
-        { name = "Figma",  rect = left },
-        { name = "Safari", rect = right },
-    })
-end)
+hs.hotkey.bind(hyper, "g", function() tilePair("Figma", "Google Chrome") end)
 ```
+
+Pick a key that isn't already bound — the bottom row `Z`/`X`/`C`/`V` holds the
+existing layouts, `A`/`S`/`D`/`F` do single-window placement, `1`–`6` focus apps,
+and `H`/`J`/`K`/`L` are arrow keys in Karabiner. Reload with Hyper+R.
 
 ## Learning path
 

@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DOTFILES="$(cd "$(dirname "$0")" && pwd)"
+DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/links.sh
+source "$DOTFILES/lib/links.sh"
 
 if [[ -t 1 ]]; then
     RED='\033[0;31m' GREEN='\033[0;32m' YELLOW='\033[0;33m'
@@ -20,7 +22,7 @@ if ! command -v brew &>/dev/null; then
 fi
 
 header "Installing Homebrew packages"
-brew bundle --file="$DOTFILES/Brewfile"
+brew bundle install --file="$DOTFILES/Brewfile"
 
 header "Linking config files"
 
@@ -35,50 +37,58 @@ link() {
     echo -e "  ${GREEN}✓${RESET} $dst -> $src"
 }
 
-link "$DOTFILES/bash_profile"                          "$HOME/.bash_profile"
-link "$DOTFILES/inputrc"                               "$HOME/.inputrc"
-link "$DOTFILES/gitconfig"                             "$HOME/.gitconfig"
-link "$DOTFILES/ssh_config"                            "$HOME/.ssh/config"
+for entry in "${LINKS[@]}"; do
+    link "$DOTFILES/${entry%%|*}" "${entry#*|}"
+done
+
+# Only the directory needs locking down. Don't chmod ~/.ssh/config — it's a
+# symlink, so chmod would follow it and change the mode of the file in the
+# repo. ssh only rejects a config that is writable by group/other, and the
+# repo's 644 already satisfies that.
 chmod 700 "$HOME/.ssh"
-chmod 600 "$HOME/.ssh/config"
-link "$DOTFILES/config/ghostty/config"                 "$HOME/.config/ghostty/config"
-link "$DOTFILES/config/nvim"                           "$HOME/.config/nvim"
-link "$DOTFILES/config/starship.toml"                  "$HOME/.config/starship.toml"
-link "$DOTFILES/config/bat/config"                     "$HOME/.config/bat/config"
-link "$DOTFILES/config/bat/themes/CatppuccinMocha.tmTheme" "$HOME/.config/bat/themes/CatppuccinMocha.tmTheme"
-link "$DOTFILES/config/mc/skins/catppuccin-mocha.ini"  "$HOME/.local/share/mc/skins/catppuccin-mocha.ini"
-link "$DOTFILES/config/vscode/settings.json"           "$HOME/Library/Application Support/Code/User/settings.json"
-link "$DOTFILES/config/btop/themes/catppuccin_mocha.theme" "$HOME/.config/btop/themes/catppuccin_mocha.theme"
-link "$DOTFILES/config/karabiner/karabiner.json"       "$HOME/.config/karabiner/karabiner.json"
-link "$DOTFILES/gh-new-repo"                           "$HOME/.local/bin/gh-new-repo"
+
 # Hammerspoon doesn't follow symlinks for init.lua — use a loader file
 mkdir -p "$HOME/.hammerspoon"
 echo "dofile(\"$DOTFILES/config/hammerspoon/init.lua\")" > "$HOME/.hammerspoon/init.lua"
 echo -e "  ${GREEN}✓${RESET} $HOME/.hammerspoon/init.lua -> dofile loader"
 
-header "Setting macOS accent color (purple — closest to Catppuccin Mocha mauve)"
+header "Setting macOS accent color (Catppuccin Mocha mauve #cba6f7)"
 defaults write -globalDomain AppleAccentColor -int 5
-defaults write -globalDomain AppleHighlightColor -string "0.564706 0.650980 0.996078 Purple"
+defaults write -globalDomain AppleHighlightColor -string "0.796078 0.650980 0.968627 Purple"
 
 header "Building bat theme cache"
 bat cache --build
 
 header "Installing VS Code extensions"
 if command -v code &>/dev/null; then
-    while IFS= read -r ext; do
-        code --install-extension "$ext" --force 2>/dev/null || true
+    # `|| [ -n "$ext" ]` so a final line without a trailing newline still runs
+    while IFS= read -r ext || [ -n "$ext" ]; do
+        [[ -z "$ext" || "$ext" == \#* ]] && continue
+        if code --install-extension "$ext" --force >/dev/null 2>&1; then
+            echo -e "  ${GREEN}✓${RESET} $ext"
+        else
+            warn "failed to install extension: $ext"
+        fi
     done < "$DOTFILES/config/vscode/extensions.txt"
 else
     warn "'code' CLI not found — install VS Code and run 'Shell Command: Install code in PATH'"
 fi
 
+header "Checking required binaries"
+for entry in "${REQUIRED_BINS[@]}"; do
+    bin="${entry%%|*}"
+    command -v "$bin" &>/dev/null || warn "$bin not on PATH — needed for ${entry#*|}"
+done
+
 header "Checking local config files"
-if [ ! -f "$HOME/.gitconfig.local" ]; then
-    warn "~/.gitconfig.local not found — create it with your [user] name/email"
-fi
-if [ ! -f "$HOME/.ssh/config.local" ]; then
-    warn "~/.ssh/config.local not found — create it with your Host entries"
-fi
+for entry in \
+    "$HOME/.gitconfig.local|your [user] name/email" \
+    "$HOME/.ssh/config.local|your Host entries" \
+    "$HOME/.bash_profile.local|machine-local env vars and secrets"
+do
+    path="${entry%%|*}"
+    [ -f "$path" ] || warn "$path not found — create it with ${entry#*|}"
+done
 
 header "Post-install reminders"
 warn "Grant Accessibility permissions in System Settings → Privacy & Security → Accessibility for:"

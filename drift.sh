@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DOTFILES="$(cd "$(dirname "$0")" && pwd)"
+DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/links.sh
+source "$DOTFILES/lib/links.sh"
+
+# Homebrew prints "==> New Formulae/Casks" announcements on stderr during
+# auto-update. Those would otherwise be mistaken for package-check output.
+export HOMEBREW_NO_AUTO_UPDATE=1
+
 DRIFTED=0
 
 if [[ -t 1 ]]; then
@@ -15,7 +22,7 @@ header() { echo -e "${BOLD}${BLUE}$1${RESET}"; }
 
 check() {
     local src="$1" dst="$2"
-    if [ ! -e "$dst" ]; then
+    if [ ! -e "$dst" ] && [ ! -L "$dst" ]; then
         echo -e "  ${RED}MISSING${RESET}  $dst"
         DRIFTED=1
     elif [ -L "$dst" ]; then
@@ -41,24 +48,13 @@ echo -e "${BOLD}Checking for drift...${RESET}"
 echo ""
 
 header "Symlinks:"
-check "$DOTFILES/bash_profile"                          "$HOME/.bash_profile"
-check "$DOTFILES/inputrc"                               "$HOME/.inputrc"
-check "$DOTFILES/gitconfig"                             "$HOME/.gitconfig"
-check "$DOTFILES/ssh_config"                            "$HOME/.ssh/config"
-check "$DOTFILES/config/ghostty/config"                 "$HOME/.config/ghostty/config"
-check "$DOTFILES/config/nvim"                           "$HOME/.config/nvim"
-check "$DOTFILES/config/starship.toml"                  "$HOME/.config/starship.toml"
-check "$DOTFILES/config/bat/config"                     "$HOME/.config/bat/config"
-check "$DOTFILES/config/mc/skins/catppuccin-mocha.ini"  "$HOME/.local/share/mc/skins/catppuccin-mocha.ini"
-check "$DOTFILES/config/vscode/settings.json"           "$HOME/Library/Application Support/Code/User/settings.json"
-check "$DOTFILES/config/btop/themes/catppuccin_mocha.theme" "$HOME/.config/btop/themes/catppuccin_mocha.theme"
-check "$DOTFILES/config/karabiner/karabiner.json"       "$HOME/.config/karabiner/karabiner.json"
-check "$DOTFILES/config/bat/themes/CatppuccinMocha.tmTheme" "$HOME/.config/bat/themes/CatppuccinMocha.tmTheme"
+for entry in "${LINKS[@]}"; do
+    check "$DOTFILES/${entry%%|*}" "${entry#*|}"
+done
 
-# Check local-only files exist
 echo ""
 header "Local files (not in repo):"
-for f in "$HOME/.gitconfig.local" "$HOME/.ssh/config.local"; do
+for f in "${LOCAL_FILES[@]}"; do
     if [ ! -f "$f" ]; then
         echo -e "  ${RED}MISSING${RESET}  $f"
         DRIFTED=1
@@ -74,24 +70,71 @@ HS_INIT="$HOME/.hammerspoon/init.lua"
 if [ ! -f "$HS_INIT" ]; then
     echo -e "  ${RED}MISSING${RESET}  $HS_INIT"
     DRIFTED=1
-elif grep -q "dofile.*$DOTFILES/config/hammerspoon/init.lua" "$HS_INIT" 2>/dev/null; then
+elif grep -qF "dofile(\"$DOTFILES/config/hammerspoon/init.lua\")" "$HS_INIT" 2>/dev/null; then
     echo -e "  ${GREEN}OK${RESET}       $HS_INIT (dofile loader)"
 else
     echo -e "  ${YELLOW}CHANGED${RESET}  $HS_INIT (not pointing to dotfiles)"
     DRIFTED=1
 fi
 
-# Check Brewfile packages (single brew command instead of per-package)
+# Check Brewfile packages.
+#
+# `brew bundle check` reports its per-package detail on stderr and only with
+# --verbose; plain stdout is empty. Merge both streams and keep the "→ ..."
+# detail lines, so the real unmet list is shown instead of the summary.
 echo ""
 header "Brewfile packages:"
-BUNDLE_CHECK="$(brew bundle check --file="$DOTFILES/Brewfile" 2>&1)" && {
+BUNDLE_OUT="$(brew bundle check --verbose --file="$DOTFILES/Brewfile" 2>&1)" && BUNDLE_RC=0 || BUNDLE_RC=$?
+if [ "$BUNDLE_RC" -eq 0 ]; then
     echo -e "  ${GREEN}All packages installed.${RESET}"
-} || {
-    echo "$BUNDLE_CHECK" | grep -v "^$" | while IFS= read -r line; do
-        echo -e "  ${RED}MISSING${RESET}  $line"
-    done
+else
+    UNMET="$(echo "$BUNDLE_OUT" | grep '^→' | sed 's/^→ //')" || true
+    if [ -n "$UNMET" ]; then
+        while IFS= read -r line; do
+            echo -e "  ${RED}UNMET${RESET}    $line"
+        done <<< "$UNMET"
+    else
+        # Couldn't parse detail lines — show raw output rather than lie.
+        echo -e "  ${RED}UNMET${RESET}    brew bundle check failed (rc=$BUNDLE_RC):"
+        while IFS= read -r line; do
+            echo "           $line"
+        done <<< "$BUNDLE_OUT"
+    fi
     DRIFTED=1
-}
+fi
+
+# Check binaries the configs shell out to
+echo ""
+header "Required binaries:"
+MISSING_BINS=0
+for entry in "${REQUIRED_BINS[@]}"; do
+    bin="${entry%%|*}"
+    if ! command -v "$bin" &>/dev/null; then
+        echo -e "  ${RED}MISSING${RESET}  $bin (${entry#*|})"
+        MISSING_BINS=1
+        DRIFTED=1
+    fi
+done
+[ "$MISSING_BINS" -eq 0 ] && echo -e "  ${GREEN}All required binaries on PATH.${RESET}"
+
+# Check Neovim treesitter parsers actually got installed
+echo ""
+header "Neovim treesitter parsers:"
+if command -v nvim &>/dev/null; then
+    TS_COUNT="$(nvim --headless \
+        "+lua local ok, ts = pcall(require, 'nvim-treesitter'); io.write(ok and #ts.get_installed() or -1)" \
+        "+qa" 2>/dev/null || echo -1)"
+    if [ "$TS_COUNT" -gt 0 ]; then
+        echo -e "  ${GREEN}OK${RESET}       $TS_COUNT parsers installed"
+    elif [ "$TS_COUNT" -eq 0 ]; then
+        echo -e "  ${RED}MISSING${RESET}  no parsers installed — run ':TSInstall' or restart nvim"
+        DRIFTED=1
+    else
+        echo -e "  ${YELLOW}SKIPPED${RESET} (nvim-treesitter not loaded yet)"
+    fi
+else
+    echo -e "  ${YELLOW}SKIPPED${RESET} ('nvim' not in PATH)"
+fi
 
 # Check VS Code extensions
 echo ""
@@ -99,8 +142,11 @@ header "VS Code extensions:"
 if command -v code &>/dev/null; then
     INSTALLED_EXTS="$(code --list-extensions 2>/dev/null)"
     MISSING_EXTS=""
-    while IFS= read -r ext; do
-        if ! echo "$INSTALLED_EXTS" | grep -qFi "$ext"; then
+    while IFS= read -r ext || [ -n "$ext" ]; do
+        [[ -z "$ext" || "$ext" == \#* ]] && continue
+        # -x so a shorter id can't be satisfied by a longer installed one
+        # (e.g. ms-python.python vs ms-python.vscode-python-envs)
+        if ! echo "$INSTALLED_EXTS" | grep -qxFi "$ext"; then
             MISSING_EXTS="$MISSING_EXTS $ext"
             DRIFTED=1
         fi

@@ -1,14 +1,5 @@
-# Bootstrap a fresh Mac:
-#   brew install bash bash-completion@2 fzf starship neovim zoxide mise bat eza fd ripgrep dust btop git-delta
-#   brew install --cask font-maple-mono-nf font-cascadia-code-nf
-#   git config --global core.pager delta
-#   git config --global interactive.diffFilter 'delta --color-only'
-#   git config --global delta.navigate true
-#   git config --global delta.dark true
-#   git config --global delta.line-numbers true
-#   git config --global delta.syntax-theme 'Catppuccin Mocha'
-#   git config --global merge.conflictStyle zdiff3
-# Config files: ~/.config/ghostty/config, ~/.config/nvim/, ~/.config/starship.toml, ~/.config/bat/config
+# Interactive bash setup. Package installs and git config live in the
+# Brewfile and gitconfig — see install.sh.
 
 export BASH_SILENCE_DEPRECATION_WARNING=1
 export CLICOLOR=1
@@ -52,15 +43,20 @@ eval "$(starship init bash)"
 # Zoxide — replaces cd while preserving cd -, cd .., etc. (must be last)
 eval "$(zoxide init bash --cmd=cd)"
 
-# Aliases — modern CLI replacements
+# Aliases — modern CLI replacements.
+# Deliberately not aliasing `find` to `fd`: they take incompatible arguments,
+# so `find . -name '*.py'` would misbehave rather than fail loudly. Use `fd`.
 alias cat='bat --paging=never'
 alias ls='eza --icons --group-directories-first'
 alias ll='eza --icons --group-directories-first -la'
 alias lt='eza --icons --group-directories-first --tree --level=2'
-alias find='fd'
 alias du='dust'
 alias top='btop'
 alias diff='delta'
 alias vim='nvim'
 unalias gm 2>/dev/null
 alias gm='/opt/homebrew/bin/gm'
+
+# Machine-local env vars and secrets — never committed. API tokens,
+# per-machine PATH entries, and work-specific config belong here.
+[[ -r "${HOME}/.bash_profile.local" ]] && . "${HOME}/.bash_profile.local"

@@ -1,0 +1,13 @@
+# Lock files. Neither is tracked, so a fresh machine gets current versions
+# rather than pinned ones — remove these lines if you'd rather pin.
+Brewfile.lock.json
+config/nvim/lazy-lock.json
+
+# Backups created by install.sh when it replaces a real file with a symlink
+*.bak
+
+# Local agent settings
+.claude/
+
+# macOS
+.DS_Store

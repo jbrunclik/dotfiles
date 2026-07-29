@@ -7,7 +7,7 @@ autocmd("TextYankPost", {
   end,
 })
 
--- 2-space indent for YAML, TypeScript, JSON
+-- 2-space indent for the web/config filetypes (Python keeps the global 4)
 autocmd("FileType", {
   pattern = { "yaml", "typescript", "typescriptreact", "javascript", "javascriptreact", "json", "lua" },
   callback = function()

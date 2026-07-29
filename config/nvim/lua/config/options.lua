@@ -10,7 +10,7 @@ opt.cursorline = true
 opt.number = true
 opt.relativenumber = true
 opt.signcolumn = "yes"
-opt.colorcolumn = "80"
+opt.colorcolumn = "88" -- matches ruff's default and VS Code's ruler
 opt.showmode = false -- lualine shows the mode
 
 -- Indentation

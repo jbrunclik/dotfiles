@@ -49,6 +49,10 @@ LSP (basedpyright, ruff, ts_ls, yamlls, lua_ls), blink.cmp, nvim-treesitter,
 fzf-lua, gitsigns, lualine, indent-blankline, which-key, conform.nvim,
 nvim-lint, mini.surround, mini.pairs, copilot.vim.
 
+Mason installs the LSP servers, but treesitter parsers are compiled by the
+`tree-sitter` CLI and conform/nvim-lint shell out to `prettier` and `eslint_d` —
+all three come from the `Brewfile`, and `drift.sh` verifies them.
+
 ### Font
 
 [Maple Mono NF](https://github.com/subframe7536/maple-font) — rounded monospace with built-in Nerd Font support.
@@ -65,7 +69,11 @@ The install script:
 1. Installs Homebrew packages from `Brewfile`
 2. Symlinks all config files (backs up existing files to `*.bak`)
 3. Installs VS Code extensions
-4. Warns if local-only config files are missing
+4. Warns if any required binary is missing from `PATH`
+5. Warns if local-only config files are missing
+
+`install.sh` and `drift.sh` share one symlink manifest (`lib/links.sh`), so the
+two can't disagree about what "installed" means.
 
 ## Files not in this repo
 
@@ -73,10 +81,19 @@ These files contain personal information and must be created manually:
 
 | File | Contents |
 |---|---|
+| `~/.bash_profile.local` | API tokens, machine-local env vars and `PATH` entries |
 | `~/.gitconfig.local` | `[user]` name/email, `[filter "lfs"]` config |
 | `~/.ssh/config.local` | Host entries (hostnames, usernames, keys) |
 | `~/.ssh/id_ed25519` | SSH private key |
 | `~/.ssh/id_ed25519.pub` | SSH public key |
+
+**This repo is public — no secret belongs in a tracked file.** `bash_profile`
+sources `~/.bash_profile.local` last, so anything machine-specific or sensitive
+goes there:
+
+```bash
+export SOME_API_TOKEN="..."
+```
 
 ### Example `~/.gitconfig.local`
 
@@ -102,8 +119,8 @@ Check if local config has diverged from the repo:
 ./drift.sh
 ```
 
-Checks symlinks, local files, installed packages, and VS Code extensions.
-Non-zero exit on drift.
+Checks symlinks, local files, Brewfile packages, required binaries, Neovim
+treesitter parsers, and VS Code extensions. Non-zero exit on drift.
 
 ## Guide
 

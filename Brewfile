@@ -11,6 +11,9 @@ brew "mise"
 
 # Editor
 brew "neovim"
+# nvim-treesitter's main branch compiles parsers with the tree-sitter CLI
+# rather than shipping prebuilt grammars — without it every :TSInstall fails
+brew "tree-sitter-cli"
 
 # Automation
 cask "karabiner-elements"
@@ -25,6 +28,14 @@ cask "claude-code"
 
 # Python
 brew "uv"
+brew "ruff"
+
+# Formatters and linters that Neovim shells out to.
+# conform.nvim and nvim-lint invoke these directly — Mason only manages LSP
+# servers, so without them format-on-save silently no-ops and linting throws
+# ENOENT on every TypeScript buffer.
+brew "prettier"
+brew "eslint_d"
 
 # Modern CLI replacements
 brew "bat"

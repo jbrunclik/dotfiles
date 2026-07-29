@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install linters
+        run: sudo apt-get update && sudo apt-get install -y shellcheck lua5.4 jq python3-yaml
+
+      - name: Shellcheck
+        run: shellcheck install.sh drift.sh gh-new-repo lib/links.sh
+
+      - name: Lua syntax
+        run: find config/nvim -name '*.lua' -print0 | xargs -0 -n1 luac5.4 -p
+
+      - name: JSON syntax
+        run: jq empty config/karabiner/karabiner.json
+
+      - name: YAML syntax
+        run: |
+          python3 -c '
+          import glob, sys, yaml
+          for f in glob.glob(".github/**/*.yml", recursive=True):
+              yaml.safe_load(open(f))
+              print(f"ok {f}")
+          '
+
+      - name: Brewfile references a real formula for every required binary
+        run: |
+          # Every REQUIRED_BINS entry should be installable — catches the class
+          # of bug where a config shells out to a tool nothing installs.
+          # shellcheck disable=SC1091
+          HOME=/tmp source lib/links.sh
+          status=0
+          for entry in "${REQUIRED_BINS[@]}"; do
+              bin="${entry%%|*}"
+              case "$bin" in
+                  rg)          formula=ripgrep ;;
+                  delta)       formula=git-delta ;;
+                  tree-sitter) formula=tree-sitter-cli ;;
+                  *)      formula="$bin" ;;
+              esac
+              if ! grep -qE "^brew \"$formula\"" Brewfile; then
+                  echo "::error::$bin is required but Brewfile has no '$formula' entry"
+                  status=1
+              fi
+          done
+          exit $status
