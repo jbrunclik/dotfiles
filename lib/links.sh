@@ -20,6 +20,7 @@ LINKS=(
     "config/ghostty/config|$HOME/.config/ghostty/config"
     "config/nvim|$HOME/.config/nvim"
     "config/starship.toml|$HOME/.config/starship.toml"
+    "config/ccstatusline/settings.json|$HOME/.config/ccstatusline/settings.json"
     "config/bat/config|$HOME/.config/bat/config"
     "config/bat/themes/CatppuccinMocha.tmTheme|$HOME/.config/bat/themes/CatppuccinMocha.tmTheme"
     "config/mc/skins/catppuccin-mocha.ini|$HOME/.local/share/mc/skins/catppuccin-mocha.ini"

@@ -9,6 +9,7 @@ macOS development environment configuration. Catppuccin Mocha everywhere.
 | Terminal | [Ghostty](https://ghostty.org/) | `config/ghostty/config` |
 | Shell | Bash + [Starship](https://starship.rs/) prompt | `bash_profile`, `inputrc`, `config/starship.toml` |
 | Editor | [Neovim](https://neovim.io/) with LSP, Treesitter, Copilot | `config/nvim/` |
+| Claude Code | [ccstatusline](https://github.com/sirmalloc/ccstatusline) — Mocha powerline status line (matches Starship) | `config/ccstatusline/settings.json` |
 | IDE | [VS Code](https://code.visualstudio.com/) with Catppuccin, Ruff, Prettier | `config/vscode/` |
 | Git | [delta](https://github.com/dandavison/delta) pager, [lazygit](https://github.com/jesseduffield/lazygit) TUI, [gh](https://cli.github.com/) CLI | `gitconfig` |
 | Keyboard | [Karabiner-Elements](https://karabiner-elements.pqrs.org/) — CapsLock as Hyper/Escape | `config/karabiner/karabiner.json` |
