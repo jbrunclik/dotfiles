@@ -59,6 +59,11 @@ defaults write -globalDomain AppleHighlightColor -string "0.796078 0.650980 0.96
 header "Building bat theme cache"
 bat cache --build
 
+# Merges generic prefs into ~/.claude/settings.json (leaving Claude-Code-managed
+# keys and secrets alone) and installs the generic plugin set. See config/claude/.
+header "Configuring Claude Code"
+bash "$DOTFILES/config/claude/bootstrap.sh"
+
 header "Installing VS Code extensions"
 if command -v code &>/dev/null; then
     # `|| [ -n "$ext" ]` so a final line without a trailing newline still runs
