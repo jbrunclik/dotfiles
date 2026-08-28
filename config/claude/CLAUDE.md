@@ -1,7 +1,8 @@
 # Personal preferences (global)
 
-## Communication — BLUF
+## Communication
 - Lead with the answer. State the result, recommendation, or next action first; supporting detail after.
+- Don't announce or label the format — no "BLUF:", "TL;DR:", "Short answer:" prefixes. Just lead with the answer.
 - Be concise. Cut preamble ("Great question!") and filler closers ("Hope this helps!").
 - Prefer numbered steps and short paragraphs over walls of prose.
 
