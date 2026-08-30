@@ -79,28 +79,48 @@ fi
 
 # Check Brewfile packages.
 #
-# `brew bundle check` reports its per-package detail on stderr and only with
-# --verbose; plain stdout is empty. Merge both streams and keep the "→ ..."
-# detail lines, so the real unmet list is shown instead of the summary.
+# `brew bundle check` counts a package as unmet when it is merely OUTDATED, not
+# only when it is absent — and this machine routinely carries dozens of outdated
+# formulae, so it reported ~15 installed packages as "unmet". Only a genuinely
+# missing package is drift; outdated is a soft note cleared by
+# `brew bundle install`. So check installation directly against `brew list`
+# (version-agnostic) and surface outdated separately without failing.
 echo ""
 header "Brewfile packages:"
-BUNDLE_OUT="$(brew bundle check --verbose --file="$DOTFILES/Brewfile" 2>&1)" && BUNDLE_RC=0 || BUNDLE_RC=$?
-if [ "$BUNDLE_RC" -eq 0 ]; then
-    echo -e "  ${GREEN}All packages installed.${RESET}"
-else
-    UNMET="$(echo "$BUNDLE_OUT" | grep '^→' | sed 's/^→ //')" || true
-    if [ -n "$UNMET" ]; then
-        while IFS= read -r line; do
-            echo -e "  ${RED}UNMET${RESET}    $line"
-        done <<< "$UNMET"
-    else
-        # Couldn't parse detail lines — show raw output rather than lie.
-        echo -e "  ${RED}UNMET${RESET}    brew bundle check failed (rc=$BUNDLE_RC):"
-        while IFS= read -r line; do
-            echo "           $line"
-        done <<< "$BUNDLE_OUT"
+mapfile -t WANT_FORMULAE < <(grep -E '^brew "' "$DOTFILES/Brewfile" | sed -E 's/^brew "([^"]+)".*/\1/')
+mapfile -t WANT_CASKS    < <(grep -E '^cask "' "$DOTFILES/Brewfile" | sed -E 's/^cask "([^"]+)".*/\1/')
+INSTALLED_FORMULAE="$(brew list --formula -1 2>/dev/null)"
+INSTALLED_CASKS="$(brew list --cask -1 2>/dev/null)"
+OUTDATED_ALL="$(brew outdated --quiet 2>/dev/null)"
+
+MISSING_PKGS=()
+OUTDATED_PKGS=()
+for f in "${WANT_FORMULAE[@]}"; do
+    if ! grep -qxF "$f" <<< "$INSTALLED_FORMULAE"; then
+        MISSING_PKGS+=("$f (formula)")
+    elif grep -qxF "$f" <<< "$OUTDATED_ALL"; then
+        OUTDATED_PKGS+=("$f")
     fi
+done
+for c in "${WANT_CASKS[@]}"; do
+    if ! grep -qxF "$c" <<< "$INSTALLED_CASKS"; then
+        MISSING_PKGS+=("$c (cask)")
+    elif grep -qxF "$c" <<< "$OUTDATED_ALL"; then
+        OUTDATED_PKGS+=("$c")
+    fi
+done
+
+if [ "${#MISSING_PKGS[@]}" -gt 0 ]; then
+    for p in "${MISSING_PKGS[@]}"; do
+        echo -e "  ${RED}MISSING${RESET}  $p"
+    done
     DRIFTED=1
+else
+    echo -e "  ${GREEN}All packages installed.${RESET}"
+fi
+if [ "${#OUTDATED_PKGS[@]}" -gt 0 ]; then
+    # Informational only — outdated is not drift. Run 'brew bundle install'.
+    echo -e "  ${YELLOW}OUTDATED${RESET} ${#OUTDATED_PKGS[@]} (update with 'brew bundle install'): ${OUTDATED_PKGS[*]}"
 fi
 
 # Check binaries the configs shell out to
