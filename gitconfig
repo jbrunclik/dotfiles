@@ -11,6 +11,7 @@
     navigate = true
     dark = true
     line-numbers = true
+    side-by-side = true
     syntax-theme = Catppuccin Mocha
 
 [push]
@@ -33,3 +34,16 @@
 
 [diff]
     algorithm = histogram
+
+[commit]
+    verbose = true
+
+[rebase]
+    autosquash = true
+    autostash = true
+
+[branch]
+    sort = -committerdate
+
+[column]
+    ui = auto

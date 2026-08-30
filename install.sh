@@ -110,5 +110,7 @@ echo -e "    - Preferences → Themes → Create custom theme, paste:"
 echo -e "    - #1E1E2E,#F8F8FA,#CBA6F7,#1E1E2E,#11111B,#CDD6F4,#CBA6F7,#EBA0AC,#1E1E2E,#CDD6F4"
 warn "Set btop theme:"
 echo -e "    - Launch btop → Esc → Options → set color theme to catppuccin_mocha"
+warn "Enable background git maintenance (per machine, one-time):"
+echo -e "    - Run 'git maintenance start' inside your large repos for near-instant fetch/status"
 
 echo -e "\n${BOLD}${GREEN}==> Done!${RESET} Open a new terminal tab to apply changes."

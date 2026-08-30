@@ -20,6 +20,10 @@ window-padding-color = extend
 macos-titlebar-style = tabs
 window-width = 140
 window-height = 40
+# Restore splits and tabs after a restart or reboot
+window-save-state = always
+# Treat Option as Meta so Alt readline bindings (Alt+B/F/D/., fzf Alt+C) work
+macos-option-as-alt = true
 
 # --- Background ---
 background-opacity = 1

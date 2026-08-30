@@ -13,6 +13,8 @@ HISTSIZE=50000
 HISTFILESIZE=100000
 HISTCONTROL=ignoreboth:erasedups
 shopt -s histappend
+# Flush each command to the history file immediately so parallel tabs share it
+PROMPT_COMMAND='history -a'
 
 # Shell options
 shopt -s cdspell 2>/dev/null
