@@ -52,6 +52,7 @@ REQUIRED_BINS=(
     "eslint_d|nvim-lint linter for ts/js"
     "ruff|Python lint + format"
     "uv|Python packaging"
+    "gitleaks|secret scanning in the global pre-commit hook"
 )
 
 # Files that must exist locally but are deliberately not in the repo.

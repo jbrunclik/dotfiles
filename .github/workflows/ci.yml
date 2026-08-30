@@ -18,7 +18,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y shellcheck lua5.4 jq python3-yaml
 
       - name: Shellcheck
-        run: shellcheck install.sh drift.sh gh-new-repo lib/links.sh
+        run: shellcheck install.sh drift.sh gh-new-repo lib/links.sh config/git/hooks/pre-commit
 
       - name: Lua syntax
         run: find config/nvim -name '*.lua' -print0 | xargs -0 -n1 luac5.4 -p

@@ -53,6 +53,11 @@ brew "httpie"
 # GitHub
 brew "gh"
 
+# Security
+# Secret scanner invoked by the global pre-commit hook (core.hooksPath in
+# gitconfig → config/git/hooks/pre-commit).
+brew "gitleaks"
+
 # Other essentials
 brew "glow"
 brew "lazygit"

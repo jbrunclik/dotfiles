@@ -3,6 +3,9 @@
 
 [core]
     pager = delta
+    # Global secret-scanning pre-commit hook. Tilde-expanded by git; assumes
+    # the repo lives at ~/src/dotfiles as documented in the README.
+    hooksPath = ~/src/dotfiles/config/git/hooks
 
 [interactive]
     diffFilter = delta --color-only
