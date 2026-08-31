@@ -18,9 +18,10 @@ $golang\
 $nodejs\
 $python\
 $docker_context\
-[ ](fg:surface2)\
-$cmd_duration\
+[](fg:surface2 bg:surface1)\
 $battery\
+[](fg:surface1)\
+$cmd_duration\
 $line_break\
 $character"""
 
@@ -92,10 +93,11 @@ min_time = 3_000
 format = " in $duration "
 
 [battery]
-# Always visible as a glanceable charge indicator (thresholds up to 100 match
-# any level). Colour grades red → yellow → green; nerd-font glyphs from Maple
-# Mono NF. Plain style to sit beside $cmd_duration, off the powerline.
-format = '[ $symbol$percentage ]($style)'
+# Final powerline segment, completing the mauve → … → surface2 → surface1
+# gradient. Always visible as a glanceable charge indicator (thresholds up to
+# 100 match any level). Foreground grades red → yellow → green over the
+# surface1 background; nerd-font glyphs from Maple Mono NF.
+format = '[ $symbol $percentage ]($style)'
 full_symbol = '󰁹'
 charging_symbol = '󰂄'
 discharging_symbol = '󰂃'
@@ -104,15 +106,15 @@ empty_symbol = '󰂎'
 
 [[battery.display]]
 threshold = 20
-style = 'bold fg:red'
+style = 'bold fg:red bg:surface1'
 
 [[battery.display]]
 threshold = 50
-style = 'fg:yellow'
+style = 'fg:yellow bg:surface1'
 
 [[battery.display]]
 threshold = 100
-style = 'fg:green'
+style = 'fg:green bg:surface1'
 
 [character]
 success_symbol = '[❯](bold fg:green)'
