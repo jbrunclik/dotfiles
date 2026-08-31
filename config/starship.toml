@@ -20,6 +20,7 @@ $python\
 $docker_context\
 [ ](fg:surface2)\
 $cmd_duration\
+$battery\
 $line_break\
 $character"""
 
@@ -89,6 +90,29 @@ format = '[[ $symbol( $context) ](fg:sky bg:surface2)]($style)'
 [cmd_duration]
 min_time = 3_000
 format = " in $duration "
+
+[battery]
+# Always visible as a glanceable charge indicator (thresholds up to 100 match
+# any level). Colour grades red → yellow → green; nerd-font glyphs from Maple
+# Mono NF. Plain style to sit beside $cmd_duration, off the powerline.
+format = '[ $symbol$percentage ]($style)'
+full_symbol = '󰁹'
+charging_symbol = '󰂄'
+discharging_symbol = '󰂃'
+unknown_symbol = '󰁽'
+empty_symbol = '󰂎'
+
+[[battery.display]]
+threshold = 20
+style = 'bold fg:red'
+
+[[battery.display]]
+threshold = 50
+style = 'fg:yellow'
+
+[[battery.display]]
+threshold = 100
+style = 'fg:green'
 
 [character]
 success_symbol = '[❯](bold fg:green)'
