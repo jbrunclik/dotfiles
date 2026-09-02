@@ -20,6 +20,7 @@ LINKS=(
     "config/ghostty/config|$HOME/.config/ghostty/config"
     "config/nvim|$HOME/.config/nvim"
     "config/starship.toml|$HOME/.config/starship.toml"
+    "config/mise/config.toml|$HOME/.config/mise/config.toml"
     "config/ccstatusline/settings.json|$HOME/.config/ccstatusline/settings.json"
     "config/claude/CLAUDE.md|$HOME/.claude/CLAUDE.md"
     "config/bat/config|$HOME/.config/bat/config"

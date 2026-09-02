@@ -1,0 +1,10 @@
+# Global runtime versions. mise is activated from bash_profile and its shims
+# take precedence over /opt/homebrew/bin, so these are what node/go/java
+# resolve to — Homebrew no longer carries a copy of any of them.
+#
+# "latest" rather than pinned versions, matching the same stay-current choice
+# as the gitignored nvim lazy-lock.json.
+[tools]
+go = "latest"
+java = "latest"
+node = "latest"
