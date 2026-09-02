@@ -1,0 +1,27 @@
+# Catppuccin Mocha, matching the palette in config/starship.toml. Mauve is the
+# accent everywhere else in this setup (macOS accent color, ccstatusline), so
+# it's the active border here too.
+#
+# lazygit reads this from ~/Library/Application Support/lazygit on macOS, not
+# ~/.config — see `lazygit --print-config-dir`.
+gui:
+  theme:
+    activeBorderColor:
+      - "#cba6f7" # mauve
+      - bold
+    inactiveBorderColor:
+      - "#a6adc8" # subtext0
+    searchingActiveBorderColor:
+      - "#f9e2af" # yellow
+    optionsTextColor:
+      - "#89b4fa" # blue
+    selectedLineBgColor:
+      - "#313244" # surface0
+    cherryPickedCommitBgColor:
+      - "#45475a" # surface1
+    cherryPickedCommitFgColor:
+      - "#cba6f7" # mauve
+    unstagedChangesColor:
+      - "#f38ba8" # red
+    defaultFgColor:
+      - "#cdd6f4" # text
