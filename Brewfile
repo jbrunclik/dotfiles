@@ -8,6 +8,10 @@ brew "fzf"
 brew "starship"
 brew "zoxide"
 brew "mise"
+# Shell-script linter. CI runs it on install.sh, drift.sh, gh-new-repo,
+# lib/links.sh and the pre-commit hook — track it so the same lint is
+# reproducible locally before pushing.
+brew "shellcheck"
 
 # Editor
 brew "neovim"
@@ -56,8 +60,13 @@ brew "git-delta"
 brew "jq"
 brew "httpie"
 
-# GitHub
+# Git + GitHub
 brew "gh"
+# core.hooksPath (gitconfig) makes git ignore every repo's .git/hooks, so
+# git-lfs's hooks live in config/git/hooks and run for EVERY repo. They
+# abort with exit 2 when git-lfs is absent, which would brick git on a
+# fresh machine — hence tracked here and in REQUIRED_BINS.
+brew "git-lfs"
 
 # Security
 # Secret scanner invoked by the global pre-commit hook (core.hooksPath in

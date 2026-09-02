@@ -53,6 +53,7 @@ REQUIRED_BINS=(
     "ruff|Python lint + format"
     "uv|Python packaging"
     "gitleaks|secret scanning in the global pre-commit hook"
+    "git-lfs|git-lfs hooks in the global hooksPath; they exit 2 without it"
 )
 
 # Files that must exist locally but are deliberately not in the repo.
