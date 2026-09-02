@@ -24,6 +24,11 @@ cask "karabiner-elements"
 cask "hammerspoon"
 cask "maccy"
 
+# macOS utilities
+cask "alt-tab"
+cask "aldente"
+cask "scroll-reverser"
+
 # Screenshots
 cask "shottr"
 
@@ -60,6 +65,13 @@ brew "git-delta"
 brew "jq"
 brew "httpie"
 
+# Network
+brew "wget"
+brew "mosh"
+# Installs to /opt/homebrew/sbin (on PATH via brew shellenv); needs sudo to
+# open the raw sockets it traces with.
+brew "mtr"
+
 # Git + GitHub
 brew "gh"
 # core.hooksPath (gitconfig) makes git ignore every repo's .git/hooks, so
@@ -72,6 +84,11 @@ brew "git-lfs"
 # Secret scanner invoked by the global pre-commit hook (core.hooksPath in
 # gitconfig → config/git/hooks/pre-commit).
 brew "gitleaks"
+cask "1password"
+# Lets ~/.bash_profile.local pull secrets at shell start with `op read`
+# instead of storing them in plaintext.
+cask "1password-cli"
+brew "pwgen"
 
 # Other essentials
 brew "glow"
