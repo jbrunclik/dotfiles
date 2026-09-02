@@ -79,6 +79,9 @@ brew "gh"
 # abort with exit 2 when git-lfs is absent, which would brick git on a
 # fresh machine — hence tracked here and in REQUIRED_BINS.
 brew "git-lfs"
+# Rewrites history across every commit — the cleanup half of the gitleaks
+# guardrail, for when a secret gets past it into a published repo.
+brew "git-filter-repo"
 
 # Security
 # Secret scanner invoked by the global pre-commit hook (core.hooksPath in
