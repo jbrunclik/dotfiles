@@ -24,6 +24,8 @@ cask "maccy"
 cask "shottr"
 
 # AI
+# The desktop app. Self-updating, so Homebrew only bootstraps it.
+cask "claude"
 # @latest ships every Claude Code release; the plain `claude-code` cask is the
 # slower stable channel. Both provide the same `claude` binary, so a machine
 # still on the old one has to drop it first:
