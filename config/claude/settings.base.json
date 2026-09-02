@@ -7,7 +7,7 @@
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,
   "permissions": {
-    "defaultMode": "default"
+    "defaultMode": "auto"
   },
   "statusLine": {
     "type": "command",

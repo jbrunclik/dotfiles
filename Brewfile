@@ -24,7 +24,11 @@ cask "maccy"
 cask "shottr"
 
 # AI
-cask "claude-code"
+# @latest ships every Claude Code release; the plain `claude-code` cask is the
+# slower stable channel. Both provide the same `claude` binary, so a machine
+# still on the old one has to drop it first:
+#   brew uninstall --cask claude-code
+cask "claude-code@latest"
 
 # Python
 brew "uv"
