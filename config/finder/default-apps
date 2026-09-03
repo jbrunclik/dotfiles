@@ -1,0 +1,116 @@
+# Finder "open with" defaults per file type. Applied by set-default-apps.swift
+# from install.sh; drift.sh runs the same tool with --check.
+# Format: <bundle id>  <.extension or UTI>
+#
+# macOS asks "Do you want all documents with the extension … to open with …?"
+# for every type that actually changes — no supported API avoids that. The tool
+# skips types already pointing at the right app, so re-runs are silent, and it
+# applies changes one at a time so you get one dialog at a time, not a stack.
+#
+# Only types the target app declares in its Info.plist can be assigned to it.
+# That is why e.g. .env, .tf, .jsonc and .pem are absent — VS Code does not
+# declare them, and LaunchServices refuses the assignment.
+#
+# Left alone on purpose: images/PDF → Preview, .psd → GIMP, .svg/.html →
+# browser, .csv/.xlsx → Numbers, .docx → Pages, .zip/.tar → Archive Utility.
+
+# --- Text, docs and config → VS Code -----------------------------------------
+# Out of the box these land in TextEdit, Notion, Claude Desktop and Cursor.
+com.microsoft.VSCode        .txt
+com.microsoft.VSCode        .md
+com.microsoft.VSCode        .markdown
+com.microsoft.VSCode        .rst
+com.microsoft.VSCode        .tex
+com.microsoft.VSCode        .log
+com.microsoft.VSCode        .json
+com.microsoft.VSCode        .yaml
+com.microsoft.VSCode        .yml
+com.microsoft.VSCode        .toml
+com.microsoft.VSCode        .xml
+com.microsoft.VSCode        .ini
+com.microsoft.VSCode        .cfg
+com.microsoft.VSCode        .properties
+com.microsoft.VSCode        .plist
+com.microsoft.VSCode        .lock
+com.microsoft.VSCode        .editorconfig
+com.microsoft.VSCode        .gitignore
+com.microsoft.VSCode        .gitattributes
+com.microsoft.VSCode        .gitconfig
+com.microsoft.VSCode        .code-workspace
+
+# --- Shell scripts → VS Code -------------------------------------------------
+# Ghostty owns .sh/.zsh by default, so double-click *executes* the script.
+com.microsoft.VSCode        .sh
+com.microsoft.VSCode        .bash
+com.microsoft.VSCode        .zsh
+com.microsoft.VSCode        .bashrc
+com.microsoft.VSCode        .bash_profile
+com.microsoft.VSCode        .zshrc
+com.microsoft.VSCode        .zshenv
+com.microsoft.VSCode        .profile
+
+# --- Source code → VS Code ---------------------------------------------------
+# .js/.mjs go to Chrome by default, which just shows the source as text.
+com.microsoft.VSCode        .py
+com.microsoft.VSCode        .pyi
+com.microsoft.VSCode        .ipynb
+com.microsoft.VSCode        .rb
+com.microsoft.VSCode        .js
+com.microsoft.VSCode        .mjs
+com.microsoft.VSCode        .cjs
+com.microsoft.VSCode        .ts
+com.microsoft.VSCode        .tsx
+com.microsoft.VSCode        .jsx
+com.microsoft.VSCode        .vue
+com.microsoft.VSCode        .go
+com.microsoft.VSCode        .rs
+com.microsoft.VSCode        .java
+com.microsoft.VSCode        .gradle
+com.microsoft.VSCode        .swift
+com.microsoft.VSCode        .c
+com.microsoft.VSCode        .h
+com.microsoft.VSCode        .cc
+com.microsoft.VSCode        .cpp
+com.microsoft.VSCode        .hpp
+com.microsoft.VSCode        .lua
+com.microsoft.VSCode        .sql
+com.microsoft.VSCode        .css
+com.microsoft.VSCode        .scss
+com.microsoft.VSCode        .sass
+com.microsoft.VSCode        .less
+com.microsoft.VSCode        .dockerfile
+com.microsoft.VSCode        .containerfile
+com.microsoft.VSCode        .makefile
+com.microsoft.VSCode        .mk
+com.microsoft.VSCode        .cmake
+com.microsoft.VSCode        .diff
+
+# --- Images → Preview --------------------------------------------------------
+# GIMP grabs HEIC and camera RAW on install; Preview decodes both natively
+# and opens instantly. GIMP keeps .psd, where it is the better tool.
+com.apple.Preview           .heic
+com.apple.Preview           .dng
+com.apple.Preview           .raw
+
+# --- Audio and video → IINA --------------------------------------------------
+# QuickTime cannot play .mkv/.webm/.ogg/.opus; Music imports a double-clicked
+# .mp3 into the library instead of just playing it; Books somehow owns .aac.
+# One native player for everything.
+com.colliderli.iina         .mp4
+com.colliderli.iina         .mov
+com.colliderli.iina         .mkv
+com.colliderli.iina         .avi
+com.colliderli.iina         .webm
+com.colliderli.iina         .m4v
+com.colliderli.iina         .mp3
+com.colliderli.iina         .m4a
+com.colliderli.iina         .aac
+com.colliderli.iina         .wav
+com.colliderli.iina         .flac
+com.colliderli.iina         .ogg
+com.colliderli.iina         .opus
+
+# --- Archives → The Unarchiver ------------------------------------------------
+# Archive Utility keeps .zip/.tar/.gz; it cannot open these two at all.
+com.macpaw.site.theunarchiver .rar
+com.macpaw.site.theunarchiver .7z

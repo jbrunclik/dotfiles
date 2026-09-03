@@ -56,6 +56,17 @@ header "Setting macOS accent color (Catppuccin Mocha mauve #cba6f7)"
 defaults write -globalDomain AppleAccentColor -int 5
 defaults write -globalDomain AppleHighlightColor -string "0.796078 0.650980 0.968627 Purple"
 
+# Finder "open with" defaults. Each type that actually changes gets a macOS
+# consent dialog (no API avoids it); already-correct types are skipped, so this
+# only prompts on first run or after drift. See config/finder/default-apps.
+header "Setting Finder default apps"
+if command -v swiftc &>/dev/null; then
+    # shellcheck disable=SC2119
+    set_default_apps || warn "some default apps were not set — see above"
+else
+    warn "swiftc not found — skipping Finder default apps (install Xcode Command Line Tools)"
+fi
+
 header "Building bat theme cache"
 bat cache --build
 

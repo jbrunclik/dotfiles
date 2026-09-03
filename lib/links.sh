@@ -63,3 +63,13 @@ LOCAL_FILES=(
     "$HOME/.gitconfig.local"
     "$HOME/.ssh/config.local"
 )
+
+# Compiles config/finder/set-default-apps.swift into a temp dir and runs it
+# against config/finder/default-apps. Pass --check to report drift only.
+set_default_apps() {
+    local bin
+    bin="$(mktemp -d)/set-default-apps"
+    swiftc -O -o "$bin" "$DOTFILES/config/finder/set-default-apps.swift" 2>/dev/null \
+        || { echo "  failed to compile set-default-apps.swift" >&2; return 1; }
+    "$bin" "$@" "$DOTFILES/config/finder/default-apps"
+}

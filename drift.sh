@@ -156,6 +156,15 @@ else
     echo -e "  ${YELLOW}SKIPPED${RESET} ('nvim' not in PATH)"
 fi
 
+# Check Finder default apps
+echo ""
+header "Finder default apps:"
+if command -v swiftc &>/dev/null; then
+    set_default_apps --check || DRIFTED=1
+else
+    echo -e "  ${YELLOW}SKIP${RESET}     swiftc not found"
+fi
+
 # Check VS Code extensions
 echo ""
 header "VS Code extensions:"

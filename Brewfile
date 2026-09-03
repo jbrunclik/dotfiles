@@ -28,6 +28,10 @@ cask "maccy"
 cask "alt-tab"
 cask "aldente"
 cask "scroll-reverser"
+# Archive Utility cannot open .rar or .7z
+cask "the-unarchiver"
+# Native mpv-based player; QuickTime cannot open .mkv/.webm/.ogg
+cask "iina"
 
 # Screenshots
 cask "shottr"

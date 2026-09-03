@@ -279,6 +279,34 @@ Settings are symlinked from the dotfiles repo. Key features:
 Extensions are managed via `config/vscode/extensions.txt` and installed
 by `./install.sh`.
 
+## Finder default apps
+
+`config/finder/default-apps` lists which app opens which file type; `./install.sh`
+applies it and `./drift.sh` reports anything that has drifted. Text, config and
+source files go to VS Code (out of the box they land in TextEdit, Notion, Claude
+Desktop, Cursor, or Ghostty — which *executes* a double-clicked `.sh`). HEIC and
+camera RAW go to Preview instead of GIMP; audio and video go to IINA (QuickTime
+cannot play `.mkv` or `.webm`, and Music imports a double-clicked `.mp3` into the
+library); `.rar` and `.7z` go to The Unarchiver.
+
+Two things to know:
+
+- macOS shows a "Do you want all documents with the extension … to open with …?"
+  dialog for every type that actually changes. No supported API avoids it. Types
+  already set correctly are skipped, so it only happens on first run or after
+  something else claims a type.
+- An app can only be assigned types it declares in its `Info.plist`. `.env`, `.tf`
+  or `.jsonc` cannot be sent to VS Code because VS Code does not declare them.
+  Check what an app declares with:
+
+  ```bash
+  plutil -convert json -o - "/Applications/Visual Studio Code.app/Contents/Info.plist" \
+    | jq -r '.CFBundleDocumentTypes[].CFBundleTypeExtensions[]?' | sort -u
+  ```
+
+To add a type, append `<bundle id>  .<ext>` to the list. Find a bundle id with
+`osascript -e 'id of app "Preview"'`.
+
 ## Git
 
 ### Delta pager
