@@ -8,3 +8,6 @@
 go = "latest"
 java = "latest"
 node = "latest"
+# Claude Code status line. Installed once rather than `npx -y ccstatusline@latest`,
+# which spawned npm + a registry check on every refresh in every session.
+"npm:ccstatusline" = "latest"
