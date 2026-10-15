@@ -64,6 +64,10 @@ defaults write -globalDomain KeyRepeat -int 2
 defaults write -globalDomain InitialKeyRepeat -int 15
 defaults write -globalDomain ApplePressAndHoldEnabled -bool false
 
+# Picked up the next time Finder starts (logout, or `killall Finder`)
+header "Showing all file extensions in Finder"
+defaults write -globalDomain AppleShowAllExtensions -bool true
+
 # Finder "open with" defaults. Each type that actually changes gets a macOS
 # consent dialog (no API avoids it); already-correct types are skipped, so this
 # only prompts on first run or after drift. See config/finder/default-apps.
