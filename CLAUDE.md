@@ -47,6 +47,9 @@ works this way and what to watch out for, not only the key.
   in the foreground, it hangs. Never memoize window state — derive it from live
   positions. Use `hs.alert` only for state feedback (mute, errors), not routine
   actions.
+  Bind Hyper keys with `bindHyper(key, section, description, fn)`, and write
+  Karabiner rule descriptions as `[App: ]Hyper+<keys> → <action>`: the
+  hold-Hyper cheatsheet is generated from both.
 - **Ghostty** doesn't watch its config: Cmd+Shift+, (or the Ghostty >
   Reload Configuration menu) before testing in a new tab. Validate with
   `/Applications/Ghostty.app/Contents/MacOS/ghostty +validate-config`.

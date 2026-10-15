@@ -7,6 +7,14 @@ require("hs.ipc")
 
 local hyper = { "cmd", "alt", "ctrl", "shift" }
 
+-- Every Hyper binding goes through bindHyper so the cheatsheet (hold Hyper
+-- alone) lists it. Entries keep bind order; sections appear in first-use order.
+local cheatsheet = {}
+local function bindHyper(key, section, desc, fn)
+    table.insert(cheatsheet, { key = key, section = section, desc = desc })
+    hs.hotkey.bind(hyper, key, fn)
+end
+
 -- Find the best window for an app (handles Zoom's multiple windows)
 local function bestWindow(appName)
     local app = hs.application.get(appName)
@@ -118,13 +126,13 @@ local function tilePair(leftApp, rightApp)
 end
 
 -- Layouts (bottom row: Z, X, C, V)
-hs.hotkey.bind(hyper, "z", function() tilePair("Ghostty", "Dia") end)
-hs.hotkey.bind(hyper, "x", function() tilePair("zoom.us", "Notion") end)
-hs.hotkey.bind(hyper, "c", function() tilePair("zoom.us", "Slack") end)
-hs.hotkey.bind(hyper, "v", function() tilePair("zoom.us", "Dia") end)
+bindHyper("z", "Layouts", "Ghostty | Dia (again: swap focus)", function() tilePair("Ghostty", "Dia") end)
+bindHyper("x", "Layouts", "Zoom | Notion", function() tilePair("zoom.us", "Notion") end)
+bindHyper("c", "Layouts", "Zoom | Slack", function() tilePair("zoom.us", "Slack") end)
+bindHyper("v", "Layouts", "Zoom | Dia", function() tilePair("zoom.us", "Dia") end)
 
 -- Hyper+Tab = toggle focus between left and right windows
-hs.hotkey.bind(hyper, "tab", function()
+bindHyper("tab", "Windows", "Focus the other half", function()
     local screen = hs.screen.mainScreen()
     local mid = screen:frame().w / 2
     local current = hs.window.focusedWindow()
@@ -141,14 +149,14 @@ hs.hotkey.bind(hyper, "tab", function()
 end)
 
 -- Hyper+Left/Right = focus window in that direction
-hs.hotkey.bind(hyper, "left", function()
+bindHyper("left", "Windows", "Focus left half", function()
     local wins = hs.fnutils.filter(hs.window.orderedWindows(), function(w)
         return w:frame().x < hs.screen.mainScreen():frame().w / 2
     end)
     if wins[1] then wins[1]:focus() end
 end)
 
-hs.hotkey.bind(hyper, "right", function()
+bindHyper("right", "Windows", "Focus right half", function()
     local wins = hs.fnutils.filter(hs.window.orderedWindows(), function(w)
         return w:frame().x >= hs.screen.mainScreen():frame().w / 2
     end)
@@ -156,38 +164,40 @@ hs.hotkey.bind(hyper, "right", function()
 end)
 
 -- Hyper+F = toggle native fullscreen
-hs.hotkey.bind(hyper, "f", function()
+bindHyper("f", "Windows", "Toggle native fullscreen", function()
     local win = hs.window.focusedWindow()
     if win then win:toggleFullScreen() end
 end)
 
 -- Hyper+ASD = tile left / maximize / tile right
-hs.hotkey.bind(hyper, "a", function()
+bindHyper("a", "Windows", "Tile left half", function()
     local win = hs.window.focusedWindow()
     if win then win:move(left) end
 end)
 
-hs.hotkey.bind(hyper, "d", function()
+bindHyper("d", "Windows", "Tile right half", function()
     local win = hs.window.focusedWindow()
     if win then win:move(right) end
 end)
 
-hs.hotkey.bind(hyper, "s", function()
+bindHyper("s", "Windows", "Maximize", function()
     local win = hs.window.focusedWindow()
     if win then win:maximize() end
 end)
 
--- Hyper+1-6 = focus app (repeat to maximize)
+-- Hyper+1-6 = focus app (repeat to maximize). Third field: cheatsheet label
+-- when the process name isn't the one people say.
 local appKeys = {
     { "1", "Ghostty" },
     { "2", "Dia" },
-    { "3", "Google Chrome" },
+    { "3", "Google Chrome", "Chrome" },
     { "4", "Slack" },
     { "5", "Notion" },
-    { "6", "zoom.us" },
+    { "6", "zoom.us", "Zoom" },
 }
 for _, binding in ipairs(appKeys) do
-    hs.hotkey.bind(hyper, binding[1], function()
+    local label = (binding[3] or binding[2]) .. (binding[1] == "1" and " (again: maximize)" or "")
+    bindHyper(binding[1], "Apps", label, function()
         local app = hs.application.get(binding[2])
         if app and app:isFrontmost() then
             local win = app:mainWindow()
@@ -214,7 +224,7 @@ local function isZoomMuted()
 end
 
 -- Hyper+M = toggle Zoom mute (works from any app, no focus switch)
-hs.hotkey.bind(hyper, "m", function()
+bindHyper("m", "Zoom", "Mute / unmute (from any app)", function()
     local zoom = hs.application.get("zoom.us")
     if not zoom then
         hs.alert.show("\u{1F4F5} Zoom not running")
@@ -239,7 +249,7 @@ hs.hotkey.bind(hyper, "m", function()
 end)
 
 -- Reload config
-hs.hotkey.bind(hyper, "r", function()
+bindHyper("r", "Hammerspoon", "Reload config (saving a .lua file also does)", function()
     hs.reload()
 end)
 
@@ -254,6 +264,117 @@ configWatcher = hs.pathwatcher.new(configDir, function(paths)
             return
         end
     end
+end):start()
+
+-- Cheatsheet: hold Hyper alone for a moment to list every Hyper binding;
+-- release it or press any key to hide. Hammerspoon bindings come from the
+-- bindHyper registry, Karabiner remaps from karabiner.json's rule descriptions
+-- (any rule written "[App: ]Hyper+<keys> → <action>"), so nothing is listed by
+-- hand.
+local keyLabels = { tab = "Tab", left = "←", right = "→" }
+
+local function karabinerEntries()
+    local config = hs.json.read(configDir .. "/../karabiner/karabiner.json")
+    local entries = {}
+    if not config then return entries end
+    for _, rule in ipairs(config.profiles[1].complex_modifications.rules) do
+        local app, keys, action = rule.description:match("^(.-)Hyper%+(%S+) → (.-)%s*%b()$")
+        if not keys then
+            app, keys, action = rule.description:match("^(.-)Hyper%+(%S+) → (.+)$")
+        end
+        if keys then
+            app = app:gsub(":%s*$", "")
+            table.insert(entries, {
+                key = keys,
+                desc = action:gsub("^%l", string.upper) .. (app ~= "" and " (" .. app .. ")" or ""),
+            })
+        end
+    end
+    return entries
+end
+
+local function cheatsheetText()
+    local font = { name = "Maple Mono NF", size = 15 }
+    local mocha = {
+        text = { hex = "#cdd6f4" }, key = { hex = "#cba6f7" },
+        section = { hex = "#89b4fa" }, dim = { hex = "#7f849c" },
+    }
+    local out = hs.styledtext.new("")
+    local function add(str, color)
+        out = out .. hs.styledtext.new(str, { font = font, color = color })
+    end
+    local function entry(key, desc)
+        local label = keyLabels[key] or key:upper()
+        -- Pad by characters, not bytes: "←" is three bytes in UTF-8
+        add("  " .. label .. string.rep(" ", 8 - utf8.len(label)), mocha.key)
+        add(desc .. "\n", mocha.text)
+    end
+
+    local order, bySection = {}, {}
+    for _, e in ipairs(cheatsheet) do
+        if not bySection[e.section] then
+            bySection[e.section] = {}
+            table.insert(order, e.section)
+        end
+        table.insert(bySection[e.section], e)
+    end
+    for _, name in ipairs(order) do
+        add(name .. "\n", mocha.section)
+        for _, e in ipairs(bySection[name]) do entry(e.key, e.desc) end
+        add("\n", mocha.text)
+    end
+    local remaps = karabinerEntries()
+    if #remaps > 0 then
+        add("Karabiner\n", mocha.section)
+        for _, e in ipairs(remaps) do entry(e.key, e.desc) end
+        add("\n", mocha.text)
+    end
+    add("Release Hyper to close", mocha.dim)
+    return out
+end
+
+local sheet
+local function showCheatsheet()
+    local text = cheatsheetText()
+    local size = hs.drawing.getTextDrawingSize(text)
+    local pad = 28
+    local w, h = size.w + 2 * pad, size.h + 2 * pad
+    local f = hs.screen.mainScreen():frame()
+    sheet = hs.canvas.new({ x = f.x + (f.w - w) / 2, y = f.y + (f.h - h) / 2, w = w, h = h })
+    sheet:appendElements(
+        {
+            type = "rectangle", action = "strokeAndFill",
+            fillColor = { hex = "#1e1e2e", alpha = 0.97 },
+            strokeColor = { hex = "#cba6f7" }, strokeWidth = 2,
+            roundedRectRadii = { xRadius = 12, yRadius = 12 },
+        },
+        { type = "text", text = text, frame = { x = pad, y = pad, w = size.w + 4, h = size.h } }
+    )
+    sheet:level(hs.canvas.windowLevels.overlay):show()
+end
+
+local function hideCheatsheet()
+    if sheet then sheet:delete(); sheet = nil end
+end
+
+-- Show after Hyper (all four modifiers, nothing else) has been held 1.2 s with
+-- no key pressed, so normal chords never flash it. Globals so neither the tap
+-- nor the timer is garbage-collected.
+local types = hs.eventtap.event.types
+cheatsheetTimer = nil
+cheatsheetTap = hs.eventtap.new({ types.flagsChanged, types.keyDown }, function(e)
+    local m = e:getFlags()
+    local hyperOnly = m.cmd and m.alt and m.ctrl and m.shift
+    if e:getType() == types.keyDown or not hyperOnly then
+        if cheatsheetTimer then cheatsheetTimer:stop(); cheatsheetTimer = nil end
+        hideCheatsheet()
+    elseif not cheatsheetTimer and not sheet then
+        cheatsheetTimer = hs.timer.doAfter(1.2, function()
+            cheatsheetTimer = nil
+            showCheatsheet()
+        end)
+    end
+    return false
 end):start()
 
 hs.alert.show("\u{1F528} Hammerspoon loaded")

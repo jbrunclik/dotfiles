@@ -446,13 +446,22 @@ Things to know:
   (~3 min). `ssh -O exit <host>` fixes it right away.
 - Everything to one host shares one connection: a big `scp` slows an
   interactive session there, and if it drops, they all drop.
-- A second `ssh` to a host reuses the first connection's settings, so options
-  like agent forwarding added later are ignored until the shared one closes.
+- **Agent forwarding follows the first connection.** If the shared connection
+  was opened without forwarding — a host reached by IP that doesn't match its
+  `Host` block, or a tool that passes its own options — every later `ssh -A`
+  to that host gets no agent for up to 10 minutes. Symptom:
+  `ssh -A <host> 'echo $SSH_AUTH_SOCK'` prints nothing while the same host
+  over another address works. Fix: `ssh -O exit <host>`, and make sure the
+  `Host` line lists every name and IP you use (`Host myserver 192.168.1.10`).
+- A shared connection also keeps the local agent it started with. After
+  switching agents (e.g. to 1Password's), close open ones with `ssh -O exit`.
 
 ## Hyper key
 
 Hyper (Cmd+Option+Ctrl+Shift) is a dedicated modifier that doesn't
-conflict with any app shortcuts. It's triggered by:
+conflict with any app shortcuts. **Hold Hyper on its own for a moment to see a
+cheatsheet of every Hyper binding**; release it (or press any key) to close.
+It's triggered by:
 
 | Keyboard | Key | Config |
 |---|---|---|
@@ -471,6 +480,17 @@ Holding CapsLock and letting go without pressing anything sends nothing once
 250 ms have passed, so an abandoned Hyper chord doesn't delete a character.
 The catch: a Hyper chord started within 250 ms of a Backspace tap becomes
 Backspace instead.
+
+### Cheatsheet
+
+Holding Hyper alone for 1.2 s opens an overlay listing every binding below.
+Quick chords never trigger it: any key pressed within 1.2 s cancels it. The list
+is generated, not written by hand:
+
+- Hammerspoon bindings come from `bindHyper(key, section, description, fn)` in
+  `init.lua` — a binding made with plain `hs.hotkey.bind` won't appear.
+- Karabiner remaps come from `karabiner.json` rule descriptions written as
+  `[App: ]Hyper+<keys> → <action>`; a trailing `(…)` note is left out.
 
 ### Navigation (Karabiner)
 
@@ -597,10 +617,12 @@ Use the OCR button to extract text from any screenshot.
 ### Adding a new layout
 
 Edit `config/hammerspoon/init.lua` and bind a key to `tilePair(leftApp, rightApp)`.
-Use the app's exact name as macOS reports it (`Ghostty`, `zoom.us`, `Google Chrome`):
+Use the app's exact name as macOS reports it (`Ghostty`, `zoom.us`, `Google Chrome`).
+Bind through `bindHyper(key, section, description, fn)` rather than
+`hs.hotkey.bind`, so the binding shows up in the cheatsheet:
 
 ```lua
-hs.hotkey.bind(hyper, "g", function() tilePair("Figma", "Google Chrome") end)
+bindHyper("g", "Layouts", "Figma | Chrome", function() tilePair("Figma", "Google Chrome") end)
 ```
 
 Pick a key that isn't already bound — the bottom row `Z`/`X`/`C`/`V` holds the
