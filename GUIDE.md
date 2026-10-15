@@ -500,8 +500,18 @@ is generated, not written by hand:
 | Hyper + J | Down arrow |
 | Hyper + K | Up arrow |
 | Hyper + L | Right arrow |
+| Hyper + U / I | Page up / Page down |
+| Hyper + O / P | Line start / end (Cmd+Left/Right) |
+| Hyper + B / W | Word back / forward (Option+Left/Right) |
+| Hyper + Backspace | Forward delete |
 
 Works system-wide: Slack, Notion, Chrome, Ghostty, etc.
+
+O/P send Cmd+Left/Right rather than Home/End: in most Mac apps Home/End scroll to
+the top or bottom of the document instead of moving within the line. In
+Ghostty, Cmd+Left/Right and Option+Left/Right are already mapped to the shell's
+line-start/end and word motions, so the whole layer works in the terminal too.
+There's no Shift+ variant for selecting: Hyper already includes Shift.
 
 ### Ghostty tabs (Karabiner)
 
