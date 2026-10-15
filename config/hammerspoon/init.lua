@@ -9,10 +9,24 @@ local hyper = { "cmd", "alt", "ctrl", "shift" }
 
 -- Every Hyper binding goes through bindHyper so the cheatsheet (hold Hyper
 -- alone) lists it. Entries keep bind order; sections appear in first-use order.
+--
+-- Keys are bound by physical position (macOS kVK_ANSI_* codes), not by
+-- character: hs.hotkey resolves "z" with whatever layout is active when the
+-- config loads, so a reload while on Czech QWERTZ would move Hyper+Z onto the
+-- Y key. Karabiner matches physical keys too, so the whole Hyper layer stays
+-- put on any layout. Names missing here (tab, left, right) are
+-- layout-independent already.
+local ansiKeys = {
+    a = 0, s = 1, d = 2, f = 3, h = 4, g = 5, z = 6, x = 7, c = 8, v = 9,
+    b = 11, q = 12, w = 13, e = 14, r = 15, y = 16, t = 17, o = 31, u = 32,
+    i = 34, p = 35, l = 37, j = 38, k = 40, n = 45, m = 46,
+    ["1"] = 18, ["2"] = 19, ["3"] = 20, ["4"] = 21, ["5"] = 23, ["6"] = 22,
+    ["7"] = 26, ["8"] = 28, ["9"] = 25, ["0"] = 29,
+}
 local cheatsheet = {}
 local function bindHyper(key, section, desc, fn)
     table.insert(cheatsheet, { key = key, section = section, desc = desc })
-    hs.hotkey.bind(hyper, key, fn)
+    hs.hotkey.bind(hyper, ansiKeys[key] or key, fn)
 end
 
 -- Find the best window for an app (handles Zoom's multiple windows)

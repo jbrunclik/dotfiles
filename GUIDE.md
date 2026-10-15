@@ -20,7 +20,7 @@ everything at once.
 | Find in scrollback | `Cmd+F` |
 | Edit config | `Cmd+,` |
 | Reload config | `Cmd+Shift+,` |
-| Previous / next tab | `Hyper+,` / `Hyper+.` (Karabiner) or `Cmd+Shift+[` / `]` |
+| Previous / next tab | `Hyper+,` / `Hyper+.` (Karabiner), `Ctrl+Shift+Tab` / `Ctrl+Tab`, or `Cmd+Shift+[` / `]` (U.S. layout only) |
 
 The quick terminal is a system-wide dropdown terminal — press
 `` Ctrl+` `` from any app to toggle it.
@@ -528,6 +528,10 @@ It's triggered by:
 | MacBook | CapsLock (hold) | Karabiner-Elements |
 | Keyboardio Model 100 | Any key (hold) | Chrysalis firmware |
 
+Hyper shortcuts are tied to **physical keys**, so they stay put when you switch
+to the Czech layout (QWERTZ swaps Y and Z): Karabiner matches physical keys,
+and Hammerspoon's `bindHyper` binds by macOS key code instead of by character.
+
 On MacBook, CapsLock is three keys in one:
 
 | Gesture | Result |
@@ -583,7 +587,9 @@ There's no Shift+ variant for selecting: Hyper already includes Shift.
 Only while Ghostty is frontmost. These have to live in Karabiner rather than
 Ghostty's config: macOS reserves `Hyper+,`, `Hyper+.` and `Hyper+/` for
 sysdiagnose and swallows them before any app sees them. Karabiner runs first and
-rewrites them to Ghostty's `Cmd+Shift+[` / `]`. Outside Ghostty they still start
+rewrites them to Ghostty's `Ctrl+Shift+Tab` / `Ctrl+Tab` — not `Cmd+Shift+[` / `]`,
+because on the Czech layout that physical key types `ú` and Ghostty's binding
+no longer matches. Outside Ghostty they still start
 a sysdiagnose (a ~400 MB archive in `/private/var/tmp`).
 
 ### Window management (Hammerspoon)
