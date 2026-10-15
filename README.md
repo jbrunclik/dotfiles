@@ -126,6 +126,14 @@ Check if local config has diverged from the repo:
 Checks symlinks, local files, Brewfile packages, required binaries, Neovim
 treesitter parsers, and VS Code extensions. Non-zero exit on drift.
 
+## Working on this repo with Claude Code
+
+`CLAUDE.md` holds the repo's conventions and tool gotchas. `.claude/settings.json`
+adds a PostToolUse hook (`.claude/hooks/check-config.sh`) that validates every
+edited file — shellcheck, JSON, Lua syntax, Karabiner lint, Ghostty config — so
+mistakes surface right away instead of in CI. Personal overrides go in the
+untracked `.claude/settings.local.json`.
+
 ## Guide
 
 See [GUIDE.md](GUIDE.md) for a complete reference of shortcuts, workflows,

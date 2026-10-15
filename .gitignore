@@ -10,8 +10,11 @@ config/nvim/lazy-lock.json
 config/karabiner/automatic_backups/
 config/karabiner/assets/
 
-# Local agent settings
-.claude/
+# Claude Code: shared project settings and hooks are tracked; personal
+# overrides (settings.local.json) are not
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
 
 # macOS
 .DS_Store
