@@ -416,6 +416,30 @@ macOS's metadata cache already make the scan cheap, and the watcher adds IPC
 plus a background daemon per repo. Worth revisiting only for repos with
 hundreds of thousands of files.
 
+## SSH
+
+`ssh_config` keeps one connection per host open and reuses it
+(`ControlMaster auto`, `ControlPersist 10m`). The first `git fetch` to GitHub
+pays the ~1 s handshake; later ones within 10 minutes skip it (measured: 1.67 s
+→ 0.55 s for `git ls-remote`). It also covers scp, rsync and new sessions to
+your own hosts.
+
+| Task | Command |
+|---|---|
+| Is a shared connection open? | `ssh -O check <host>` (e.g. `git@github.com`) |
+| Close it (hangs after sleep or Wi-Fi change) | `ssh -O exit <host>` |
+| Opt a host out | `ControlMaster no` under its entry in `~/.ssh/config.local` |
+
+Things to know:
+
+- After the Mac sleeps or switches networks, the shared connection can be dead
+  without SSH knowing; the next command waits until `ServerAlive` gives up
+  (~3 min). `ssh -O exit <host>` fixes it right away.
+- Everything to one host shares one connection: a big `scp` slows an
+  interactive session there, and if it drops, they all drop.
+- A second `ssh` to a host reuses the first connection's settings, so options
+  like agent forwarding added later are ignored until the shared one closes.
+
 ## Hyper key
 
 Hyper (Cmd+Option+Ctrl+Shift) is a dedicated modifier that doesn't
