@@ -13,7 +13,6 @@ hostnames, or employer-specific detail in tracked files.
   editing the repo file changes the live config.
 - `GUIDE.md` — user-facing reference for every shortcut and workaround.
   `README.md` — what's included and how to install.
-- `TODO.md` — the improvement backlog. Untracked on purpose; don't commit it.
 
 ## Keep the docs in step with behavior
 
