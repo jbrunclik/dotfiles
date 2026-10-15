@@ -56,6 +56,14 @@ header "Setting macOS accent color (Catppuccin Mocha mauve #cba6f7)"
 defaults write -globalDomain AppleAccentColor -int 5
 defaults write -globalDomain AppleHighlightColor -string "0.796078 0.650980 0.968627 Purple"
 
+# Fastest repeat the System Settings sliders allow (30 ms, 225 ms initial delay),
+# and hold-to-repeat instead of the accent popup — Hyper+HJKL arrows and
+# CapsLock tap-then-hold Backspace both rely on repeat. Takes effect after logout.
+header "Setting key repeat"
+defaults write -globalDomain KeyRepeat -int 2
+defaults write -globalDomain InitialKeyRepeat -int 15
+defaults write -globalDomain ApplePressAndHoldEnabled -bool false
+
 # Finder "open with" defaults. Each type that actually changes gets a macOS
 # consent dialog (no API avoids it); already-correct types are skipped, so this
 # only prompts on first run or after drift. See config/finder/default-apps.
