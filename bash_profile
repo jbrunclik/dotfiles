@@ -34,6 +34,18 @@ fi
 
 # Catppuccin Mocha FZF colors (matches Ghostty theme)
 export FZF_DEFAULT_OPTS='--color=fg:#cdd6f4,bg:#1e1e2e,hl:#f38ba8 --color=fg+:#cdd6f4,bg+:#313244,hl+:#f38ba8 --color=info:#cba6f7,prompt:#a6e3a1,pointer:#f5e0dc --color=marker:#b4befe,spinner:#f5e0dc,header:#94e2d5'
+# Walk with fd instead of find: faster, includes dotfiles, and skips .git plus
+# anything .gitignored (node_modules, build output).
+export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
+# Ctrl+T: pick files, with a bat preview
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_CTRL_T_OPTS="--preview 'bat --color=always --style=numbers --line-range=:300 {}'"
+# Alt+C: cd into a directory, with a tree preview
+export FZF_ALT_C_COMMAND='fd --type d --hidden --exclude .git'
+export FZF_ALT_C_OPTS="--preview 'eza --tree --level=2 --icons --color=always {} | head -200'"
+# `**<Tab>` completion (vim **<Tab>, cd **<Tab>) uses the same fd walk
+_fzf_compgen_path() { fd --hidden --exclude .git . "$1"; }
+_fzf_compgen_dir() { fd --type d --hidden --exclude .git . "$1"; }
 eval "$(fzf --bash)"
 
 # Tools
