@@ -64,6 +64,23 @@ defaults write -globalDomain KeyRepeat -int 2
 defaults write -globalDomain InitialKeyRepeat -int 15
 defaults write -globalDomain ApplePressAndHoldEnabled -bool false
 
+# Dock on the right, hidden, instant: a bottom Dock pops up over Zoom's toolbar
+# (and every app's bottom controls) on overshoot, while nothing sits flush
+# against a side edge. Apps are launched by Hyper keys, so the Dock is mostly a
+# running-apps indicator.
+header "Setting Dock and Spaces"
+defaults write com.apple.dock orientation -string right
+defaults write com.apple.dock autohide -bool true
+defaults write com.apple.dock autohide-delay -float 0
+defaults write com.apple.dock autohide-time-modifier -float 0.15
+defaults write com.apple.dock magnification -bool false
+defaults write com.apple.dock minimize-to-application -bool true
+# Keep Spaces in a fixed order instead of reordering by recent use
+defaults write com.apple.dock mru-spaces -bool false
+# Clicking the wallpaper no longer hides every window
+defaults write com.apple.WindowManager EnableStandardClickToShowDesktop -bool false
+killall Dock
+
 # Picked up the next time Finder starts (logout, or `killall Finder`)
 header "Showing all file extensions in Finder"
 defaults write -globalDomain AppleShowAllExtensions -bool true

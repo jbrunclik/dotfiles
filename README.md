@@ -71,7 +71,7 @@ The install script:
 1. Installs Homebrew packages from `Brewfile`
 2. Symlinks all config files (backs up existing files to `*.bak`)
 3. Sets macOS defaults: accent color, key repeat, press-and-hold off, Finder
-   file extensions (see [GUIDE.md](GUIDE.md#macos-settings))
+   file extensions, Dock and Spaces (see [GUIDE.md](GUIDE.md#macos-settings))
 4. Installs VS Code extensions
 5. Warns if any required binary is missing from `PATH`
 6. Warns if local-only config files are missing

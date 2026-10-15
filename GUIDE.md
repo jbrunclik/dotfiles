@@ -336,9 +336,18 @@ To add a type, append `<bundle id>  .<ext>` to the list. Find a bundle id with
 | Key repeat | 30 ms, 225 ms initial delay | Fastest the System Settings sliders allow; Hyper+HJKL and CapsLock Backspace rely on it |
 | Press-and-hold | Off | Holding a letter repeats it instead of opening the accent picker |
 | File extensions in Finder | Always shown | |
+| Dock | Right edge, auto-hide, no delay, no magnification | A bottom Dock popped up over Zoom's toolbar on overshoot; nothing sits flush against a side edge |
+| Minimize | Into the app's Dock icon | Dock doesn't grow a pile of minimized windows |
+| Spaces order | Fixed (no reordering by recent use) | Positions stay where muscle memory expects them |
+| Click wallpaper to reveal desktop | Off | A near-miss on a window edge no longer hides every window |
 
 Key repeat needs a logout; Finder picks up the extension setting on restart
-(`killall Finder`).
+(`killall Finder`). The Dock settings apply when `install.sh` restarts the Dock.
+
+Spaces aren't used on purpose: Hammerspoon layouts (Hyper+Z/X/C/V) and app
+focus (Hyper+1–6) already switch context in one key, and Hammerspoon's window
+queries only see the current Space, so layouts can't pull windows from another
+one. Native fullscreen (Hyper+F) is the only thing that creates a Space.
 
 Deliberately left on: smart quotes and dashes. Mail and other prose apps get
 real typography; terminals and editors ignore the setting. Just don't draft
