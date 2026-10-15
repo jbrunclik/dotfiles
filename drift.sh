@@ -87,8 +87,14 @@ fi
 # (version-agnostic) and surface outdated separately without failing.
 echo ""
 header "Brewfile packages:"
-mapfile -t WANT_FORMULAE < <(grep -E '^brew "' "$DOTFILES/Brewfile" | sed -E 's/^brew "([^"]+)".*/\1/')
-mapfile -t WANT_CASKS    < <(grep -E '^cask "' "$DOTFILES/Brewfile" | sed -E 's/^cask "([^"]+)".*/\1/')
+# The Brewfile also loads the untracked ~/Brewfile.local (work tools etc.).
+BREWFILES=("$DOTFILES/Brewfile")
+[ -f "$HOME/Brewfile.local" ] && BREWFILES+=("$HOME/Brewfile.local")
+# Tap-qualified names (org/tap/name) are compared by their last component,
+# which is what `brew list` prints.
+mapfile -t WANT_FORMULAE < <(grep -hE '^brew "' "${BREWFILES[@]}" | sed -E 's/^brew "([^"]+)".*/\1/; s|.*/||')
+mapfile -t WANT_CASKS    < <(grep -hE '^cask "' "${BREWFILES[@]}" | sed -E 's/^cask "([^"]+)".*/\1/')
+mapfile -t WANT_MAS      < <(grep -hE '^mas "' "${BREWFILES[@]}" | sed -E 's/^mas "([^"]+)", *id: *([0-9]+).*/\2 \1/')
 INSTALLED_FORMULAE="$(brew list --formula -1 2>/dev/null)"
 INSTALLED_CASKS="$(brew list --cask -1 2>/dev/null)"
 OUTDATED_ALL="$(brew outdated --quiet 2>/dev/null)"
@@ -109,6 +115,12 @@ for c in "${WANT_CASKS[@]}"; do
         OUTDATED_PKGS+=("$c")
     fi
 done
+if [ "${#WANT_MAS[@]}" -gt 0 ]; then
+    INSTALLED_MAS="$(mas list 2>/dev/null | awk '{print $1}')"
+    for entry in "${WANT_MAS[@]}"; do
+        grep -qxF "${entry%% *}" <<< "$INSTALLED_MAS" || MISSING_PKGS+=("${entry#* } (App Store)")
+    done
+fi
 
 if [ "${#MISSING_PKGS[@]}" -gt 0 ]; then
     for p in "${MISSING_PKGS[@]}"; do

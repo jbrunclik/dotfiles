@@ -68,7 +68,8 @@ cd ~/src/dotfiles
 ```
 
 The install script:
-1. Installs Homebrew packages from `Brewfile`
+1. Installs Homebrew packages from `Brewfile` (plus `~/Brewfile.local`, if
+   present), and App Store apps via `mas` — sign in to the App Store first
 2. Symlinks all config files (backs up existing files to `*.bak`)
 3. Sets macOS defaults: accent color, key repeat, press-and-hold off, Finder
    file extensions, Dock and Spaces (see [GUIDE.md](GUIDE.md#macos-settings))
@@ -86,6 +87,7 @@ These files contain personal information and must be created manually:
 | File | Contents |
 |---|---|
 | `~/.bash_profile.local` | API tokens, machine-local env vars and `PATH` entries |
+| `~/Brewfile.local` | Work tools and this-machine-only apps; the `Brewfile` loads it if present |
 | `~/.gitconfig.local` | `[user]` name/email, `[filter "lfs"]` config |
 | `~/.ssh/config.local` | Host entries (hostnames, usernames, keys) |
 | `~/.ssh/id_ed25519` | SSH private key |

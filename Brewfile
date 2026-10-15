@@ -14,6 +14,9 @@ brew "mise"
 brew "shellcheck"
 
 # Editor
+# Default app for text and source files (config/finder/default-apps), and
+# install.sh installs its extensions
+cask "visual-studio-code"
 brew "neovim"
 # nvim-treesitter's main branch compiles parsers with the tree-sitter CLI
 # rather than shipping prebuilt grammars — without it every :TSInstall fails
@@ -35,6 +38,19 @@ cask "iina"
 
 # Screenshots
 cask "shottr"
+
+# Apps
+# Hyper+2 and the Hyper+Z/V layouts
+cask "thebrowsercompany-dia"
+cask "signal"
+cask "tailscale-app"
+# Keyboardio Model 100 configurator (its Hyper key is set in firmware)
+cask "chrysalis"
+cask "insta360-link-controller"
+
+# App Store (needs signing in to the App Store app first)
+brew "mas"
+mas "WhatsApp", id: 310633997
 
 # AI
 # The desktop app. Self-updating, so Homebrew only bootstraps it.
@@ -63,6 +79,7 @@ brew "fd"
 brew "ripgrep"
 brew "dust"
 brew "btop"
+brew "htop"
 brew "git-delta"
 
 # Data + API
@@ -75,6 +92,7 @@ brew "mosh"
 # Installs to /opt/homebrew/sbin (on PATH via brew shellenv); needs sudo to
 # open the raw sockets it traces with.
 brew "mtr"
+brew "nmap"
 
 # Git + GitHub
 brew "gh"
@@ -96,6 +114,9 @@ cask "1password"
 # instead of storing them in plaintext.
 cask "1password-cli"
 brew "pwgen"
+# YubiKey CLI, and the GPG passphrase prompt for keys on it
+brew "ykman"
+brew "pinentry-mac"
 
 # Other essentials
 brew "glow"
@@ -103,7 +124,15 @@ brew "glow"
 brew "graphicsmagick"
 brew "lazygit"
 brew "midnight-commander"
+# 7z/.rar from the command line (The Unarchiver covers Finder)
+brew "sevenzip"
+brew "yt-dlp"
 
 # Fonts
 cask "font-maple-mono-nf"
 cask "font-cascadia-code-nf"
+
+# Machine-local additions — work tools, this-machine-only apps. Untracked;
+# drift.sh checks it too. A Brewfile is Ruby, so this just evaluates the file.
+local_brewfile = File.expand_path("~/Brewfile.local")
+instance_eval(File.read(local_brewfile), local_brewfile) if File.exist?(local_brewfile)
