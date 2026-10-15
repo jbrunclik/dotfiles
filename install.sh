@@ -69,9 +69,14 @@ defaults write -globalDomain ApplePressAndHoldEnabled -bool false
 header "Enabling Touch ID for sudo"
 if grep -qs '^auth.*pam_tid.so' /etc/pam.d/sudo_local; then
     echo -e "  ${GREEN}✓${RESET} already enabled"
-else
+elif [ -e /etc/pam.d/sudo_local ]; then
+    # Never overwrite an existing file: it may hold other local PAM config
+    warn "/etc/pam.d/sudo_local exists without pam_tid — add 'auth sufficient pam_tid.so' to it by hand"
+elif grep -qs '^#auth.*pam_tid.so' /etc/pam.d/sudo_local.template; then
     sed 's/^#auth/auth/' /etc/pam.d/sudo_local.template | sudo tee /etc/pam.d/sudo_local >/dev/null
     echo -e "  ${GREEN}✓${RESET} /etc/pam.d/sudo_local"
+else
+    warn "No sudo_local template with a pam_tid line (needs macOS 14+) — skipping"
 fi
 
 # Dock on the right and hidden: a bottom Dock pops up over Zoom's toolbar (and
