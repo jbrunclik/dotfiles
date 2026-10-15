@@ -44,7 +44,8 @@ works this way and what to watch out for, not only the key.
   then commit the file as Karabiner rewrote it.
 - **Hammerspoon** reloads itself when a `.lua` file in `config/hammerspoon/`
   is saved. Query live state with `hs -c '<lua>'`; don't run `hs -c 'hs.reload()'`
-  in the foreground, it hangs. Never memoize window state — derive it from live
+  in the foreground, it hangs. In scripts, give `hs` `</dev/null` — it reads
+  commands from stdin when that isn't a terminal and otherwise waits forever. Never memoize window state — derive it from live
   positions. Use `hs.alert` only for state feedback (mute, errors), not routine
   actions.
   Bind Hyper keys with `bindHyper(key, section, description, fn)` (it binds by

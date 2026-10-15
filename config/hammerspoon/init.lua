@@ -311,6 +311,41 @@ local function karabinerEntries()
     return entries
 end
 
+-- The cheatsheet as data: Hammerspoon sections in bind order, then the
+-- Karabiner remaps. Both the overlay and the printable PDF (the
+-- hyper-cheatsheet script) render this, so they always list the same bindings.
+local function cheatsheetSections()
+    local sections, byName = {}, {}
+    local function label(key) return keyLabels[key] or key:upper() end
+    for _, e in ipairs(cheatsheet) do
+        if not byName[e.section] then
+            byName[e.section] = { name = e.section, note = sectionNotes[e.section], entries = {} }
+            table.insert(sections, byName[e.section])
+        end
+        table.insert(byName[e.section].entries, { key = label(e.key), desc = e.desc })
+    end
+    local remaps = karabinerEntries()
+    if #remaps > 0 then
+        local karabiner = { name = "Karabiner", entries = {} }
+        for _, e in ipairs(remaps) do
+            table.insert(karabiner.entries, { key = label(e.key), desc = e.desc })
+        end
+        table.insert(sections, karabiner)
+    end
+    return sections
+end
+
+-- Used by the hyper-cheatsheet script: writes the sections, plus the CapsLock
+-- rule's description, as JSON to `path`. Global so `hs -c` can call it.
+function hyperCheatsheetExport(path)
+    local config = hs.json.read(configDir .. "/../karabiner/karabiner.json")
+    local caps
+    for _, rule in ipairs(config and config.profiles[1].complex_modifications.rules or {}) do
+        if rule.description:match("^CapsLock") then caps = rule.description end
+    end
+    return hs.json.write({ sections = cheatsheetSections(), caps = caps }, path, false, true)
+end
+
 local function cheatsheetText()
     local font = { name = "Maple Mono NF", size = 15 }
     local mocha = {
@@ -321,31 +356,14 @@ local function cheatsheetText()
     local function add(str, color)
         out = out .. hs.styledtext.new(str, { font = font, color = color })
     end
-    local function entry(key, desc)
-        local label = keyLabels[key] or key:upper()
-        -- Pad by characters, not bytes: "←" is three bytes in UTF-8
-        add("  " .. label .. string.rep(" ", 8 - utf8.len(label)), mocha.key)
-        add(desc .. "\n", mocha.text)
-    end
-
-    local order, bySection = {}, {}
-    for _, e in ipairs(cheatsheet) do
-        if not bySection[e.section] then
-            bySection[e.section] = {}
-            table.insert(order, e.section)
+    for _, section in ipairs(cheatsheetSections()) do
+        add(section.name, mocha.section)
+        add((section.note and "  · " .. section.note or "") .. "\n", mocha.dim)
+        for _, e in ipairs(section.entries) do
+            -- Pad by characters, not bytes: "←" is three bytes in UTF-8
+            add("  " .. e.key .. string.rep(" ", 8 - utf8.len(e.key)), mocha.key)
+            add(e.desc .. "\n", mocha.text)
         end
-        table.insert(bySection[e.section], e)
-    end
-    for _, name in ipairs(order) do
-        add(name, mocha.section)
-        add((sectionNotes[name] and "  · " .. sectionNotes[name] or "") .. "\n", mocha.dim)
-        for _, e in ipairs(bySection[name]) do entry(e.key, e.desc) end
-        add("\n", mocha.text)
-    end
-    local remaps = karabinerEntries()
-    if #remaps > 0 then
-        add("Karabiner\n", mocha.section)
-        for _, e in ipairs(remaps) do entry(e.key, e.desc) end
         add("\n", mocha.text)
     end
     add("Release Hyper to close", mocha.dim)

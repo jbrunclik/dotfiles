@@ -34,6 +34,7 @@ LINKS=(
     "config/btop/themes/catppuccin_mocha.theme|$HOME/.config/btop/themes/catppuccin_mocha.theme"
     "config/karabiner|$HOME/.config/karabiner"
     "gh-new-repo|$HOME/.local/bin/gh-new-repo"
+    "hyper-cheatsheet|$HOME/.local/bin/hyper-cheatsheet"
 )
 
 # Binaries the configs reference but that nothing else verifies. Neovim's

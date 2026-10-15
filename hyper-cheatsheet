@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Render a printable A4 cheatsheet PDF: every Hyper binding, then the
+# shortcuts and command tricks from GUIDE.md worth learning over time.
+#
+# The Hyper page comes live from Hammerspoon (the bindHyper registry plus
+# karabiner.json's rule descriptions — what the hold-Hyper overlay shows); the
+# other pages are read from GUIDE.md. Nothing is listed by hand, so the
+# printout always matches the config. Which GUIDE sections go on which page is
+# set at the top of config/hammerspoon/cheatsheet-pdf.swift.
+#
+# Usage:
+#   hyper-cheatsheet                  # writes ~/Desktop/hyper-cheatsheet.pdf
+#   hyper-cheatsheet path/to/out.pdf
+
+OUT="${1:-$HOME/Desktop/hyper-cheatsheet.pdf}"
+# Resolve the repo through the ~/.local/bin symlink
+DOTFILES="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+RENDERER="$DOTFILES/config/hammerspoon/cheatsheet-pdf.swift"
+
+command -v hs >/dev/null || { echo "hs (Hammerspoon CLI) not found" >&2; exit 1; }
+command -v swiftc >/dev/null || { echo "swiftc not found (install Xcode Command Line Tools)" >&2; exit 1; }
+
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+# hs prints "-- Loading extension" chatter, so pass the data through a file.
+# </dev/null: hs reads commands from stdin when it isn't a terminal, and would
+# wait there forever when this runs from another script. The 10 s alarm is
+# only a safety net (macOS has no `timeout`).
+perl -e 'alarm 10; exec @ARGV' \
+    hs -c "return hyperCheatsheetExport('$TMP/bindings.json')" </dev/null >/dev/null 2>&1 || true
+[ -s "$TMP/bindings.json" ] || { echo "no data from Hammerspoon — is it running?" >&2; exit 1; }
+
+swiftc -O -o "$TMP/cheatsheet-pdf" "$RENDERER" 2>/dev/null \
+    || { echo "failed to compile $RENDERER" >&2; exit 1; }
+"$TMP/cheatsheet-pdf" "$TMP/bindings.json" "$DOTFILES/GUIDE.md" "$OUT"
+echo "Wrote $OUT"

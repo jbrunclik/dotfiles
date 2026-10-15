@@ -585,6 +585,24 @@ is generated, not written by hand:
 - Karabiner remaps come from `karabiner.json` rule descriptions written as
   `[App: ]Hyper+<keys> → <action>`; a trailing `(…)` note is left out.
 
+### Printable cheatsheet
+
+`hyper-cheatsheet` writes an A4 landscape PDF to `~/Desktop/hyper-cheatsheet.pdf`
+(or a path you pass), for the desk — shortcuts to pick up a few at a time:
+
+1. **Hyper** — every Hyper binding, asked live from Hammerspoon (exactly what
+   the hold-Hyper overlay shows).
+2. **Keyboard** — this guide's Ghostty, readline, fzf, "Text editing
+   everywhere" and "macOS essentials" tables.
+
+Nothing is listed by hand: page 2 is parsed from this file, so editing a table
+here changes the printout. (Sections can also contribute `command  #
+explanation` lines from their code blocks.) Which sections go on which page is the `pages`
+list at the top of `config/hammerspoon/cheatsheet-pdf.swift`; renaming a listed
+section makes the script fail rather than silently drop it. Each page shrinks
+its font to fit. Rendering uses macOS's own WebKit, compiled on the fly — needs
+Hammerspoon running and the Xcode Command Line Tools (`swiftc`).
+
 ### Navigation (Karabiner)
 
 | Shortcut | Action |
