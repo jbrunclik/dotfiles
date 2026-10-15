@@ -13,8 +13,8 @@ macOS development environment configuration. Catppuccin Mocha everywhere.
 | IDE | [VS Code](https://code.visualstudio.com/) with Catppuccin, Ruff, Prettier | `config/vscode/` |
 | Default apps | Finder "open with" per file type — text/code → VS Code, HEIC/RAW → Preview, media → IINA, .rar/.7z → The Unarchiver | `config/finder/default-apps` |
 | Git | [delta](https://github.com/dandavison/delta) pager, [lazygit](https://github.com/jesseduffield/lazygit) TUI, [gh](https://cli.github.com/) CLI | `gitconfig` |
-| Keyboard | [Karabiner-Elements](https://karabiner-elements.pqrs.org/) — CapsLock as Hyper/Backspace | `config/karabiner/karabiner.json` |
-| Window layouts | [Hammerspoon](https://www.hammerspoon.org/) — hotkey-triggered layouts | `config/hammerspoon/init.lua` |
+| Keyboard | [Karabiner-Elements](https://karabiner-elements.pqrs.org/) — CapsLock as Hyper / Backspace, Hyper+HJKL arrows, Hyper+,/. Ghostty tabs | `config/karabiner/` |
+| Window layouts | [Hammerspoon](https://www.hammerspoon.org/) — hotkey-triggered layouts, app focus, Zoom mute; reloads on save | `config/hammerspoon/init.lua` |
 | Clipboard | [Maccy](https://maccy.app/) — clipboard history | — |
 | Screenshots | [Shottr](https://shottr.cc/) — capture, annotate, OCR | — |
 | SSH | Shared defaults (agent, keepalive, compression) | `ssh_config` |
@@ -70,9 +70,11 @@ cd ~/src/dotfiles
 The install script:
 1. Installs Homebrew packages from `Brewfile`
 2. Symlinks all config files (backs up existing files to `*.bak`)
-3. Installs VS Code extensions
-4. Warns if any required binary is missing from `PATH`
-5. Warns if local-only config files are missing
+3. Sets macOS defaults: accent color, key repeat, press-and-hold off, Finder
+   file extensions (see [GUIDE.md](GUIDE.md#macos-settings))
+4. Installs VS Code extensions
+5. Warns if any required binary is missing from `PATH`
+6. Warns if local-only config files are missing
 
 `install.sh` and `drift.sh` share one symlink manifest (`lib/links.sh`), so the
 two can't disagree about what "installed" means.

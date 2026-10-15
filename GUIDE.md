@@ -22,6 +22,17 @@ everything at once.
 The quick terminal is a system-wide dropdown terminal — press
 `` Ctrl+` `` from any app to toggle it.
 
+Two things to know:
+
+- **Config changes need a reload before a new tab.** Ghostty doesn't watch its
+  config file; new tabs use the config that was loaded last. Press
+  `Cmd+Shift+,` first. Shell-integration changes then only reach new tabs.
+- **`sudo` keeps Ghostty's terminfo.** `TERM=xterm-ghostty` is only described
+  inside Ghostty.app, and `sudo` strips the `TERMINFO` variable that points
+  there, so root TUIs failed with `Error opening terminal: xterm-ghostty`.
+  `shell-integration-features = sudo` wraps `sudo` with
+  `--preserve-env=TERMINFO`. `type sudo` should say "sudo is a function".
+
 ## Shell
 
 ### History search (readline)
@@ -46,8 +57,15 @@ Examples:
 | Action | Shortcut |
 |---|---|
 | Search command history | `Ctrl+R` |
+| Insert file path(s), with `bat` preview | `Ctrl+T` |
+| Jump into a directory, with tree preview | `Alt+C` (Option+C) |
 | Find files | Type then `**` Tab (e.g., `vim **` Tab) |
 | Change directory | `cd **` Tab |
+
+All of these walk the filesystem with `fd`, not `find`: hidden files are
+included, while `.git` and anything gitignored (`node_modules`, build output)
+are skipped. `Tab` multi-selects in `Ctrl+T`. `Alt+C` works because Ghostty
+sends Option as Alt (`macos-option-as-alt`).
 
 ### Smart cd (zoxide)
 
@@ -308,6 +326,24 @@ Two things to know:
 To add a type, append `<bundle id>  .<ext>` to the list. Find a bundle id with
 `osascript -e 'id of app "Preview"'`.
 
+## macOS settings
+
+`./install.sh` writes these with `defaults write`:
+
+| Setting | Value | Why |
+|---|---|---|
+| Accent / highlight color | Catppuccin mauve | Matches everything else |
+| Key repeat | 30 ms, 225 ms initial delay | Fastest the System Settings sliders allow; Hyper+HJKL and CapsLock Backspace rely on it |
+| Press-and-hold | Off | Holding a letter repeats it instead of opening the accent picker |
+| File extensions in Finder | Always shown | |
+
+Key repeat needs a logout; Finder picks up the extension setting on restart
+(`killall Finder`).
+
+Deliberately left on: smart quotes and dashes. Mail and other prose apps get
+real typography; terminals and editors ignore the setting. Just don't draft
+shell commands in Notes or Mail — `--force` turns into `—force` there.
+
 ## Git
 
 ### Delta pager
@@ -378,8 +414,18 @@ conflict with any app shortcuts. It's triggered by:
 | MacBook | CapsLock (hold) | Karabiner-Elements |
 | Keyboardio Model 100 | Any key (hold) | Chrysalis firmware |
 
-On MacBook, tapping CapsLock sends Backspace. Tap, then tap again and hold,
-to keep deleting (holding CapsLock alone is always Hyper).
+On MacBook, CapsLock is three keys in one:
+
+| Gesture | Result |
+|---|---|
+| Hold + another key | Hyper |
+| Tap (release within 250 ms) | Backspace |
+| Tap, then press again within 250 ms and hold | Repeating Backspace |
+
+Holding CapsLock and letting go without pressing anything sends nothing once
+250 ms have passed, so an abandoned Hyper chord doesn't delete a character.
+The catch: a Hyper chord started within 250 ms of a Backspace tap becomes
+Backspace instead.
 
 ### Navigation (Karabiner)
 
@@ -390,7 +436,20 @@ to keep deleting (holding CapsLock alone is always Hyper).
 | Hyper + K | Up arrow |
 | Hyper + L | Right arrow |
 
-Works system-wide: Slack, Notion, Chrome, etc.
+Works system-wide: Slack, Notion, Chrome, Ghostty, etc.
+
+### Ghostty tabs (Karabiner)
+
+| Shortcut | Action |
+|---|---|
+| Hyper + , | Previous tab |
+| Hyper + . | Next tab |
+
+Only while Ghostty is frontmost. These have to live in Karabiner rather than
+Ghostty's config: macOS reserves `Hyper+,`, `Hyper+.` and `Hyper+/` for
+sysdiagnose and swallows them before any app sees them. Karabiner runs first and
+rewrites them to Ghostty's `Cmd+Shift+[` / `]`. Outside Ghostty they still start
+a sysdiagnose (a ~400 MB archive in `/private/var/tmp`).
 
 ### Window management (Hammerspoon)
 
@@ -437,6 +496,9 @@ Press twice to maximize the focused app's window.
 |---|---|
 | Hyper + R | Reload Hammerspoon config |
 
+Saving any `.lua` file in `config/hammerspoon/` reloads Hammerspoon on its own
+(`hs.pathwatcher`), so Hyper+R is rarely needed.
+
 ### Debugging
 
 The `hs` CLI lets you query Hammerspoon from the terminal:
@@ -449,6 +511,24 @@ hs -c 'hs.application.get("Slack"):allWindows()'  # list app windows
 If an app's windows are invisible to Hammerspoon (returns 0 windows),
 restart the app — Electron apps like Slack can lose their accessibility
 registration after updates.
+
+### Editing the Karabiner config
+
+- `~/.config/karabiner` is a symlink to the whole `config/karabiner/` directory,
+  not just the JSON file. Karabiner saves by writing a temp file and renaming it
+  over `karabiner.json`, which used to replace a file symlink with a plain copy.
+- Karabiner reformats `karabiner.json` (compact arrays, sorted keys) whenever it
+  saves. After editing by hand, let it save once and commit what it wrote, so
+  later diffs only show real changes.
+- It doesn't always notice hand edits. Force a reload with:
+
+  ```bash
+  launchctl kickstart -k gui/$(id -u)/org.pqrs.service.agent.Karabiner-Console-User-Server
+  ```
+
+- Check a rule set with `karabiner_cli --lint-complex-modifications` (in
+  `/Library/Application Support/org.pqrs/Karabiner-Elements/bin/`); it expects
+  a `{"title", "rules"}` file, not the full config.
 
 ## Clipboard (Maccy)
 
@@ -480,7 +560,9 @@ hs.hotkey.bind(hyper, "g", function() tilePair("Figma", "Google Chrome") end)
 
 Pick a key that isn't already bound — the bottom row `Z`/`X`/`C`/`V` holds the
 existing layouts, `A`/`S`/`D`/`F` do single-window placement, `1`–`6` focus apps,
-and `H`/`J`/`K`/`L` are arrow keys in Karabiner. Saving the file reloads Hammerspoon (Hyper+R also works).
+`M` mutes Zoom, `R` reloads, `Tab`/`Left`/`Right` move focus, `H`/`J`/`K`/`L` are
+arrow keys in Karabiner, and `,`/`.`/`/` are reserved by macOS (see Ghostty
+tabs above). Saving the file reloads Hammerspoon.
 
 ## Learning path
 
