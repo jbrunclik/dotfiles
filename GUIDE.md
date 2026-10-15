@@ -17,6 +17,7 @@ everything at once.
 | Find in scrollback | `Cmd+F` |
 | Edit config | `Cmd+,` |
 | Reload config | `Cmd+Shift+,` |
+| Previous / next tab | `Hyper+,` / `Hyper+.` (Karabiner) or `Cmd+Shift+[` / `]` |
 
 The quick terminal is a system-wide dropdown terminal — press
 `` Ctrl+` `` from any app to toggle it.
@@ -377,7 +378,8 @@ conflict with any app shortcuts. It's triggered by:
 | MacBook | CapsLock (hold) | Karabiner-Elements |
 | Keyboardio Model 100 | Any key (hold) | Chrysalis firmware |
 
-On MacBook, tapping CapsLock sends Escape (great for Neovim).
+On MacBook, tapping CapsLock sends Backspace. Tap, then tap again and hold,
+to keep deleting (holding CapsLock alone is always Hyper).
 
 ### Navigation (Karabiner)
 

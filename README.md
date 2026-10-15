@@ -13,7 +13,7 @@ macOS development environment configuration. Catppuccin Mocha everywhere.
 | IDE | [VS Code](https://code.visualstudio.com/) with Catppuccin, Ruff, Prettier | `config/vscode/` |
 | Default apps | Finder "open with" per file type — text/code → VS Code, HEIC/RAW → Preview, media → IINA, .rar/.7z → The Unarchiver | `config/finder/default-apps` |
 | Git | [delta](https://github.com/dandavison/delta) pager, [lazygit](https://github.com/jesseduffield/lazygit) TUI, [gh](https://cli.github.com/) CLI | `gitconfig` |
-| Keyboard | [Karabiner-Elements](https://karabiner-elements.pqrs.org/) — CapsLock as Hyper/Escape | `config/karabiner/karabiner.json` |
+| Keyboard | [Karabiner-Elements](https://karabiner-elements.pqrs.org/) — CapsLock as Hyper/Backspace | `config/karabiner/karabiner.json` |
 | Window layouts | [Hammerspoon](https://www.hammerspoon.org/) — hotkey-triggered layouts | `config/hammerspoon/init.lua` |
 | Clipboard | [Maccy](https://maccy.app/) — clipboard history | — |
 | Screenshots | [Shottr](https://shottr.cc/) — capture, annotate, OCR | — |
