@@ -400,6 +400,7 @@ To add a type, append `<bundle id>  .<ext>` to the list. Find a bundle id with
 | Minimize | Into the app's Dock icon | Dock doesn't grow a pile of minimized windows |
 | Spaces order | Fixed (no reordering by recent use) | Positions stay where muscle memory expects them |
 | Click wallpaper to reveal desktop | Off | A near-miss on a window edge no longer hides every window |
+| `sudo` authentication | Touch ID | `pam_tid` in `/etc/pam.d/sudo_local`, which survives macOS updates; the password still works as a fallback |
 
 Key repeat needs a logout; Finder picks up the extension setting on restart
 (`killall Finder`). The Dock settings apply when `install.sh` restarts the Dock.

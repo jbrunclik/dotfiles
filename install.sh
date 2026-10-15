@@ -64,6 +64,16 @@ defaults write -globalDomain KeyRepeat -int 2
 defaults write -globalDomain InitialKeyRepeat -int 15
 defaults write -globalDomain ApplePressAndHoldEnabled -bool false
 
+# Touch ID for sudo. /etc/pam.d/sudo_local survives macOS updates (unlike
+# /etc/pam.d/sudo) and ships as a template with the pam_tid line commented out.
+header "Enabling Touch ID for sudo"
+if grep -qs '^auth.*pam_tid.so' /etc/pam.d/sudo_local; then
+    echo -e "  ${GREEN}✓${RESET} already enabled"
+else
+    sed 's/^#auth/auth/' /etc/pam.d/sudo_local.template | sudo tee /etc/pam.d/sudo_local >/dev/null
+    echo -e "  ${GREEN}✓${RESET} /etc/pam.d/sudo_local"
+fi
+
 # Dock on the right and hidden: a bottom Dock pops up over Zoom's toolbar (and
 # every app's bottom controls) on overshoot. A short delay stays, because
 # right-tiled apps do have controls near the right edge (Slack's thread close

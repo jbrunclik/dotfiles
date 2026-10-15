@@ -63,6 +63,16 @@ for f in "${LOCAL_FILES[@]}"; do
     fi
 done
 
+# Check Touch ID for sudo (install.sh enables it)
+echo ""
+header "Touch ID for sudo:"
+if grep -qs '^auth.*pam_tid.so' /etc/pam.d/sudo_local; then
+    echo -e "  ${GREEN}OK${RESET}       /etc/pam.d/sudo_local"
+else
+    echo -e "  ${RED}MISSING${RESET}  /etc/pam.d/sudo_local (run install.sh)"
+    DRIFTED=1
+fi
+
 # Check Hammerspoon loader file
 echo ""
 header "Hammerspoon:"
