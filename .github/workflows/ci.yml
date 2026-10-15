@@ -48,6 +48,7 @@ jobs:
                   rg)          formula=ripgrep ;;
                   delta)       formula=git-delta ;;
                   tree-sitter) formula=tree-sitter-cli ;;
+                  gm)          formula=graphicsmagick ;;
                   *)      formula="$bin" ;;
               esac
               if ! grep -qE "^brew \"$formula\"" Brewfile; then

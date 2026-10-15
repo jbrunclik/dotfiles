@@ -99,6 +99,8 @@ brew "pwgen"
 
 # Other essentials
 brew "glow"
+# GraphicsMagick; bash_profile pins the `gm` alias to it
+brew "graphicsmagick"
 brew "lazygit"
 brew "midnight-commander"
 

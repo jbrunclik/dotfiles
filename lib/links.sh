@@ -59,6 +59,7 @@ REQUIRED_BINS=(
     "uv|Python packaging"
     "gitleaks|secret scanning in the global pre-commit hook"
     "git-lfs|git-lfs hooks in the global hooksPath; they exit 2 without it"
+    "gm|GraphicsMagick, pinned by the gm alias in bash_profile"
 )
 
 # Files that must exist locally but are deliberately not in the repo.

@@ -68,8 +68,10 @@ alias du='dust'
 alias top='btop'
 alias diff='delta'
 alias vim='nvim'
+# gm is GraphicsMagick. Pin it to the Homebrew binary so a `gm` alias or
+# function from elsewhere (git-merge shorthands are common) can't shadow it.
 unalias gm 2>/dev/null
-alias gm='/opt/homebrew/bin/gm'
+alias gm="${HOMEBREW_PREFIX}/bin/gm"
 
 # Machine-local env vars and secrets — never committed. API tokens,
 # per-machine PATH entries, and work-specific config belong here.
