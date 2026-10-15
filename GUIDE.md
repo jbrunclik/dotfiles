@@ -336,7 +336,7 @@ To add a type, append `<bundle id>  .<ext>` to the list. Find a bundle id with
 | Key repeat | 30 ms, 225 ms initial delay | Fastest the System Settings sliders allow; Hyper+HJKL and CapsLock Backspace rely on it |
 | Press-and-hold | Off | Holding a letter repeats it instead of opening the accent picker |
 | File extensions in Finder | Always shown | |
-| Dock | Right edge, auto-hide, no delay, no magnification | A bottom Dock popped up over Zoom's toolbar on overshoot; nothing sits flush against a side edge |
+| Dock | Right edge, auto-hide, 0.2 s delay, quick slide, no magnification | A bottom Dock popped up over Zoom's toolbar on overshoot. The short delay keeps it from covering controls near the right edge, like Slack's thread close button |
 | Minimize | Into the app's Dock icon | Dock doesn't grow a pile of minimized windows |
 | Spaces order | Fixed (no reordering by recent use) | Positions stay where muscle memory expects them |
 | Click wallpaper to reveal desktop | Off | A near-miss on a window edge no longer hides every window |
