@@ -6,6 +6,10 @@ config/nvim/lazy-lock.json
 # Backups created by install.sh when it replaces a real file with a symlink
 *.bak
 
+# Karabiner writes these next to karabiner.json (the whole dir is linked)
+config/karabiner/automatic_backups/
+config/karabiner/assets/
+
 # Local agent settings
 .claude/
 

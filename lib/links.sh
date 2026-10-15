@@ -11,6 +11,9 @@
 #
 # Not covered here (they need special handling in install.sh/drift.sh):
 #   ~/.hammerspoon/init.lua — a dofile loader; Hammerspoon won't follow symlinks
+#
+# Karabiner is linked as a whole directory: it saves karabiner.json by writing
+# a temp file and renaming it over the original, which replaces a file symlink.
 
 LINKS=(
     "bash_profile|$HOME/.bash_profile"
@@ -29,7 +32,7 @@ LINKS=(
     "config/vscode/settings.json|$HOME/Library/Application Support/Code/User/settings.json"
     "config/lazygit/config.yml|$HOME/Library/Application Support/lazygit/config.yml"
     "config/btop/themes/catppuccin_mocha.theme|$HOME/.config/btop/themes/catppuccin_mocha.theme"
-    "config/karabiner/karabiner.json|$HOME/.config/karabiner/karabiner.json"
+    "config/karabiner|$HOME/.config/karabiner"
     "gh-new-repo|$HOME/.local/bin/gh-new-repo"
 )
 
