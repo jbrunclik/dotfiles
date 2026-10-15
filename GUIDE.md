@@ -402,6 +402,13 @@ To add a type, append `<bundle id>  .<ext>` to the list. Find a bundle id with
 | Click wallpaper to reveal desktop | Off | A near-miss on a window edge no longer hides every window |
 | `sudo` authentication | Touch ID | `pam_tid` in `/etc/pam.d/sudo_local`, which survives macOS updates; the password still works as a fallback |
 
+If `sudo` still asks for a password with Touch ID enabled, check the log:
+`log show --last 5m --predicate 'process == "sudo"' | grep -i "interaction"`.
+"User interaction is required" (LocalAuthentication error -1004) in every terminal,
+while Touch ID works for apps, means something outside the dotfiles blocks
+biometric prompts for root processes — on a managed Mac, ask IT (endpoint
+security or MDM). `pam_reattach`, the tmux fix, doesn't help in that case.
+
 Key repeat needs a logout; Finder picks up the extension setting on restart
 (`killall Finder`). The Dock settings apply when `install.sh` restarts the Dock.
 
