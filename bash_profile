@@ -69,7 +69,7 @@ alias top='btop'
 alias diff='delta'
 alias vim='nvim'
 # gm is GraphicsMagick. Pin it to the Homebrew binary so a `gm` alias or
-# function from elsewhere (git-merge shorthands are common) can't shadow it.
+# function from elsewhere can't shadow it — oh-my-bash's git aliases made it `git merge`.
 unalias gm 2>/dev/null
 alias gm="${HOMEBREW_PREFIX}/bin/gm"
 

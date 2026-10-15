@@ -171,7 +171,7 @@ Tips:
 - `rg -t py "import"` to search only Python files
 - `dust -d 2` to limit directory depth
 - `gm` is always GraphicsMagick: `bash_profile` pins the alias to the Homebrew
-  binary, so a git-merge `gm` shorthand from elsewhere can't shadow it
+  binary, so a `gm` = `git merge` shorthand (oh-my-bash used to define one) can't shadow it
 
 ### Runtime version management (mise)
 
