@@ -242,4 +242,18 @@ end)
 hs.hotkey.bind(hyper, "r", function()
     hs.reload()
 end)
+
+-- Auto-reload when a .lua file in this directory is saved. Watches the repo
+-- directory this file was dofile'd from, not hs.configdir (~/.hammerspoon only
+-- holds the loader). Kept in a global so the watcher isn't garbage-collected.
+local configDir = debug.getinfo(1, "S").source:match("^@(.*)/[^/]*$")
+configWatcher = hs.pathwatcher.new(configDir, function(paths)
+    for _, path in ipairs(paths) do
+        if path:match("%.lua$") then
+            hs.reload()
+            return
+        end
+    end
+end):start()
+
 hs.alert.show("\u{1F528} Hammerspoon loaded")

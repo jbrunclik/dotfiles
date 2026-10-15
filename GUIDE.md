@@ -480,7 +480,7 @@ hs.hotkey.bind(hyper, "g", function() tilePair("Figma", "Google Chrome") end)
 
 Pick a key that isn't already bound — the bottom row `Z`/`X`/`C`/`V` holds the
 existing layouts, `A`/`S`/`D`/`F` do single-window placement, `1`–`6` focus apps,
-and `H`/`J`/`K`/`L` are arrow keys in Karabiner. Reload with Hyper+R.
+and `H`/`J`/`K`/`L` are arrow keys in Karabiner. Saving the file reloads Hammerspoon (Hyper+R also works).
 
 ## Learning path
 
