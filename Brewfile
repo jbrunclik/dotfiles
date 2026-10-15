@@ -134,5 +134,7 @@ cask "font-cascadia-code-nf"
 
 # Machine-local additions — work tools, this-machine-only apps. Untracked;
 # drift.sh checks it too. A Brewfile is Ruby, so this just evaluates the file.
+# Apps an MDM installs (root-owned) belong in neither file: Homebrew can't
+# adopt them, and two updaters would fight over them.
 local_brewfile = File.expand_path("~/Brewfile.local")
 instance_eval(File.read(local_brewfile), local_brewfile) if File.exist?(local_brewfile)
