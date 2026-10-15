@@ -33,6 +33,8 @@ cask "aldente"
 cask "scroll-reverser"
 # Archive Utility cannot open .rar or .7z
 cask "the-unarchiver"
+# Menubar toggle that keeps the Mac awake (instead of a `caffeinate -d` tab)
+cask "keepingyouawake"
 # Native mpv-based player; QuickTime cannot open .mkv/.webm/.ogg
 cask "iina"
 
@@ -81,6 +83,10 @@ brew "dust"
 brew "btop"
 brew "htop"
 brew "git-delta"
+# `tldr <cmd>`: the few invocations you actually need, not the man page
+brew "tlrc"
+# batman, batgrep, batdiff — bat-powered man pages, grep and diff
+brew "bat-extras"
 
 # Data + API
 brew "jq"
@@ -127,6 +133,8 @@ brew "midnight-commander"
 # 7z/.rar from the command line (The Unarchiver covers Finder)
 brew "sevenzip"
 brew "yt-dlp"
+# Per-project command runner (justfile)
+brew "just"
 
 # Fonts
 cask "font-maple-mono-nf"

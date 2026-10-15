@@ -117,20 +117,27 @@ find a match.
 
 ### Modern CLI tools
 
-These are aliased over the defaults. Use them as you normally would:
+Most are aliased over the defaults. Use them as you normally would:
 
 ```bash
 cat file.py        # syntax-highlighted output (bat)
 ls                 # icons + git status + grouped dirs (eza)
 ll                 # detailed listing
 lt                 # tree view (2 levels)
-find .json         # find files matching pattern (fd)
+fd .json           # find files matching pattern — not aliased over find (different arguments)
 rg "TODO"          # search file contents (ripgrep) — not aliased, use rg directly
 du                 # visual disk usage (dust)
 top                # process monitor (btop)
 diff a.txt b.txt   # syntax-highlighted diff (delta)
 glow README.md     # render markdown in terminal
+tldr tar           # the handful of invocations you actually need (tlrc)
+batman rsync       # man page with bat highlighting
+batgrep "TODO" src # rg results shown with bat, with context
+batdiff            # git diff of the working tree, rendered by bat
+just               # run a recipe from the project's justfile (lists them with `just --list`)
 ```
+
+`tldr` downloads its page cache on first use and refreshes it automatically.
 
 ### JSON processing (jq)
 
@@ -357,6 +364,7 @@ macOS text fields also understand the emacs keys from the shell: `Ctrl+A`/`E`
 | Move a file (cut + paste) in Finder | `Cmd+C`, then `Cmd+Option+V` |
 | Emoji and symbol picker | `Cmd+Ctrl+Space` |
 | Lock the screen | `Cmd+Ctrl+Q` |
+| Keep the Mac awake (no sleep, screen stays on) | Click the cup in the menubar (KeepingYouAwake) |
 
 ## Finder default apps
 
@@ -472,6 +480,19 @@ Tips:
 - `gh pr create --fill` auto-fills title/body from commits
 - `gh pr merge --squash --delete-branch` for clean merges
 - `gh api repos/{owner}/{repo}/pulls` for raw API access
+
+### GitLab CLI (glab)
+
+Work repos live on GitLab; `glab` mirrors `gh` there. It's in `~/Brewfile.local`,
+not the public Brewfile. Log in once with `glab auth login`.
+
+```bash
+glab mr list                   # open merge requests
+glab mr checkout 123           # check out an MR branch
+glab mr view 123 --web         # open an MR in the browser
+glab ci view                   # live pipeline view for the current branch
+glab ci trace                  # follow a job's log
+```
 
 ### Useful git config
 
