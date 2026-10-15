@@ -403,6 +403,18 @@ Tips:
 - **`rerere`** remembers conflict resolutions and auto-applies them next time
 - **`fetch.prune`** auto-cleans stale remote branches
 - **`diff.algorithm = histogram`** — better diffs for moved code
+- **`diff.colorMoved`** — moved lines get their own color, so a refactor reads
+  as a move instead of a delete plus an add
+- **`push.followTags`** — `git push` also pushes annotated tags on the pushed
+  commits. Lightweight tags (`git tag name`) stay local
+- **`help.autocorrect = prompt`** — a typo like `git stauts` asks
+  "Run 'status' instead [y/N]?" (interactive terminals only)
+
+Tried and dropped: `core.fsmonitor` + `core.untrackedCache`. On a 31k-file repo
+they made `git status` *slower* (30.6 ms vs 21.4 ms, warm cache) — APFS plus
+macOS's metadata cache already make the scan cheap, and the watcher adds IPC
+plus a background daemon per repo. Worth revisiting only for repos with
+hundreds of thousands of files.
 
 ## Hyper key
 

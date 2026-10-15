@@ -19,6 +19,8 @@
 
 [push]
     autoSetupRemote = true
+    # Also push annotated tags on the pushed commits (lightweight tags stay local)
+    followTags = true
 
 [pull]
     rebase = true
@@ -37,6 +39,8 @@
 
 [diff]
     algorithm = histogram
+    # Moved lines get their own color (delta renders it), so refactors read as moves
+    colorMoved = default
 
 [commit]
     verbose = true
@@ -50,3 +54,7 @@
 
 [column]
     ui = auto
+
+[help]
+    # `git stauts` asks "did you mean status?" instead of failing
+    autocorrect = prompt
