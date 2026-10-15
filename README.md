@@ -126,6 +126,10 @@ Check if local config has diverged from the repo:
 Checks symlinks, local files, Brewfile packages, required binaries, Neovim
 treesitter parsers, and VS Code extensions. Non-zero exit on drift.
 
+A Brewfile package that isn't installed is drift; one that is merely outdated
+is listed in yellow but doesn't fail the check — `brew bundle install`
+updates them. (`brew bundle check` alone can't tell the two apart.)
+
 ## Working on this repo with Claude Code
 
 `CLAUDE.md` holds the repo's conventions and tool gotchas. `.claude/settings.json`
