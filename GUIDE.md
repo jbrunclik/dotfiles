@@ -9,10 +9,13 @@ everything at once.
 | Action | Shortcut |
 |---|---|
 | New tab | `Cmd+T` |
-| Split horizontal | `Cmd+D` |
-| Split vertical | `Cmd+Shift+D` |
+| Split right / down | `Cmd+D` / `Cmd+Shift+D` |
 | Navigate splits | `Cmd+Option+Arrow` |
-| Zoom/focus a split | double-tap `Cmd+Enter` |
+| Zoom a split (toggle) | `Cmd+Shift+Enter` |
+| Fullscreen | `Cmd+Enter` |
+| Jump to previous / next prompt | `Cmd+Up` / `Cmd+Down` |
+| Clear screen and scrollback | `Cmd+K` |
+| Open a URL | `Cmd`+click |
 | Quick terminal (global) | `` Ctrl+` `` |
 | Find in scrollback | `Cmd+F` |
 | Edit config | `Cmd+,` |
@@ -21,6 +24,10 @@ everything at once.
 
 The quick terminal is a system-wide dropdown terminal — press
 `` Ctrl+` `` from any app to toggle it.
+
+Prompt jumping (`Cmd+Up/Down`) needs shell integration, which is on: it scrolls
+straight to the start of each command's output — the fastest way back through
+a long build log or a Claude Code session.
 
 Two things to know:
 
@@ -45,6 +52,27 @@ Examples:
 - Type `git` then press Up → cycles through your git commands
 - Type `ssh` then press Up → cycles through your SSH sessions
 - Type `docker` then press Up → cycles through docker commands
+
+### Line editing (readline)
+
+The same keys work in every readline prompt — bash, `python`, `psql`, `mysql`.
+
+| Action | Shortcut |
+|---|---|
+| Start / end of line | `Ctrl+A` / `Ctrl+E` (or `Hyper+O` / `Hyper+P`) |
+| Delete word back, stopping at punctuation | `Option+Backspace` |
+| Delete back to the previous space (a whole path or URL) | `Ctrl+W` |
+| Delete to start / end of line | `Ctrl+U` / `Ctrl+K` |
+| Paste back what you just deleted | `Ctrl+Y` |
+| Undo the last edit | `Ctrl+_` |
+| Insert the previous command's last argument (repeat to go further back) | `Option+.` |
+| Edit the current command in `$EDITOR` (nvim), run it on save and quit | `Ctrl+X` `Ctrl+E` |
+
+Two shell shorthands worth knowing: `cd -` returns to the previous directory,
+and `sudo !!` re-runs the last command with sudo.
+
+The Option-based keys work because Ghostty sends Option as Alt
+(`macos-option-as-alt`).
 
 ### Tab completion
 
@@ -297,6 +325,36 @@ Settings are symlinked from the dotfiles repo. Key features:
 
 Extensions are managed via `config/vscode/extensions.txt` and installed
 by `./install.sh`.
+
+## Text editing everywhere (macOS)
+
+These work in any native text field — Mail, Notes, Slack, browsers, VS Code —
+and most also in Ghostty. Add `Shift` to any movement to select instead.
+
+| Action | Shortcut |
+|---|---|
+| Word left / right | `Option+Left` / `Option+Right` (or `Hyper+B` / `Hyper+W`) |
+| Line start / end | `Cmd+Left` / `Cmd+Right` (or `Hyper+O` / `Hyper+P`) |
+| Document start / end | `Cmd+Up` / `Cmd+Down` |
+| Delete word back / forward | `Option+Backspace` / `Option+Fn+Backspace` |
+| Delete to line start | `Cmd+Backspace` |
+| Forward delete | `Fn+Backspace` (or `Hyper+Backspace`) |
+| Paste without formatting | `Cmd+Option+Shift+V` (Notion: `Cmd+Shift+V`) |
+
+macOS text fields also understand the emacs keys from the shell: `Ctrl+A`/`E`
+(line start/end), `Ctrl+K` (delete to line end) and `Ctrl+Y` (paste it back),
+`Ctrl+D` (forward delete).
+
+## macOS essentials
+
+| Action | Shortcut |
+|---|---|
+| Cycle windows of the current app | ``Cmd+` `` |
+| Show / hide dotfiles in Finder and open/save dialogs | `Cmd+Shift+.` |
+| Type a path in Finder or any open/save dialog | `Cmd+Shift+G` |
+| Move a file (cut + paste) in Finder | `Cmd+C`, then `Cmd+Option+V` |
+| Emoji and symbol picker | `Cmd+Ctrl+Space` |
+| Lock the screen | `Cmd+Ctrl+Q` |
 
 ## Finder default apps
 
