@@ -24,6 +24,11 @@ local ansiKeys = {
     ["7"] = 26, ["8"] = 28, ["9"] = 25, ["0"] = 29,
 }
 local cheatsheet = {}
+-- What pressing a key again does, shown once per cheatsheet section
+local sectionNotes = {
+    Layouts = "again: swap focus",
+    Apps = "again: maximize",
+}
 local function bindHyper(key, section, desc, fn)
     table.insert(cheatsheet, { key = key, section = section, desc = desc })
     hs.hotkey.bind(hyper, ansiKeys[key] or key, fn)
@@ -140,7 +145,7 @@ local function tilePair(leftApp, rightApp)
 end
 
 -- Layouts (bottom row: Z, X, C, V)
-bindHyper("z", "Layouts", "Ghostty | Dia (again: swap focus)", function() tilePair("Ghostty", "Dia") end)
+bindHyper("z", "Layouts", "Ghostty | Dia", function() tilePair("Ghostty", "Dia") end)
 bindHyper("x", "Layouts", "Zoom | Notion", function() tilePair("zoom.us", "Notion") end)
 bindHyper("c", "Layouts", "Zoom | Slack", function() tilePair("zoom.us", "Slack") end)
 bindHyper("v", "Layouts", "Zoom | Dia", function() tilePair("zoom.us", "Dia") end)
@@ -210,8 +215,7 @@ local appKeys = {
     { "6", "zoom.us", "Zoom" },
 }
 for _, binding in ipairs(appKeys) do
-    local label = (binding[3] or binding[2]) .. (binding[1] == "1" and " (again: maximize)" or "")
-    bindHyper(binding[1], "Apps", label, function()
+    bindHyper(binding[1], "Apps", binding[3] or binding[2], function()
         local app = hs.application.get(binding[2])
         if app and app:isFrontmost() then
             local win = app:mainWindow()
@@ -333,7 +337,8 @@ local function cheatsheetText()
         table.insert(bySection[e.section], e)
     end
     for _, name in ipairs(order) do
-        add(name .. "\n", mocha.section)
+        add(name, mocha.section)
+        add((sectionNotes[name] and "  · " .. sectionNotes[name] or "") .. "\n", mocha.dim)
         for _, e in ipairs(bySection[name]) do entry(e.key, e.desc) end
         add("\n", mocha.text)
     end
