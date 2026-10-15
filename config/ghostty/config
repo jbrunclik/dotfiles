@@ -47,6 +47,9 @@ quick-terminal-animation-duration = 0.15
 
 # --- Shell integration (automatic, but explicit for clarity) ---
 shell-integration = detect
+# Keep TERMINFO through sudo, so root TUIs (sudo mtr, sudo btop) can find
+# xterm-ghostty instead of failing with "Error opening terminal"
+shell-integration-features = sudo
 
 # --- Notifications ---
 # Notify when a command finishes while Ghostty is not focused
