@@ -265,6 +265,14 @@ bindHyper("s", "Windows", "Maximize", function()
     if win then win:maximize() end
 end)
 
+-- Hyper+Q = send the front app to the background, as Cmd+H does: macOS hands
+-- focus back to the app used before. Cmd+Q next to it is the real quit; a
+-- stray Hyper+Q only hides, and Hyper+1–6 or the launcher bring it back.
+bindHyper("q", "Windows", "Hide the front app (like Cmd+H)", function()
+    local app = hs.application.frontmostApplication()
+    if app then app:hide() end
+end)
+
 -- Hyper+1-6 = focus app (repeat to maximize). Third field: cheatsheet label
 -- when the process name isn't the one people say.
 local appKeys = {
@@ -561,7 +569,8 @@ end):start()
 
 -- Hyper+Space = launcher: a panel of one-key shortcuts for apps without a
 -- Hyper key of their own, plus the ones with (hinted), so it's a complete map.
--- Press the key with no modifiers and the app comes forward as with Hyper+1–6.
+-- Press the key with no modifiers and the app comes forward as with Hyper+1–6;
+-- if it's already in front, it hides instead.
 -- Escape, any other key, Hyper+Space again or 3 s of nothing closes it. Keys
 -- go through an eventtap that runs only while the panel is up and swallows
 -- them, so they never reach the app underneath or clash with its shortcuts.
@@ -602,7 +611,13 @@ local launcherActions = {
 local launcherByCode, launcherEntries = {}, {}
 for _, app in ipairs(launcherApps) do
     local key, name = app[1], app[2]
-    launcherByCode[ansiKeys[key]] = launcherActions[name] or function() focusApp(name) end
+    -- An app already in front hides instead, so the same key summons and
+    -- dismisses it (Messages' toggle does this itself)
+    local action = launcherActions[name] or function() focusApp(name) end
+    launcherByCode[ansiKeys[key]] = function()
+        local running = getApp(name)
+        if running and running:isFrontmost() then running:hide() else action() end
+    end
     local hyperKey = appHyperKeys[name]
     table.insert(launcherEntries, {
         key = key:upper(),

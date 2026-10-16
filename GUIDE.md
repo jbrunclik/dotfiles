@@ -679,7 +679,7 @@ brightness 200/255):
   | Backspace — forward delete | pink |
   | `,` `.` — Ghostty tabs | white |
   | 1–6 — apps, each in its own color | Ghostty mauve (its Catppuccin accent), Dia yellow, Chrome green, Slack pink, Notion white, Zoom blue |
-  | Z X C V — layouts · Tab A S D F — windows | mauve · blue |
+  | Z X C V — layouts · Tab Q A S D F — windows | mauve · blue |
   | T Messages · M Zoom mute · R reload | teal · red · yellow |
   | Space — launcher | green (like the app keys) |
 
@@ -798,6 +798,11 @@ a sysdiagnose (a ~400 MB archive in `/private/var/tmp`).
 | Hyper + F | Toggle native fullscreen |
 | Hyper + Tab | Toggle focus between left/right windows |
 | Hyper + Left/Right | Focus window in that direction (MacBook arrow keys) |
+| Hyper + Q | Hide the front app (like `Cmd+H`); focus returns to the previous app |
+
+Hyper+Q sends an app to the background; `Cmd+Q` on the same key quits it for
+real (`Cmd+W` only closes the window — WhatsApp, Slack and Zoom keep running).
+A stray Hyper+Q is harmless: Hyper+1–6 or the launcher brings the app back.
 
 ### Layouts (Hammerspoon, bottom row)
 
@@ -850,6 +855,8 @@ number — everything else stays with Spotlight.
 The panel lists them in this order: Hyper apps first, the rest
 alphabetically, System Settings last.
 
+- If the app is already in front, its key hides it instead (like Hyper+Q), so
+  `Hyper+Space W` both summons and dismisses WhatsApp.
 - The panel shows straight away; typing the letter from memory just flashes it.
 - `Escape`, any key not in the list, `Hyper+Space` again or 3 s of nothing
   closes it without doing anything. Its keys only work while it's open — an
