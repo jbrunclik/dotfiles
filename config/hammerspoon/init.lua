@@ -284,7 +284,7 @@ bindPlain("f18", "Any", "Zoom", "Mute / unmute (Model 100 Any key → F18)", tog
 -- between presses: whether Messages is frontmost decides. On a cold start,
 -- wait (up to 5 s) for its window before placing it.
 local messagesFrame = hs.geometry.rect(2 / 3, 0, 1 / 3, 1)
-bindHyper("t", "Messages", "Show / hide Messages", function()
+local function toggleMessages()
     local app = hs.application.get("Messages")
     if app and app:isFrontmost() then
         app:hide()
@@ -302,7 +302,9 @@ bindHyper("t", "Messages", "Show / hide Messages", function()
         local win = window()
         if win then win:move(messagesFrame) end
     end, 0.05)
-end)
+end
+bindHyper("t", "Messages", "Show / hide Messages", toggleMessages)
+bindPlain("f19", "Prog", "Messages", "Show / hide Messages (Model 100 Prog key → F19)", toggleMessages)
 
 -- Reload config
 bindHyper("r", "Hammerspoon", "Reload config (saving a .lua file also does)", function()
