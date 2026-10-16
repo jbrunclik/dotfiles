@@ -270,7 +270,7 @@ all three come from the `Brewfile`, and `drift.sh` verifies them.
 
 | Action | Keys |
 |---|---|
-| Find files | `Ctrl+P` or `Space f f` |
+| Find files (also `Space f f`) | `Ctrl+P` |
 | Live grep (search in files) | `Space f g` |
 | Grep the word under the cursor | `Space f w` |
 | Changed files (git status, with diff preview) | `Space g s` |
@@ -293,10 +293,10 @@ the files**, then `:w`. Oil shows every change and asks before applying it.
 |---|---|
 | Open the current file's folder (again: up a level) | `-` |
 | Open a file or folder | `Enter` |
-| Rename / move | edit the name (a path moves it) |
+| Rename (type a path to move) | `ciw` |
 | Delete (to the Trash) | `dd` |
-| Copy / move | `yy` here, `p` in another folder |
-| New file / folder | a new line (`name` or `name/`) |
+| Copy / move to another folder | `yy` / `dd`, then `p` there |
+| New file (end with `/` for a folder) | `o` + name |
 | Apply changes | `:w` |
 
 `nvim .` opens Oil instead of netrw. Hidden files are shown — dotfiles are
@@ -353,7 +353,8 @@ Run `:Mason` to see status. Configured servers:
 | Next buffer | `Space b n` |
 | Previous buffer | `Space b p` |
 | Close buffer | `Space b d` |
-| Resize split | `Ctrl+W +` / `-` (height), `Ctrl+W <` / `>` (width) |
+| Taller / shorter split | `Ctrl+W +` / `-` |
+| Wider / narrower split | `Ctrl+W >` / `<` |
 
 `j` / `k` move by screen line through wrapped text, but with a count (`5j`)
 by real lines — the ones the relative line numbers count. Ctrl+arrow resizing
@@ -840,8 +841,10 @@ trailing `(…)` note or hint.
    the hold-Hyper overlay shows).
 2. **Keyboard** — this guide's Ghostty, readline, fzf, "Text editing
    everywhere" and "macOS essentials" tables.
+3. **Neovim** — the Neovim section's tables: finding things, oil, LSP,
+   editing, gitsigns, completion.
 
-Nothing is listed by hand: page 2 is parsed from this file, so editing a table
+Nothing is listed by hand: pages 2 and 3 are parsed from this file, so editing a table
 here changes the printout. (Sections can also contribute `command  #
 explanation` lines from their code blocks.) Which sections go on which page is the `pages`
 list at the top of `config/hammerspoon/cheatsheet-pdf.swift`; renaming a listed

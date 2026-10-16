@@ -25,6 +25,10 @@ let pages: [(title: String, sections: [String])] = [
         "Terminal (Ghostty)", "Line editing (readline)", "Fuzzy finder (fzf)",
         "Text editing everywhere (macOS)", "macOS essentials",
     ]),
+    ("Neovim", [
+        "Getting around", "Files (oil.nvim)", "LSP (code intelligence)",
+        "Editing", "Git (gitsigns)", "Completion (blink.cmp)",
+    ]),
 ]
 
 struct Entry: Decodable { let key: String; let desc: String }
