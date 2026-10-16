@@ -688,7 +688,7 @@ brightness 200/255):
   | Backspace — forward delete | pink |
   | `,` `.` — Ghostty tabs | white |
   | 1–6 — apps, each in its own color | Ghostty mauve (its Catppuccin accent), Dia yellow, Chrome green, Slack pink, Notion white, Zoom blue |
-  | Z X C V — layouts · Tab Q A S D F, left thumb Cmd Shift — windows | mauve · blue |
+  | Z X C V — layouts · ` Tab Q A S D F, left thumb Cmd Shift — windows | mauve · blue |
   | T Messages · M Zoom mute · R reload | teal · red · yellow |
   | Space — launcher | green (like the app keys) |
 
@@ -813,11 +813,19 @@ a sysdiagnose (a ~400 MB archive in `/private/var/tmp`).
 | Hyper + F | Toggle native fullscreen |
 | Hyper + Tab | Toggle focus between left/right windows |
 | Hyper + Left/Right | Focus window in that direction (MacBook arrows; Model 100: left thumb Cmd / Shift) |
+| Hyper + ` | Cycle the windows stacked on this half (or at this spot) |
 | Hyper + Q | Hide the front app (like `Cmd+H`); focus returns to the previous app |
 
 Hyper+Q sends an app to the background; `Cmd+Q` on the same key quits it for
 real (`Cmd+W` only closes the window — WhatsApp, Slack and Zoom keep running).
 A stray Hyper+Q is harmless: Hyper+1–6 or the launcher brings the app back.
+
+Hyper+` is Cmd+` per spot instead of per app: it cycles the windows that sit
+exactly where the focused one is — Slack and Notion both tiled right, two
+maximized windows, two floats on top of each other. Hyper+Tab and Hyper+Left/Right
+only ever reach the topmost window of a half; this gets at the ones under it.
+Each press raises the bottom-most of the stack, so three windows come round in
+turn rather than the top two swapping.
 
 ### Layouts (Hammerspoon, bottom row)
 

@@ -22,7 +22,7 @@ local ansiKeys = {
     b = 11, q = 12, w = 13, e = 14, r = 15, y = 16, t = 17, o = 31, u = 32,
     i = 34, p = 35, l = 37, j = 38, k = 40, n = 45, m = 46,
     ["1"] = 18, ["2"] = 19, ["3"] = 20, ["4"] = 21, ["5"] = 23, ["6"] = 22,
-    ["7"] = 26, ["8"] = 28, ["9"] = 25, ["0"] = 29, [","] = 43,
+    ["7"] = 26, ["8"] = 28, ["9"] = 25, ["0"] = 29, [","] = 43, ["`"] = 50,
 }
 local cheatsheet = {}
 -- What pressing a key again does, shown once per cheatsheet section
@@ -247,6 +247,25 @@ bindHyper("right", "Windows", "Focus right half", function()
         return w:isStandard() and w:frame().x >= hs.screen.mainScreen():frame().w / 2
     end)
     if wins[1] then wins[1]:focus() end
+end)
+
+-- Hyper+` = cycle the windows stacked where the focused one is (Slack and
+-- Notion both tiled right, two maximized windows, two floats at the same
+-- spot) — Cmd+`, but per spot instead of per app. Each press brings the
+-- bottom-most window of the stack to the front: with A over B over C that's
+-- C, then B, then A again. Raising the one just below the top would only
+-- ever flip between the top two. Derived from live frames and z-order.
+bindHyper("`", "Windows", "Cycle windows stacked on this half", function()
+    local current = hs.window.focusedWindow()
+    if not current then return end
+    local f = current:frame()
+    local function samePlace(w)
+        local g = w:frame()
+        return w:isStandard() and math.abs(g.x - f.x) < 20 and math.abs(g.y - f.y) < 20
+            and math.abs(g.w - f.w) < 20 and math.abs(g.h - f.h) < 20
+    end
+    local stack = hs.fnutils.filter(hs.window.orderedWindows(), samePlace)
+    if #stack > 1 then stack[#stack]:focus() end
 end)
 
 -- Hyper+F = toggle native fullscreen
