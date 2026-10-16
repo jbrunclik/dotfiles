@@ -150,7 +150,15 @@ batman rsync       # man page with bat highlighting
 batgrep "TODO" src # rg results shown with bat, with context
 batdiff            # git diff of the working tree, rendered by bat
 just               # run a recipe from the project's justfile (lists them with `just --list`)
+sd 'old' 'new' *.lua   # find-and-replace in files: ripgrep's regex, no sed -i quirks
+tokei              # lines of code per language (code / comments / blanks)
+hyperfine 'cmd1' 'cmd2'  # benchmark: many runs, mean ± spread, which is faster
 ```
+
+`sd` is the replace half of `rg`: same regex syntax (no `\(` escaping), and it
+edits in place the same way everywhere — `sed -i` takes different arguments on
+macOS and Linux. `hyperfine` beats a single `time cmd`: it warms up, repeats
+and reports the spread, so a 5 % difference is real or noise, not a guess.
 
 `tldr` downloads its page cache on first use and refreshes it automatically.
 
@@ -160,7 +168,12 @@ just               # run a recipe from the project's justfile (lists them with `
 cat data.json | jq '.results[].name'    # extract nested fields
 curl -s api/endpoint | jq '.'           # pretty-print JSON
 jq -r '.[] | [.id, .name] | @csv' data.json  # convert to CSV
+jless data.json                         # browse it: fold, search, copy a path
+http GET api/endpoint | jless           # … or straight from httpie / curl
 ```
+
+In `jless`: `j`/`k` move, `h`/`l` collapse/expand, `/` searches, `yp` copies
+the path of the current node (`.results[3].name`) — paste it into `jq`.
 
 Tips:
 - `jq 'keys'` to see top-level keys in an object

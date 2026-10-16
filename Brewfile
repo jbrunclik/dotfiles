@@ -93,6 +93,8 @@ brew "bat-extras"
 
 # Data + API
 brew "jq"
+# Interactive JSON viewer: fold, search, copy paths
+brew "jless"
 brew "httpie"
 
 # Network
@@ -142,6 +144,10 @@ brew "sevenzip"
 brew "yt-dlp"
 # Per-project command runner (justfile)
 brew "just"
+# Occasional but cheap: benchmark commands, count code, find-and-replace
+brew "hyperfine"
+brew "tokei"
+brew "sd"
 
 # Fonts
 cask "font-maple-mono-nf"

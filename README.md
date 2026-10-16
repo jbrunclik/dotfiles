@@ -47,7 +47,7 @@ what to watch out for.
 |---|---|---|
 | Terminal | [Ghostty](https://ghostty.org/) — tabs on Hyper+,/., `sudo` keeps its terminfo | `config/ghostty/config` |
 | Shell | Bash + [Starship](https://starship.rs/), [fzf](https://github.com/junegunn/fzf) on `fd` with previews, [zoxide](https://github.com/ajeetdsouza/zoxide) | `bash_profile`, `inputrc`, `config/starship.toml` |
-| Modern CLI | `bat`, `eza`, `fd`, `ripgrep`, `dust`, `btop`, `delta`, `tldr`, `bat-extras`, `just` | `Brewfile`, `config/bat/` |
+| Modern CLI | `bat`, `eza`, `fd`, `ripgrep`, `sd`, `dust`, `btop`, `delta`, `difftastic`, `jless`, `tldr`, `bat-extras`, `just`, `hyperfine`, `tokei` | `Brewfile`, `config/bat/` |
 | Runtimes | [mise](https://mise.jdx.dev/) for Node, Go and Java; `uv` and `ruff` for Python | `config/mise/config.toml` |
 | SSH | Agent, keepalive, one reused connection per host | `ssh_config` |
 
