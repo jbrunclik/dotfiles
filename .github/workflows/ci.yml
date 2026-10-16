@@ -20,6 +20,9 @@ jobs:
       - name: Shellcheck
         run: shellcheck install.sh drift.sh gh-new-repo hyper-cheatsheet lib/links.sh config/git/hooks/pre-commit .claude/hooks/check-config.sh
 
+      - name: Python syntax
+        run: python3 -c "import ast; ast.parse(open('keyboardio-backup').read())"
+
       - name: Lua syntax
         run: find config/nvim -name '*.lua' -print0 | xargs -0 -n1 luac5.4 -p
 

@@ -1,7 +1,8 @@
 -- Hammerspoon config
 -- Hyper key (Cmd+Option+Ctrl+Shift) via:
 --   MacBook:    CapsLock (remapped by Karabiner-Elements)
---   Keyboardio: Any key (configured in Chrysalis firmware)
+--   Keyboardio: right thumb-cluster Fn key (set in firmware with Chrysalis;
+--               backed up in config/keyboardio/model100.json)
 
 require("hs.ipc")
 

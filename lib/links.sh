@@ -37,6 +37,7 @@ LINKS=(
     "config/karabiner|$HOME/.config/karabiner"
     "gh-new-repo|$HOME/.local/bin/gh-new-repo"
     "hyper-cheatsheet|$HOME/.local/bin/hyper-cheatsheet"
+    "keyboardio-backup|$HOME/.local/bin/keyboardio-backup"
 )
 
 # Binaries the configs reference but that nothing else verifies. Neovim's

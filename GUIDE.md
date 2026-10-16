@@ -564,7 +564,7 @@ It's triggered by:
 | Keyboard | Key | Config |
 |---|---|---|
 | MacBook | CapsLock (hold) | Karabiner-Elements |
-| Keyboardio Model 100 | Any key (hold) | Chrysalis firmware |
+| Keyboardio Model 100 | Right thumb-cluster Fn key (hold) | Chrysalis (backed up in `config/keyboardio/`) |
 
 Hyper shortcuts are tied to **physical keys**, so they stay put when you switch
 to the Czech layout (QWERTZ swaps Y and Z): Karabiner matches physical keys,
@@ -582,6 +582,26 @@ Holding CapsLock and letting go without pressing anything sends nothing once
 250 ms have passed, so an abandoned Hyper chord doesn't delete a character.
 The catch: a Hyper chord started within 250 ms of a Backspace tap becomes
 Backspace instead.
+
+### Keyboardio Model 100
+
+The keymap lives in the keyboard itself (Kaleidoscope firmware, edited with
+Chrysalis), so it works on any computer without Karabiner. Keys that matter
+here, layer 0:
+
+| Key | Sends | Does |
+|---|---|---|
+| Right thumb-cluster Fn | Ctrl+Alt+Shift + Left Cmd | Hyper, held |
+| Butterfly | `Cmd+Shift+4` | Shottr area capture (its hotkey; macOS's own `Cmd+Shift+4` is off) |
+| Any | The stock "Any" macro (types a random character) | Free to repurpose |
+
+**Back it up after every change in Chrysalis:** quit Chrysalis (it holds the
+serial port), run `keyboardio-backup`, and commit `config/keyboardio/model100.json`.
+The script asks the keyboard for every setting over the same protocol Chrysalis
+uses (read-only — it skips reset/erase/trigger) and writes Chrysalis's own
+backup format, so restoring is Chrysalis's restore-from-backup option. Chrysalis
+only backs up by itself before a firmware update, which is why its last one
+predated the Hyper and butterfly keys.
 
 ### Cheatsheet
 
