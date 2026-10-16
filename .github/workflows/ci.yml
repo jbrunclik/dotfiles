@@ -18,7 +18,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y shellcheck lua5.4 jq python3-yaml
 
       - name: Shellcheck
-        run: shellcheck install.sh drift.sh gh-new-repo hyper-cheatsheet wallpaper lib/links.sh config/git/hooks/pre-commit .claude/hooks/check-config.sh
+        run: shellcheck install.sh drift.sh gh-new-repo hyper-cheatsheet wallpaper lib/links.sh config/git/hooks/pre-commit config/git/hooks/pre-push .claude/hooks/check-config.sh
 
       - name: Python syntax
         run: |

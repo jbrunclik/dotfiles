@@ -29,7 +29,7 @@ same on a MacBook and a Keyboardio Model 100. Catppuccin Mocha everywhere.
 - **Keyboard firmware as code.** The Model 100's keymap and colors are backed
   up into the repo and its lit Hyper layer is generated from the dotfiles.
 - **Kept honest.** `drift.sh` checks the machine against the repo, CI lints
-  every push, a global pre-commit hook scans for secrets, and a Claude Code
+  every push, global pre-commit and pre-push hooks scan for secrets, and a Claude Code
   hook validates every config file as it's edited.
 
 | On screen: hold Hyper | On the desk: `hyper-cheatsheet` |
@@ -159,8 +159,10 @@ scripts keep it in the repo (quit Chrysalis first — it holds the port):
   Touch ID for `sudo`. Non-zero exit on drift.
 - CI lints every push: shellcheck, Python/Lua/JSON/YAML syntax, and that every
   binary a config shells out to has a Brewfile entry.
-- A global pre-commit hook runs [gitleaks](https://github.com/gitleaks/gitleaks)
-  on every commit, in every repo.
+- Global git hooks run [gitleaks](https://github.com/gitleaks/gitleaks) in every
+  repo: pre-commit on each commit, and pre-push on every commit about to leave
+  the machine — the backstop for commits that skip pre-commit (git absorb's
+  fixups, rebases, other libgit2 tools).
 - Working on the repo with Claude Code: [CLAUDE.md](CLAUDE.md) holds the
   conventions and the after-every-change checklist, and a hook in
   `.claude/settings.json` validates each edited file — shellcheck, JSON, Lua,

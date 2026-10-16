@@ -1,3 +1,41 @@
-#!/bin/sh
-command -v git-lfs >/dev/null 2>&1 || { printf >&2 "\n%s\n\n" "This repository is configured for Git LFS but 'git-lfs' was not found on your path. If you no longer wish to use Git LFS, remove this hook by deleting the 'pre-push' file in the hooks directory (set by 'core.hookspath'; usually '.git/hooks')."; exit 2; }
-git lfs pre-push "$@"
+#!/usr/bin/env bash
+# Global pre-push hook, wired via `core.hooksPath` in gitconfig.
+#
+# 1. Scan every commit about to be pushed for secrets with gitleaks. The
+#    pre-commit hook only sees `git commit`: commits made another way skip it —
+#    git absorb's fixups (built through libgit2), rebases, other libgit2 tools.
+#    This is the backstop before anything leaves the machine.
+# 2. Git LFS's own pre-push (this file replaced the hook `git lfs install`
+#    writes); it needs the same ref list on stdin.
+# 3. Chain to the repo's own .git/hooks/pre-push, as pre-commit does.
+#
+# Git passes "<local ref> <local sha> <remote ref> <remote sha>" lines on stdin.
+set -euo pipefail
+
+refs="$(cat)"
+zero="0000000000000000000000000000000000000000"
+
+if command -v gitleaks >/dev/null 2>&1; then
+    while read -r _ local_sha _ remote_sha; do
+        [ -n "${local_sha:-}" ] || continue
+        [ "$local_sha" = "$zero" ] && continue          # deleting a remote branch
+        if [ "$remote_sha" = "$zero" ]; then
+            range="$local_sha --not --remotes"          # new branch: what no remote has
+        else
+            range="$remote_sha..$local_sha"
+        fi
+        gitleaks git --log-opts="$range" --redact --no-banner
+    done <<< "$refs"
+fi
+
+command -v git-lfs >/dev/null 2>&1 || {
+    printf >&2 "\n%s\n\n" "This repository is configured for Git LFS but 'git-lfs' was not found on your path. Install it (it's in the Brewfile) or remove this hook."
+    exit 2
+}
+printf '%s\n' "$refs" | git lfs pre-push "$@"
+
+# core.hooksPath points here, so find the repo-local hook via the common git dir
+repo_hook="$(git rev-parse --git-common-dir)/hooks/pre-push"
+if [ -x "$repo_hook" ]; then
+    printf '%s\n' "$refs" | "$repo_hook" "$@"
+fi

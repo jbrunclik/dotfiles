@@ -637,6 +637,8 @@ git absorb --and-rebase   # fold your fixes into the commits they belong to
   belongs to, makes `fixup!` commits for them and squashes them in. With
   nothing staged it takes every change in the working tree. Hunks it can't
   place unambiguously stay as uncommitted changes, so check `git status`.
+  Its commits skip the pre-commit secret scan (it doesn't run `git commit`);
+  the global pre-push hook scans them before they leave the machine.
 
 ### Lazygit
 
