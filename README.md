@@ -5,6 +5,8 @@
 A keyboard-first macOS setup, built around one **Hyper** key that works the
 same on a MacBook and a Keyboardio Model 100. Catppuccin Mocha everywhere.
 
+<img src="docs/model100.jpg" alt="Keyboardio Model 100 with the base layer's dim mauve-to-green gradient; Prog, Any and the butterfly key lit in their own colors" width="720">
+
 ## Highlights
 
 - **One Hyper key, two keyboards.** Caps Lock on the MacBook, the thumb key
