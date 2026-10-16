@@ -113,6 +113,10 @@ brew "git-lfs"
 # Rewrites history across every commit — the cleanup half of the gitleaks
 # guardrail, for when a secret gets past it into a published repo.
 brew "git-filter-repo"
+# `git absorb`: folds staged fixes into the commits they belong to
+brew "git-absorb"
+# Structural diff, wired as `git difftool` (delta stays the pager)
+brew "difftastic"
 
 # Security
 # Secret scanner invoked by the global pre-commit hook (core.hooksPath in

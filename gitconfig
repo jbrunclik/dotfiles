@@ -41,6 +41,26 @@
     algorithm = histogram
     # Moved lines get their own color (delta renders it), so refactors read as moves
     colorMoved = default
+    # `git difftool` (alias `git dft`) shows a structural diff: difftastic
+    # compares syntax trees, so reformatting and re-indenting don't show as
+    # changes. delta stays the pager for everything else.
+    tool = difftastic
+
+[difftool]
+    prompt = false
+
+[difftool "difftastic"]
+    cmd = difft "$LOCAL" "$REMOTE"
+
+[pager]
+    difftool = true
+
+[absorb]
+    # With nothing staged, `git absorb` takes every change in the working tree
+    autoStageIfNothingStaged = true
+
+[alias]
+    dft = difftool
 
 [commit]
     verbose = true

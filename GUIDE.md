@@ -606,6 +606,25 @@ All git diffs are syntax-highlighted with line numbers. Navigation:
 | Previous file | `N` |
 | Quit | `q` |
 
+### Structural diffs and fixups
+
+```bash
+git dft              # structural diff of the working tree (difftastic)
+git dft main         # … against a branch; any `git diff` arguments work
+git absorb --and-rebase   # fold your fixes into the commits they belong to
+```
+
+- **`git dft`** is `git difftool` with **difftastic**, which compares syntax
+  trees instead of lines: reformatting, re-indenting and re-wrapping don't
+  show as changes, and moved code reads as moved. Use it when a refactor's
+  `git diff` is a wall of red and green. delta stays the pager for `git diff`,
+  `log` and `show` — difftastic is the second opinion, not the default.
+- **`git absorb`** answers PR review the clean way: fix the comments, then
+  `git absorb --and-rebase` works out which earlier commit each changed hunk
+  belongs to, makes `fixup!` commits for them and squashes them in. With
+  nothing staged it takes every change in the working tree. Hunks it can't
+  place unambiguously stay as uncommitted changes, so check `git status`.
+
 ### Lazygit
 
 Run `lazygit` in any repo for a full terminal UI. Key areas:

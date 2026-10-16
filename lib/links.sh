@@ -55,6 +55,7 @@ REQUIRED_BINS=(
     "dust|du alias"
     "btop|top alias"
     "delta|git pager"
+    "difft|git difftool (difftastic)"
     "fzf|shell fuzzy finder"
     "starship|prompt"
     "zoxide|cd replacement"
