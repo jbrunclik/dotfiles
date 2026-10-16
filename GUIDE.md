@@ -600,14 +600,36 @@ here, layer 0:
 Mocha's color families, saturated — its pastels read as near-white on LEDs;
 brightness 200/255):
 
-- **Base** — dim; Prog teal (Messages), Any red (mute), butterfly peach
-  (screenshot), layer keys white.
-- **Hyper** (hold the thumb key) — each bound key in its cheatsheet section's
-  color, unbound keys dark: layouts mauve, windows blue, apps green, Messages
-  teal, Zoom red, reload yellow, Karabiner nav peach. The keyboard *is* the
-  cheatsheet here.
-- **Function** / **Numpad** — only their own keys lit: arrows sky, F-keys pink,
-  media yellow; digits green.
+- **Base** — every key softly lit in a dim left-to-right gradient (mauve,
+  blue, teal, green — four columns each); Prog teal (Messages), Any red
+  (mute), butterfly orange (screenshot), layer keys white.
+- **Hyper** (hold the thumb key) — bound keys by what they do, unbound keys
+  dark. The keyboard *is* the cheatsheet here:
+
+  | Keys | Color |
+  |---|---|
+  | H J K L — arrows | sky (same as the Fn layer's arrows) |
+  | B W, O P — word / line jumps | orange |
+  | U I — page up / down | lavender |
+  | Backspace — forward delete | pink |
+  | `,` `.` — Ghostty tabs | white |
+  | 1–6 — apps, each in its own color | Ghostty mauve (its Catppuccin accent), Dia yellow, Chrome green, Slack pink, Notion white, Zoom blue |
+  | Z X C V — layouts · Tab A S D F — windows | mauve · blue |
+  | T Messages · M Zoom mute · R reload | teal · red · yellow |
+
+- **Function** / **Numpad** — only their own keys lit, by kind: F-keys pink,
+  arrows sky, media yellow, mouse keys green, brackets orange, editing and
+  navigation lavender; digits green, operators yellow. The key that gets you
+  back out of a layer stays white.
+
+The Numpad is on **layer 4**, not the stock layer 1: the firmware's stock NumPad
+plugin is tied to layer 1 and, while it's active, forces the number keys to its
+own color (off here), so the color map can't light them. Layer 1 is left empty.
+
+Only **16 colors** are usable: the color map stores 4 bits per key, even though
+the palette holds 24. `keyboardio-layers` refuses to go past index 15. That's
+why some keys share a color where they never sit side by side (Slack and
+forward delete, Zoom and the window keys, Ghostty tabs and the Hyper key).
 
 The color map is indexed by LED, not by key — the LEDs are wired in a different
 order (the table is in `keyboardio-layers`, the same one Chrysalis uses).

@@ -38,8 +38,12 @@ from kaleidoscope_focus import Keyboard  # noqa: E402
 
 APPLY = "--apply" in sys.argv[1:]
 LAYERS, KEYS = 8, 64
-BASE, NUMPAD, FN, HYPER = 0, 1, 2, 3
-NAMES = ["QWERTY", "Numpad", "Function", "Hyper"]
+# The Numpad lives on layer 4, not the stock layer 1: the firmware's stock
+# NumPad plugin is tied to layer 1 and, while it's active, forces the numpad
+# keys to its own color (off, in this firmware) — the color map can't light them.
+STOCK_NUMPAD, FN, HYPER, NUMPAD = 1, 2, 3, 4
+BASE = 0
+NAMES = ["QWERTY", "Unused", "Function", "Hyper", "Numpad"]
 BRIGHTNESS = 200  # of 255; LEDs under keycaps are hard to see much lower
 
 # The color map is indexed by LED, not by key: the LEDs are wired in a
@@ -59,29 +63,48 @@ CTRL, LALT, SHIFT, GUI = 0x01, 0x02, 0x08, 0x10
 HYPER_MODS = (CTRL | LALT | SHIFT | GUI) << 8
 HYPER_KEY = ((CTRL | LALT | SHIFT) << 8) | 0xE3  # Ctrl+Alt+Shift + Left Cmd
 SHIFT_TO_LAYER = 0x4400 + 42                     # + layer (left palm Fn = layer 2 = 17452)
+LOCK_LAYER = 0x4400                              # + layer (stock Num key = layer 1 = 0x4401)
 F18, F19 = 0x6D, 0x6E
 SCREENSHOT = ((SHIFT | GUI) << 8) | 0x21         # Cmd+Shift+4, the butterfly key (Shottr)
 PROG = 0                                         # row 0, col 0 of the base layer
 
-# Palette: 24 RGB colors (Chrysalis reads it in threes). Catppuccin Mocha's
-# color families, but saturated: its pastels read as near-white on LEDs.
+# Palette: 24 RGB colors (Chrysalis reads it in threes), but the color map
+# stores 4 bits per key, so only the first 16 are reachable. Catppuccin
+# Mocha's color families, saturated: its pastels read as near-white on LEDs.
 PALETTE = [
     (0, 0, 0),        # 0  off
     (150, 40, 255),   # 1  mauve     Layouts
-    (0, 70, 255),     # 2  blue      Windows
-    (0, 255, 40),     # 3  green     Apps, numpad digits
+    (0, 70, 255),     # 2  blue      Windows, Zoom
+    (0, 255, 40),     # 3  green     Apps, numpad digits, mouse keys
     (255, 0, 40),     # 4  red       Zoom (also the Any key)
     (0, 255, 170),    # 5  teal      Messages (also the Prog key)
-    (255, 190, 0),    # 6  yellow    Hammerspoon, media keys
-    (255, 80, 0),     # 7  peach     Karabiner nav, screenshot key
-    (110, 120, 255),  # 8  lavender  anything else bound
+    (255, 190, 0),    # 6  yellow    Hammerspoon, media keys, numpad operators
+    (255, 80, 0),     # 7  peach     Karabiner nav, screenshot key, brackets/symbols
+    (110, 120, 255),  # 8  lavender  editing/navigation keys, anything else
     (0, 190, 255),    # 9  sky       arrows
-    (255, 30, 150),   # 10 pink      F-keys
-    (35, 35, 60),     # 11 surface   base layer keys (dim)
-    (220, 220, 230),  # 12 text      Hyper key, layer keys
-] + [(0, 0, 0)] * 11
+    (255, 30, 150),   # 10 pink      F-keys, forward delete, Slack
+    (140, 80, 190),   # 11 dim mauve base layer gradient, columns 0–3 (far left)
+    (230, 230, 240),  # 12 white     layer keys (incl. the way out of a layer), Notion, Ghostty tabs
+    (70, 100, 190),   # 13 dim blue  base layer gradient, columns 4–7
+    (50, 150, 140),   # 14 dim teal  base layer gradient, columns 8–11
+    (70, 150, 80),    # 15 dim green base layer gradient, columns 12–15 (far right)
+] + [(0, 0, 0)] * 8   # 16–23: unreachable from the 4-bit color map
+# Base layer: a dim left-to-right gradient, so it's never a dull grey. Brightness
+# of these is what reads as "softly lit" under the keycaps; much lower is invisible.
+BASE_GRADIENT = [11, 13, 14, 15]
 SECTION_COLORS = {"Layouts": 1, "Windows": 2, "Apps": 3, "Zoom": 4, "Messages": 5,
                   "Hammerspoon": 6, "Karabiner": 7}
+# Hyper+1–6: each app in its own theme/brand color (keyed by the cheatsheet label)
+APP_COLORS = {"Ghostty": 1,  # its Catppuccin Mocha accent, mauve
+              "Dia": 6,      # yellow icon
+              "Chrome": 3,   # green, from the logo
+              "Slack": 10,   # aubergine, as magenta-pink
+              "Notion": 12,  # black and white
+              "Zoom": 2}     # Zoom blue
+# Karabiner remaps by kind (matched on the rule's action text): arrows are
+# their own category, the same sky as the Fn layer's arrows
+KARABINER_COLORS = [("Arrow", 9), ("Page", 8), ("Word", 7), ("Line", 7),
+                    ("Forward delete", 10), ("tab", 12)]
 
 HID = {chr(65 + i): 0x04 + i for i in range(26)}
 HID.update({str(i): 0x1D + i for i in range(1, 10)})
@@ -93,8 +116,48 @@ def plain(k):
     return k if k < 0x100 else None
 
 
+def is_layer_key(k):
+    return 0x4400 <= k < 0x4500
+
+
+def layer_color(k, base_key):
+    """Color for a key on a non-base layer (Fn, Numpad, and any added later),
+    by what kind of key it is. Transparent keys are dark — except where the
+    base key is a layer key, which stays lit: that's the way out."""
+    if k == TRANSPARENT:
+        return 12 if is_layer_key(base_key) else 0
+    hi, code = k >> 8, k & 0xFF
+    if hi == 0x48:                       # consumer: media keys
+        return 6
+    if hi == 0x50:                       # mouse keys
+        return 3
+    if is_layer_key(k):
+        return 12
+    if hi & ~0x1F:                       # macros, LED keys, …
+        return 11
+    if 0x3A <= code <= 0x45:             # F1–F12
+        return 10
+    if 0x4F <= code <= 0x52:             # arrows
+        return 9
+    if 0x1E <= code <= 0x27 or 0x59 <= code <= 0x62:  # digits, keypad digits
+        return 3
+    if 0x54 <= code <= 0x58 or code in (0x63, 0x2E, 0x37):  # keypad operators, = .
+        return 6
+    if code in (0x2F, 0x30, 0x31):       # [ ] \ (and with Shift: { } |)
+        return 7
+    return 8                             # editing / navigation
+
+
+def hyper_color(section, desc):
+    if section == "Apps":
+        return APP_COLORS.get(desc.split(" (")[0], SECTION_COLORS["Apps"])
+    if section == "Karabiner":
+        return next((c for word, c in KARABINER_COLORS if word in desc), SECTION_COLORS["Karabiner"])
+    return SECTION_COLORS.get(section, 8)
+
+
 def hyper_bindings():
-    """{HID usage: section} for every Hyper binding, asked live from Hammerspoon."""
+    """{HID usage: palette color} for every Hyper binding, asked live from Hammerspoon."""
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "bindings.json")
         # </dev/null: hs reads commands from stdin when it isn't a terminal
@@ -113,7 +176,7 @@ def hyper_bindings():
             parts = [label] if len(label) == 1 or label in HID else label.split("/")
             for part in parts:
                 if part in HID:  # arrows etc. aren't on the Model 100's base layer
-                    bound[HID[part]] = section["name"]
+                    bound[HID[part]] = hyper_color(section["name"], entry["desc"])
     return bound
 
 
@@ -148,6 +211,17 @@ def setcolor(layer, i, color):
 setkey(BASE, hyper_at[0], SHIFT_TO_LAYER + HYPER)
 setkey(BASE, PROG, F19)
 
+# Numpad: move layer 1 to layer 4 (once — afterwards layer 4 is the source),
+# point the Num key at it, and leave layer 1 empty
+stock = keymap[STOCK_NUMPAD * KEYS:(STOCK_NUMPAD + 1) * KEYS]
+if set(keymap[NUMPAD * KEYS:(NUMPAD + 1) * KEYS]) == {TRANSPARENT} and set(stock) != {TRANSPARENT}:
+    for i, k in enumerate(stock):
+        setkey(NUMPAD, i, k)
+for i in range(KEYS):
+    setkey(STOCK_NUMPAD, i, TRANSPARENT)
+    if base[i] == LOCK_LAYER + STOCK_NUMPAD:
+        setkey(BASE, i, LOCK_LAYER + NUMPAD)
+
 # Hyper layer: every plain non-modifier key sends Hyper + itself; the rest
 # (modifiers, layer keys, F18/F19) stays transparent
 for i, k in enumerate(base):
@@ -161,18 +235,19 @@ for i in range(KEYS):
     h = plain(k)
     # Base: dim, single-purpose keys marked
     setcolor(BASE, i, {F18: 4, F19: 5}.get(h, 7 if k == SCREENSHOT else
-                       12 if k >= 0x4400 and k < 0x4500 else 11))
-    # Hyper: bound keys by section, everything else dark
-    section = bound.get(h) if h is not None else None
+                       12 if is_layer_key(k) else BASE_GRADIENT[(i % 16) // 4]))
+    # Hyper: bound keys by what they do, everything else dark
     setcolor(HYPER, i, 12 if k == SHIFT_TO_LAYER + HYPER else
-             SECTION_COLORS.get(section, 8) if section else 0)
-    # Fn: arrows, F-keys, media; Numpad: its keys
-    fk = new_keymap[FN * KEYS + i]
-    fh = plain(fk & 0xFF) if fk != TRANSPARENT and fk < 0x100 else None
-    setcolor(FN, i, 0 if fk == TRANSPARENT else 9 if fh in (0x4F, 0x50, 0x51, 0x52) else
-             10 if fh is not None and (0x3A <= fh <= 0x45) else 6 if fk >= 0x5000 else 8)
-    nk = new_keymap[NUMPAD * KEYS + i]
-    setcolor(NUMPAD, i, 0 if nk == TRANSPARENT else 3)
+             bound.get(h, 0) if h is not None else 0)
+    # Every other layer that has keys of its own: by key type
+    for layer in range(LAYERS):
+        if layer in (BASE, HYPER):
+            continue
+        keys = new_keymap[layer * KEYS:(layer + 1) * KEYS]
+        setcolor(layer, i, layer_color(keys[i], k) if set(keys) != {TRANSPARENT} else 0)
+
+if max(new_colormap) > 15:
+    sys.exit("color index above 15: the color map stores 4 bits per key")
 
 names = NAMES + [f"#{n}" for n in range(len(NAMES), LAYERS)]
 plan = {
@@ -185,7 +260,7 @@ plan = {
 }
 
 changed_keys = [i for i in range(LAYERS * KEYS) if new_keymap[i] != keymap[i]]
-print(f"Hyper bindings found: {len(bound)} keys in {len(set(bound.values()))} sections")
+print(f"Hyper bindings found: {len(bound)} keys in {len(set(bound.values()))} colors")
 if changed_keys:
     per_layer = {L: sum(1 for i in changed_keys if i // KEYS == L) for L in range(LAYERS)}
     print("Keymap: " + ", ".join(f"{n} keys on {NAMES[L] if L < len(NAMES) else L}"
