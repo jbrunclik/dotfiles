@@ -423,7 +423,7 @@ App preferences `install.sh` also sets (only the ones changed from default):
 |---|---|
 | AlDente | Charge limit 80 % (macOS native; its lowest), sailing mode 5 %, automatic discharge, heat protection (pauses charging above 35 °C — heat wears a battery faster than charge level), percentage in the menu bar |
 | Scroll Reverser | Reverse scrolling for the mouse only, not the trackpad |
-| gh | `~/.config/gh/config.yml` is symlinked (aliases such as `gh co`); `hosts.yml` with the token stays out of the repo |
+| gh | `~/.config/gh/config.yml` is symlinked (aliases such as `gh co`; `git_protocol: ssh`, so `gh repo clone`, `gh-new-repo` and fork checkouts get SSH remotes like every other repo); `hosts.yml` with the token stays out of the repo |
 
 Key repeat needs a logout; Finder picks up the extension setting on restart
 (`killall Finder`). The Dock settings apply when `install.sh` restarts the Dock.
