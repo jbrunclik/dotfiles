@@ -681,6 +681,7 @@ brightness 200/255):
   | 1–6 — apps, each in its own color | Ghostty mauve (its Catppuccin accent), Dia yellow, Chrome green, Slack pink, Notion white, Zoom blue |
   | Z X C V — layouts · Tab A S D F — windows | mauve · blue |
   | T Messages · M Zoom mute · R reload | teal · red · yellow |
+  | Space — launcher | green (like the app keys) |
 
 - **Function** / **Numpad** — only their own keys lit, by kind: F-keys pink,
   arrows sky, media yellow, mouse keys green, brackets orange, editing and
@@ -728,6 +729,10 @@ is generated, not written by hand:
   `init.lua` — a binding made with plain `hs.hotkey.bind` won't appear.
 - Karabiner remaps come from `karabiner.json` rule descriptions written as
   `[App: ]Hyper+<keys> → <action>`; a trailing `(…)` note is left out.
+
+Every Hammerspoon popup (this one and the Hyper+Space launcher) is drawn in
+three columns sized to the widest entry: key, description, and a dimmed
+trailing `(…)` note or hint.
 
 ### Printable cheatsheet
 
@@ -824,6 +829,36 @@ The first press brings up the app's main window, the second maximizes it
 (launching the app if it has no window). For Zoom that's the **call** window
 during a meeting, never the meetings list ("Zoom Workplace"); the Zoom layouts
 (Hyper+X/C/V) pick the same way.
+
+### Launcher (Hammerspoon)
+
+`Hyper+Space` opens a panel of one-key shortcuts; press the key (no modifiers)
+and the app comes forward the same way as Hyper+1–6, launching it if needed.
+For apps used often enough to want a key, not often enough to earn a Hyper
+number — everything else stays with Spotlight.
+
+| Key | App | Key | App |
+|---|---|---|---|
+| G | Ghostty (also Hyper+1) | 1 | 1Password |
+| D | Dia (Hyper+2) | C | Claude |
+| H | Chrome (Hyper+3) | F | Finder |
+| S | Slack (Hyper+4) | M | Music |
+| N | Notion (Hyper+5) | V | VS Code |
+| Z | Zoom (Hyper+6) | W | WhatsApp |
+| T | Messages (Hyper+T) | , | System Settings |
+
+The panel lists them in this order: Hyper apps first, the rest
+alphabetically, System Settings last.
+
+- The panel shows straight away; typing the letter from memory just flashes it.
+- `Escape`, any key not in the list, `Hyper+Space` again or 3 s of nothing
+  closes it without doing anything. Its keys only work while it's open — an
+  event tap swallows them — so they never reach the app underneath.
+- `T` does what Hyper+T does (Messages over the right third). `F` opens a new
+  Finder window at home when none is open — otherwise Finder's only "window"
+  is the Desktop and nothing would appear.
+- The list is `launcherApps` in `init.lua`; a new app also needs its bundle ID
+  in `BUNDLE_IDS`. Keys are physical, so they survive the Czech layout.
 
 ### Zoom (Hammerspoon)
 

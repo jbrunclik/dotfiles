@@ -22,7 +22,7 @@ local ansiKeys = {
     b = 11, q = 12, w = 13, e = 14, r = 15, y = 16, t = 17, o = 31, u = 32,
     i = 34, p = 35, l = 37, j = 38, k = 40, n = 45, m = 46,
     ["1"] = 18, ["2"] = 19, ["3"] = 20, ["4"] = 21, ["5"] = 23, ["6"] = 22,
-    ["7"] = 26, ["8"] = 28, ["9"] = 25, ["0"] = 29,
+    ["7"] = 26, ["8"] = 28, ["9"] = 25, ["0"] = 29, [","] = 43,
 }
 local cheatsheet = {}
 -- What pressing a key again does, shown once per cheatsheet section
@@ -57,6 +57,13 @@ local BUNDLE_IDS = {
     ["Notion"] = "notion.id",
     ["zoom.us"] = "us.zoom.xos",
     ["Messages"] = "com.apple.MobileSMS",
+    ["Claude"] = "com.anthropic.claudefordesktop",
+    ["WhatsApp"] = "net.whatsapp.WhatsApp",
+    ["Visual Studio Code"] = "com.microsoft.VSCode",
+    ["1Password"] = "com.1password.1password",
+    ["Finder"] = "com.apple.finder",
+    ["System Settings"] = "com.apple.systempreferences",
+    ["Music"] = "com.apple.Music",
 }
 
 local function getApp(name)
@@ -271,17 +278,21 @@ local appKeys = {
 -- Both presses go through bestWindow, so Zoom in a call means the call window,
 -- never its meetings list ("Zoom Workplace"), and every app gets its real
 -- window rather than whichever one macOS last activated.
+local function focusApp(name)
+    local win = bestWindow(name)
+    if win and win == hs.window.focusedWindow() then
+        win:maximize()
+    elseif win then
+        win:focus()
+    else
+        launchApp(name)
+    end
+end
+-- App name → its Hyper key, for the launcher panel's hints
+local appHyperKeys = {}
 for _, binding in ipairs(appKeys) do
-    bindHyper(binding[1], "Apps", binding[3] or binding[2], function()
-        local win = bestWindow(binding[2])
-        if win and win == hs.window.focusedWindow() then
-            win:maximize()
-        elseif win then
-            win:focus()
-        else
-            launchApp(binding[2])
-        end
-    end)
+    appHyperKeys[binding[2]] = binding[1]
+    bindHyper(binding[1], "Apps", binding[3] or binding[2], function() focusApp(binding[2]) end)
 end
 
 -- Check Zoom mute state by reading the toolbar button's accessibility description
@@ -352,6 +363,7 @@ local function toggleMessages()
     end, 0.05)
 end
 bindHyper("t", "Messages", "Show / hide Messages", toggleMessages)
+appHyperKeys["Messages"] = "t"
 bindPlain("f19", "Prog", "Messages", "Show / hide Messages (Model 100 Prog key → F19)", toggleMessages)
 
 -- Reload config
@@ -377,7 +389,7 @@ end):start()
 -- bindHyper registry, Karabiner remaps from karabiner.json's rule descriptions
 -- (any rule written "[App: ]Hyper+<keys> → <action>"), so nothing is listed by
 -- hand.
-local keyLabels = { tab = "Tab", left = "←", right = "→" }
+local keyLabels = { tab = "Tab", left = "←", right = "→", space = "Space" }
 
 local function karabinerEntries()
     local config = hs.json.read(configDir .. "/../karabiner/karabiner.json")
@@ -434,7 +446,10 @@ function hyperCheatsheetExport(path)
     return hs.json.write({ sections = cheatsheetSections(), caps = caps }, path, false, true)
 end
 
-local function cheatsheetText()
+-- Sections ({ name, note, entries = {{ key, desc }} }) as Catppuccin styled
+-- text with `footer` dimmed at the end; the cheatsheet and the launcher panel
+-- both draw with it
+local function overlayText(sections, footer)
     local font = { name = "Maple Mono NF", size = 15 }
     local mocha = {
         text = { hex = "#cdd6f4" }, key = { hex = "#cba6f7" },
@@ -444,23 +459,45 @@ local function cheatsheetText()
     local function add(str, color)
         out = out .. hs.styledtext.new(str, { font = font, color = color })
     end
-    for _, section in ipairs(cheatsheetSections()) do
+    -- Three columns: key, description, and a dimmed hint — the entry's `hint`,
+    -- else a trailing "(…)" split off the description. Widths come from the
+    -- widest cell across all sections, counted in characters, not bytes ("←"
+    -- is three bytes in UTF-8); the font is monospaced.
+    local rows, keyW, descW = {}, 0, 0
+    for _, section in ipairs(sections) do
+        for _, e in ipairs(section.entries) do
+            local desc, hint = e.desc, e.hint
+            if not hint then
+                local main, paren = desc:match("^(.-)%s+(%b())$")
+                if main then desc, hint = main, paren end
+            end
+            rows[e] = { desc = desc, hint = hint }
+            keyW = math.max(keyW, utf8.len(e.key))
+            if hint then descW = math.max(descW, utf8.len(desc)) end
+        end
+    end
+    local function pad(str, width) return str .. string.rep(" ", width - utf8.len(str)) end
+    for _, section in ipairs(sections) do
         add(section.name, mocha.section)
         add((section.note and "  · " .. section.note or "") .. "\n", mocha.dim)
         for _, e in ipairs(section.entries) do
-            -- Pad by characters, not bytes: "←" is three bytes in UTF-8
-            add("  " .. e.key .. string.rep(" ", 8 - utf8.len(e.key)), mocha.key)
-            add(e.desc .. "\n", mocha.text)
+            local row = rows[e]
+            add("  " .. pad(e.key, keyW + 3), mocha.key)
+            if row.hint then
+                add(pad(row.desc, descW + 3), mocha.text)
+                add(row.hint .. "\n", mocha.dim)
+            else
+                add(row.desc .. "\n", mocha.text)
+            end
         end
         add("\n", mocha.text)
     end
-    add("Release Hyper to close", mocha.dim)
+    add(footer, mocha.dim)
     return out
 end
 
--- The overlay, centered on the main screen; not shown yet
-local function cheatsheetCanvas()
-    local text = cheatsheetText()
+-- An overlay of `text`, centered on the main screen; not shown yet
+local function overlayCanvas(text)
     local size = hs.drawing.getTextDrawingSize(text)
     local pad = 28
     local w, h = size.w + 2 * pad, size.h + 2 * pad
@@ -476,6 +513,10 @@ local function cheatsheetCanvas()
         { type = "text", text = text, frame = { x = pad, y = pad, w = size.w + 4, h = size.h } }
     )
     return canvas
+end
+
+local function cheatsheetCanvas()
+    return overlayCanvas(overlayText(cheatsheetSections(), "Release Hyper to close"))
 end
 
 -- Used by `hyper-cheatsheet --readme`: renders the overlay to a PNG for the
@@ -517,6 +558,83 @@ cheatsheetTap = hs.eventtap.new({ types.flagsChanged, types.keyDown }, function(
     end
     return false
 end):start()
+
+-- Hyper+Space = launcher: a panel of one-key shortcuts for apps without a
+-- Hyper key of their own, plus the ones with (hinted), so it's a complete map.
+-- Press the key with no modifiers and the app comes forward as with Hyper+1–6.
+-- Escape, any other key, Hyper+Space again or 3 s of nothing closes it. Keys
+-- go through an eventtap that runs only while the panel is up and swallows
+-- them, so they never reach the app underneath or clash with its shortcuts.
+-- Matched by physical key code, like bindHyper, so they survive the Czech
+-- layout. Everything else stays with Spotlight.
+-- Panel order: apps with a Hyper key (in Hyper order), the rest
+-- alphabetically, System Settings last.
+local launcherApps = {
+    { "g", "Ghostty" },
+    { "d", "Dia" },
+    { "h", "Google Chrome", "Chrome" },
+    { "s", "Slack" },
+    { "n", "Notion" },
+    { "z", "zoom.us", "Zoom" },
+    { "t", "Messages" },
+    { "1", "1Password" },
+    { "c", "Claude" },
+    { "f", "Finder" },
+    { "m", "Music" },
+    { "v", "Visual Studio Code", "VS Code" },
+    { "w", "WhatsApp" },
+    { ",", "System Settings" },
+}
+local launcherActions = {
+    -- The same float-over-the-right-third as Hyper+T
+    Messages = toggleMessages,
+    -- With no Finder window open, its "main window" is the Desktop: open one
+    Finder = function()
+        local win = bestWindow("Finder")
+        if win and win:isStandard() then
+            focusApp("Finder")
+        else
+            hs.task.new("/usr/bin/open", nil, { os.getenv("HOME") }):start()
+        end
+    end,
+}
+
+local launcherByCode, launcherEntries = {}, {}
+for _, app in ipairs(launcherApps) do
+    local key, name = app[1], app[2]
+    launcherByCode[ansiKeys[key]] = launcherActions[name] or function() focusApp(name) end
+    local hyperKey = appHyperKeys[name]
+    table.insert(launcherEntries, {
+        key = key:upper(),
+        desc = app[3] or name,
+        hint = hyperKey and "Hyper+" .. hyperKey:upper(),
+    })
+end
+
+local launcherPanel, launcherTimer
+local function closeLauncher()
+    if launcherTimer then launcherTimer:stop(); launcherTimer = nil end
+    launcherTap:stop()
+    if launcherPanel then launcherPanel:delete(); launcherPanel = nil end
+end
+-- Global so it isn't garbage-collected. Hyper+Space itself never reaches it:
+-- hotkeys are dispatched before event taps see the key.
+launcherTap = hs.eventtap.new({ types.keyDown }, function(e)
+    local m = e:getFlags()
+    local action = not (m.cmd or m.alt or m.ctrl) and launcherByCode[e:getKeyCode()]
+    closeLauncher()
+    if action then action() end
+    return true
+end)
+
+bindHyper("space", "Launcher", "App launcher: then one key (panel lists them)", function()
+    if launcherPanel then closeLauncher(); return end
+    launcherPanel = overlayCanvas(overlayText(
+        { { name = "Launcher", entries = launcherEntries } }, "Esc or any other key to close"))
+    launcherPanel:level(hs.canvas.windowLevels.overlay):show()
+    launcherTap:start()
+    launcherTimer = hs.timer.doAfter(3, closeLauncher)
+end)
 
 -- Black menu bar. macOS 26's menu bar is transparent, so a bright wallpaper
 -- shows through it (and frames the MacBook's notch). Instead of an app, draw a
