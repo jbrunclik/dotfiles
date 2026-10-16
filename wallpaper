@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Generate the abstract Catppuccin Mocha wallpapers (config/wallpaper/generate.swift)
+# at the exact pixel sizes of each screen, and set the Mac's.
+#
+# Usage:
+#   wallpaper                          # render the default variant and set it
+#   wallpaper ridges                   # render another variant and set it
+#   wallpaper --preview [variant…]     # comparison sheet on the Desktop
+#
+# Files go to ~/Pictures/Wallpapers as <variant>-<width>x<height>.png. The
+# Hammerspoon black menu bar redraws its band from whichever one is set, and
+# picks the file matching each screen's size, so nothing is cropped.
+
+VARIANT_DEFAULT="lowpoly"
+# Pixel sizes: external 5K display, 14" MacBook Pro, iPhone 17 Pro
+SIZES=("5120x2880" "3024x1964" "1206x2622")
+OUT_DIR="$HOME/Pictures/Wallpapers"
+
+DOTFILES="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+command -v swiftc >/dev/null || { echo "swiftc not found (install Xcode Command Line Tools)" >&2; exit 1; }
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+swiftc -O -o "$TMP/generate" "$DOTFILES/config/wallpaper/generate.swift" 2>/dev/null \
+    || { echo "failed to compile generate.swift" >&2; exit 1; }
+
+if [ "${1:-}" = "--preview" ]; then
+    shift
+    "$TMP/generate" --sheet "$HOME/Desktop/wallpaper-preview.png" "$@"
+    echo "Wrote ~/Desktop/wallpaper-preview.png"
+    exit 0
+fi
+
+VARIANT="${1:-$VARIANT_DEFAULT}"
+mkdir -p "$OUT_DIR"
+for size in "${SIZES[@]}"; do
+    "$TMP/generate" "$VARIANT" "${size%x*}" "${size#*x}" "$OUT_DIR/$VARIANT-$size.png"
+    echo "Wrote $OUT_DIR/$VARIANT-$size.png"
+done
+
+# Set it on the Mac — the file matching the main screen's size, if there is one
+if command -v hs >/dev/null; then
+    # </dev/null: hs reads commands from stdin when it isn't a terminal
+    perl -e 'alarm 10; exec @ARGV' hs -c "
+        local s = hs.screen.mainScreen()
+        local f, scale = s:fullFrame(), s:currentMode().scale
+        local exact = string.format('$OUT_DIR/$VARIANT-%dx%d.png', math.floor(f.w * scale), math.floor(f.h * scale))
+        local path = hs.fs.attributes(exact) and exact or '$OUT_DIR/$VARIANT-${SIZES[0]}.png'
+        s:desktopImageURL('file://' .. path)
+        return 'Set ' .. path" </dev/null 2>/dev/null | grep -v '^-- ' || true
+fi

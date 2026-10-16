@@ -409,13 +409,60 @@ Two things to know:
 To add a type, append `<bundle id>  .<ext>` to the list. Find a bundle id with
 `osascript -e 'id of app "Preview"'`.
 
+## Wallpaper
+
+`wallpaper` generates an abstract Catppuccin Mocha wallpaper — **Low-poly**: a
+faceted triangle mesh in blue, sapphire and teal, dark and calm at the top and
+richer toward the bottom — at each screen's exact pixel size, and sets the Mac's:
+
+| File (in `~/Pictures/Wallpapers/`) | For |
+|---|---|
+| `lowpoly-5120x2880.png` | 5K external display |
+| `lowpoly-3024x1964.png` | 14" MacBook Pro |
+| `lowpoly-1206x2622.png` | iPhone 17 Pro — save to Photos, then Settings → Wallpaper |
+
+The phone version is composed for the tall screen (pattern lower, more dark sky
+for the clock), not cropped from the desktop one. Fine grain keeps the dark
+gradients from banding, which is also why the files are large.
+
+- `wallpaper --preview [variant…]` — a comparison sheet on the Desktop.
+  Variants: `lowpoly` (default), `crystal`, `lattice`, `blocks`, `peaks`,
+  `tide`, `contours`, `ripples`, `ridges`, `bokeh`, `hex`, `shards`,
+  `halftone`, and warmer `aurora`, `ember`.
+- `wallpaper <variant>` — render and set another one.
+- The design lives in `config/wallpaper/generate.swift` (deterministic — same
+  variant and size, same image). Screen sizes are at the top of `wallpaper`.
+
+## Black menu bar
+
+macOS 26's menu bar is transparent, so a bright wallpaper shows through it —
+distracting on any display, and on the MacBook it frames the notch. Hammerspoon
+draws a **dark band, exactly the menu bar's height**, into a copy of your
+wallpaper and sets that copy: **pure black on the built-in display**, where the
+notch disappears into it (even Catppuccin's darkest color would leave the notch
+faintly outlined on that panel), and **Catppuccin Crust** (`#11111b`) on other
+displays, where it blends with the wallpaper and Ghostty. No app needed — this is what TopNotch did, minus the part that broke.
+
+- Pick wallpapers as usual in System Settings: the band is redrawn on the new
+  one a second later. No polling — it reacts to the wallpaper store changing,
+  to display changes (resolution, switching screens) and to wake. The original file is
+  never changed; copies live in `~/Library/Caches/dotfiles-menubar-band/`.
+- Each display gets a copy at its own pixel size and menu bar height (taller on
+  the notched built-in screen), drawn with "fill" scaling so it lines up exactly.
+  A wallpaper named `<name>-<w>x<h>` (like the generated ones) is swapped for
+  its sibling at that screen's size when one exists, so nothing is cropped.
+- To turn it off, remove the "Black menu bar" block from `init.lua` and pick
+  your wallpaper again.
+
 ## macOS settings
 
 `./install.sh` writes these with `defaults write`:
 
 | Setting | Value | Why |
 |---|---|---|
-| Accent / highlight color | Catppuccin mauve | Matches everything else |
+| Accent / highlight color | Catppuccin mauve | Matches everything else; contrasts with the blue-teal wallpaper the way Catppuccin apps use it |
+| Appearance | Dark, dark-style app icons | Icons keep their own colors so apps stay recognizable |
+| Wallpaper tinting in windows | On | With the blue-teal wallpaper, Finder and System Settings get a faint blue cast, closer to Catppuccin's base than neutral grey |
 | Key repeat | 30 ms, 225 ms initial delay | Fastest the System Settings sliders allow; Hyper+HJKL and CapsLock Backspace rely on it |
 | Press-and-hold | Off | Holding a letter repeats it instead of opening the accent picker |
 | File extensions in Finder | Always shown | |

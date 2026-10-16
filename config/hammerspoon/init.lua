@@ -518,4 +518,95 @@ cheatsheetTap = hs.eventtap.new({ types.flagsChanged, types.keyDown }, function(
     return false
 end):start()
 
+-- Black menu bar. macOS 26's menu bar is transparent, so a bright wallpaper
+-- shows through it (and frames the MacBook's notch). Instead of an app, draw a
+-- black band, exactly the menu bar's height, into a copy of the wallpaper and
+-- set that copy — on the built-in display the notch disappears into it. Black
+-- there, Catppuccin Crust on other displays (see bandColor).
+--   * The original wallpaper is never touched; copies live in a cache folder.
+--     Its path is kept in hs.settings so the band can be redrawn for another
+--     display or size.
+--   * Drawn at the screen's pixel size with "fill" scaling, like macOS's own
+--     "Fill Screen", so the result lines up exactly.
+--   * Event-driven, no polling: re-checked on load, on display changes
+--     (resolution, switching screens), on wake, and when the wallpaper changes —
+--     macOS records each choice in its wallpaper store, which is watched. Our
+--     own wallpaper change fires that too; the check then finds nothing to do.
+local BAND_DIR = os.getenv("HOME") .. "/Library/Caches/dotfiles-menubar-band"
+-- Pure black where it hides the notch (the built-in display); Catppuccin Crust
+-- elsewhere, the same near-black as the wallpaper's darkest parts and Ghostty
+local function bandColor(screen)
+    return screen:name():match("^Built%-in") and "000000" or "11111b"
+end
+local BAND_SOURCE_KEY = "menubarBand.source"
+
+local function bandWallpaper(screen)
+    local url = screen:desktopImageURL()
+    local current = url and hs.http.urlParts(url).path
+    if not current then return end
+    -- A path in our cache means the band is already ours, so the original is
+    -- the remembered one; anything else is a wallpaper the user picked
+    local ours = current:sub(1, #BAND_DIR) == BAND_DIR
+    local source = ours and hs.settings.get(BAND_SOURCE_KEY) or current
+    if not ours then hs.settings.set(BAND_SOURCE_KEY, source) end
+    local full, scale = screen:fullFrame(), screen:currentMode().scale
+    -- Wallpapers named <name>-<w>x<h>.<ext> (e.g. from the `wallpaper` script)
+    -- may have a sibling rendered for this screen's exact size: prefer it, so
+    -- nothing is cropped
+    if source then
+        local stem, ext = source:match("^(.*)%-%d+x%d+%.(%w+)$")
+        local sibling = stem and string.format("%s-%dx%d.%s", stem, math.floor(full.w * scale), math.floor(full.h * scale), ext)
+        if sibling and hs.fs.attributes(sibling) then source = sibling end
+    end
+    local image = source and hs.image.imageFromPath(source)
+    if not image then return end
+
+    local band = screen:frame().y - full.y  -- the menu bar's height on this screen
+    if band <= 0 then return end            -- menu bar hidden: nothing to cover
+    local prefix = (source:match("([^/]+)%.%w+$") or "wallpaper") .. "-"
+    local color = bandColor(screen)
+    local name = string.format("%s%dx%d-%d-%s.jpg", prefix,
+        math.floor(full.w * scale), math.floor(full.h * scale), math.floor(band * scale), color)
+    local target = BAND_DIR .. "/" .. name
+    if current == target then return end
+
+    if not hs.fs.attributes(target) then
+        hs.fs.mkdir(BAND_DIR)
+        -- Fill: scale the image to cover the screen, centered, cropping overflow
+        local size = image:size()
+        local s = math.max(full.w / size.w, full.h / size.h)
+        local w, h = size.w * s, size.h * s
+        local canvas = hs.canvas.new({ x = 0, y = 0, w = full.w, h = full.h })
+        canvas:appendElements(
+            { type = "image", image = image, imageScaling = "scaleToFit",
+              frame = { x = (full.w - w) / 2, y = (full.h - h) / 2, w = w, h = h } },
+            { type = "rectangle", action = "fill", fillColor = { hex = "#" .. color },
+              frame = { x = 0, y = 0, w = full.w, h = band } }
+        )
+        canvas:imageFromCanvas():saveToFile(target, false, "JPEG")
+        canvas:delete()
+        -- Keep the folder small: drop copies made from an older wallpaper
+        for file in hs.fs.dir(BAND_DIR) do
+            if file:match("%.jpg$") and file:sub(1, #prefix) ~= prefix then
+                os.remove(BAND_DIR .. "/" .. file)
+            end
+        end
+    end
+    screen:desktopImageURL("file://" .. target)
+end
+
+local function bandAllScreens()
+    for _, screen in ipairs(hs.screen.allScreens()) do bandWallpaper(screen) end
+end
+bandAllScreens()
+-- Globals so the watchers and timer aren't garbage-collected
+bandScreenWatcher = hs.screen.watcher.new(function() hs.timer.doAfter(1, bandAllScreens) end):start()
+bandWakeWatcher = hs.caffeinate.watcher.new(function(event)
+    if event == hs.caffeinate.watcher.screensDidWake then hs.timer.doAfter(2, bandAllScreens) end
+end):start()
+bandWallpaperWatcher = hs.pathwatcher.new(
+    os.getenv("HOME") .. "/Library/Application Support/com.apple.wallpaper/Store",
+    function() hs.timer.doAfter(1, bandAllScreens) end  -- let the store finish writing
+):start()
+
 hs.alert.show("\u{1F528} Hammerspoon loaded")

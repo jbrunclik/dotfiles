@@ -39,6 +39,7 @@ LINKS=(
     "hyper-cheatsheet|$HOME/.local/bin/hyper-cheatsheet"
     "keyboardio-backup|$HOME/.local/bin/keyboardio-backup"
     "keyboardio-layers|$HOME/.local/bin/keyboardio-layers"
+    "wallpaper|$HOME/.local/bin/wallpaper"
 )
 
 # Binaries the configs reference but that nothing else verifies. Neovim's

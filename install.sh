@@ -59,6 +59,12 @@ echo -e "  ${GREEN}✓${RESET} $HOME/.hammerspoon/init.lua -> dofile loader"
 header "Setting macOS accent color (Catppuccin Mocha mauve #cba6f7)"
 defaults write -globalDomain AppleAccentColor -int 5
 defaults write -globalDomain AppleHighlightColor -string "0.796078 0.650980 0.968627 Purple"
+# Dark mode, dark-style app icons (macOS 26), and windows tinted by the
+# wallpaper — with the generated blue-teal wallpaper that gives Finder and
+# System Settings a faint blue cast, closer to Catppuccin's base than grey
+defaults write -globalDomain AppleInterfaceStyle -string Dark
+defaults write -globalDomain AppleIconAppearanceTheme -string RegularDark
+defaults write -globalDomain AppleReduceDesktopTinting -bool false
 
 # Fastest repeat the System Settings sliders allow (30 ms, 225 ms initial delay),
 # and hold-to-repeat instead of the accent popup — Hyper+HJKL arrows and
