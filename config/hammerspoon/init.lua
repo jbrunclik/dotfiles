@@ -44,9 +44,35 @@ local function bindPlain(key, label, section, desc, fn)
     hs.hotkey.bind({}, key, fn)
 end
 
+-- Apps are looked up by bundle ID, never by name: a name matches any process
+-- whose display name contains it, and Zoom runs a WebKit helper called
+-- "zoom.us Sidebar Web Content" that getApp("zoom.us") returned
+-- instead of Zoom — no windows, so layouts waited out their timeout and mute
+-- reported "not in a meeting". Keys are the names used throughout this file.
+local BUNDLE_IDS = {
+    ["Ghostty"] = "com.mitchellh.ghostty",
+    ["Dia"] = "company.thebrowser.dia",
+    ["Google Chrome"] = "com.google.Chrome",
+    ["Slack"] = "com.tinyspeck.slackmacgap",
+    ["Notion"] = "notion.id",
+    ["zoom.us"] = "us.zoom.xos",
+    ["Messages"] = "com.apple.MobileSMS",
+}
+
+local function getApp(name)
+    local id = BUNDLE_IDS[name]
+    if not id then return hs.application.get(name) end
+    return hs.application.applicationsForBundleID(id)[1]
+end
+
+local function launchApp(name)
+    local id = BUNDLE_IDS[name]
+    if id then hs.application.launchOrFocusByBundleID(id) else hs.application.launchOrFocus(name) end
+end
+
 -- Find the best window for an app (handles Zoom's multiple windows)
 local function bestWindow(appName)
-    local app = hs.application.get(appName)
+    local app = getApp(appName)
     if not app then return nil end
 
     -- For Zoom: prefer the meeting/webinar window over the dashboard
@@ -124,21 +150,24 @@ end
 -- A 50 ms gap between focus(right) and focus(left) lets each call settle.
 -- This is imperceptible to humans but enough for the window server.
 --
--- The 0.3 s delay in the launch path lets launchOrFocus() finish creating the
--- window before we try to move it — only fires when an app wasn't running yet.
--- When both apps are already running, tiling takes ~50 ms (one timer tick).
+-- Cold start (an app not running, or running without a window): launchOrFocus()
+-- returns before the window exists, and Slack or Notion take seconds to create
+-- one. So poll every 0.1 s, up to 10 s, until both windows exist, then tile —
+-- and move them once more 0.5 s later, because Electron apps restore their own
+-- saved frame just after the window appears, undoing the first move. When both
+-- apps already have windows, tiling takes ~50 ms (one timer tick).
 local function tilePair(leftApp, rightApp)
     local lw = bestWindow(leftApp)
     local rw = bestWindow(rightApp)
     -- If both windows are already in position, cycle focus
     if isTiled(lw, left) and isTiled(rw, right) then
-        local la = hs.application.get(leftApp)
+        local la = getApp(leftApp)
         if la and la:isFrontmost() then rw:focus() else lw:focus() end
         return
     end
     -- Launch any app that isn't running yet
-    if not lw then hs.application.launchOrFocus(leftApp) end
-    if not rw then hs.application.launchOrFocus(rightApp) end
+    if not lw then launchApp(leftApp) end
+    if not rw then launchApp(rightApp) end
     -- Position windows and set z-order with a gap between focus calls
     local function tile()
         lw = lw or bestWindow(leftApp)
@@ -151,7 +180,22 @@ local function tilePair(leftApp, rightApp)
             if lw then lw:focus() end
         end)
     end
-    if lw and rw then tile() else hs.timer.doAfter(0.3, tile) end
+    if lw and rw then
+        tile()
+        return
+    end
+    local deadline = hs.timer.secondsSinceEpoch() + 10
+    hs.timer.waitUntil(function()
+        lw = lw or bestWindow(leftApp)
+        rw = rw or bestWindow(rightApp)
+        return (lw and rw) or hs.timer.secondsSinceEpoch() > deadline
+    end, function()
+        tile()
+        hs.timer.doAfter(0.5, function()
+            if lw then lw:move(left) end
+            if rw then rw:move(right) end
+        end)
+    end, 0.1)
 end
 
 -- Layouts (bottom row: Z, X, C, V)
@@ -224,21 +268,25 @@ local appKeys = {
     { "5", "Notion" },
     { "6", "zoom.us", "Zoom" },
 }
+-- Both presses go through bestWindow, so Zoom in a call means the call window,
+-- never its meetings list ("Zoom Workplace"), and every app gets its real
+-- window rather than whichever one macOS last activated.
 for _, binding in ipairs(appKeys) do
     bindHyper(binding[1], "Apps", binding[3] or binding[2], function()
-        local app = hs.application.get(binding[2])
-        if app and app:isFrontmost() then
-            local win = app:mainWindow()
-            if win then win:maximize() end
+        local win = bestWindow(binding[2])
+        if win and win == hs.window.focusedWindow() then
+            win:maximize()
+        elseif win then
+            win:focus()
         else
-            hs.application.launchOrFocus(binding[2])
+            launchApp(binding[2])
         end
     end)
 end
 
 -- Check Zoom mute state by reading the toolbar button's accessibility description
 local function isZoomMuted()
-    local zoom = hs.application.get("zoom.us")
+    local zoom = getApp("zoom.us")
     if not zoom then return nil end
     local axApp = hs.axuielement.applicationElement(zoom)
     for _, win in ipairs(axApp:childrenWithRole("AXWindow")) do
@@ -253,7 +301,7 @@ end
 
 -- Toggle Zoom mute from any app, without switching focus
 local function toggleZoomMute()
-    local zoom = hs.application.get("zoom.us")
+    local zoom = getApp("zoom.us")
     if not zoom then
         hs.alert.show("\u{1F4F5} Zoom not running")
         return
@@ -285,15 +333,15 @@ bindPlain("f18", "Any", "Zoom", "Mute / unmute (Model 100 Any key → F18)", tog
 -- wait (up to 5 s) for its window before placing it.
 local messagesFrame = hs.geometry.rect(2 / 3, 0, 1 / 3, 1)
 local function toggleMessages()
-    local app = hs.application.get("Messages")
+    local app = getApp("Messages")
     if app and app:isFrontmost() then
         app:hide()
         return
     end
-    hs.application.launchOrFocus("Messages")
+    launchApp("Messages")
     local deadline = hs.timer.secondsSinceEpoch() + 5
     local function window()
-        local messages = hs.application.get("Messages")
+        local messages = getApp("Messages")
         return messages and messages:mainWindow()
     end
     hs.timer.waitUntil(function()

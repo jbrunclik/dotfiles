@@ -753,6 +753,12 @@ a sysdiagnose (a ~400 MB archive in `/private/var/tmp`).
 | Hyper + C | Meeting + chat — Zoom left, Slack right |
 | Hyper + V | Meeting + browsing — Zoom left, Dia right |
 
+Press the same layout again to swap focus between the two sides. An app that
+isn't running (or has no window) is launched first; the layout waits for its
+window — up to 10 s, since Slack and Notion take a few seconds — then tiles,
+and repeats the move half a second later because Electron apps restore their
+own saved position right after opening.
+
 ### App focus (Hammerspoon)
 
 | Shortcut | App |
@@ -764,7 +770,10 @@ a sysdiagnose (a ~400 MB archive in `/private/var/tmp`).
 | Hyper + 5 | Notion |
 | Hyper + 6 | Zoom |
 
-Press twice to maximize the focused app's window.
+The first press brings up the app's main window, the second maximizes it
+(launching the app if it has no window). For Zoom that's the **call** window
+during a meeting, never the meetings list ("Zoom Workplace"); the Zoom layouts
+(Hyper+X/C/V) pick the same way.
 
 ### Zoom (Hammerspoon)
 
@@ -858,11 +867,16 @@ Use the OCR button to extract text from any screenshot.
 ### Adding a new layout
 
 Edit `config/hammerspoon/init.lua` and bind a key to `tilePair(leftApp, rightApp)`.
-Use the app's exact name as macOS reports it (`Ghostty`, `zoom.us`, `Google Chrome`).
-Bind through `bindHyper(key, section, description, fn)` rather than
-`hs.hotkey.bind`, so the binding shows up in the cheatsheet:
+Add each new app to `BUNDLE_IDS` with its bundle ID
+(`osascript -e 'id of app "Figma"'`): apps are looked up by bundle ID, because a
+name matches any process whose name contains it — Zoom runs a helper called
+"zoom.us Sidebar Web Content" that a name lookup picked instead of Zoom, which
+broke the Zoom layouts and mute. Bind through `bindHyper(key, section,
+description, fn)` rather than `hs.hotkey.bind`, so the binding shows up in the
+cheatsheet:
 
 ```lua
+["Figma"] = "com.figma.Desktop",  -- in BUNDLE_IDS
 bindHyper("g", "Layouts", "Figma | Chrome", function() tilePair("Figma", "Google Chrome") end)
 ```
 

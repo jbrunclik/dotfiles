@@ -73,7 +73,10 @@ commit. Go through what applies:
   positions. Use `hs.alert` only for state feedback (mute, errors), not routine
   actions.
   Bind Hyper keys with `bindHyper(key, section, description, fn)` (it binds by
-  physical key code, so shortcuts survive the Czech layout), and write
+  physical key code, so shortcuts survive the Czech layout). Look apps up
+  with `getApp`/`launchApp` and add them to `BUNDLE_IDS` — never
+  `hs.application.get("name")`, which can return a helper process (Zoom's
+  "zoom.us Sidebar Web Content"). Write
   Karabiner rule descriptions as `[App: ]Hyper+<keys> → <action>`: the
   hold-Hyper cheatsheet is generated from both.
 - **Ghostty** doesn't watch its config: Cmd+Shift+, (or the Ghostty >
