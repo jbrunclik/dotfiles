@@ -8,6 +8,10 @@ require("hs.ipc")
 
 local hyper = { "cmd", "alt", "ctrl", "shift" }
 
+-- Window moves are instant: the default 0.2 s slide made every tile, layout
+-- and the Messages float visibly animate into place
+hs.window.animationDuration = 0
+
 -- Every Hyper binding goes through bindHyper so the cheatsheet (hold Hyper
 -- alone) lists it. Entries keep bind order; sections appear in first-use order.
 --
@@ -587,24 +591,61 @@ bindHyper("return", "Zoom", "Start / join the meeting about to begin", joinNextM
 -- it, and macOS hands focus back to the app you were in. Nothing is remembered
 -- between presses: whether Messages is frontmost decides. On a cold start,
 -- wait (up to 5 s) for its window before placing it.
-local messagesFrame = hs.geometry.rect(2 / 3, 0, 1 / 3, 1)
+-- Messages refuses to be narrower than this (measured): a third of the
+-- MacBook screen is 504 pt, so asking for a third made it keep the third's
+-- left edge and run 156 pt off the right. A fixed property of the app, not
+-- window state, so it's a constant rather than something read back.
+local MESSAGES_MIN_WIDTH = 660
+
+local function placeMessages(win)
+    local s = win:screen():frame()
+    local w = math.max(s.w / 3, MESSAGES_MIN_WIDTH)
+    win:setFrame({ x = s.x + s.w - w, y = s.y, w = w, h = s.h })
+    -- Fallback if the minimum ever grows: Messages widens itself back only
+    -- some time after the move, so watch for an overflow for 1.5 s and pin
+    -- the right edge
+    local deadline = hs.timer.secondsSinceEpoch() + 1.5
+        hs.timer.waitUntil(function()
+            local f = win:frame()
+            return f.x + f.w > s.x + s.w + 1 or hs.timer.secondsSinceEpoch() > deadline
+        end, function()
+            local f = win:frame()
+            if f.x + f.w > s.x + s.w + 1 then
+                f.x = s.x + s.w - f.w
+                win:setFrame(f)
+            end
+        end, 0.05)
+end
+
 local function toggleMessages()
     local app = getApp("Messages")
     if app and app:isFrontmost() then
         app:hide()
         return
     end
-    launchApp("Messages")
-    local deadline = hs.timer.secondsSinceEpoch() + 5
     local function window()
         local messages = getApp("Messages")
         return messages and messages:mainWindow()
     end
+    -- Running (hidden or behind): unhide and place in the same tick, so it
+    -- doesn't show at its old spot first
+    if app then
+        app:unhide()
+        local win = window()
+        if win then
+            placeMessages(win)
+            win:focus()
+            return
+        end
+    end
+    -- Cold start: wait (up to 5 s) for its window
+    launchApp("Messages")
+    local deadline = hs.timer.secondsSinceEpoch() + 5
     hs.timer.waitUntil(function()
         return window() or hs.timer.secondsSinceEpoch() > deadline
     end, function()
         local win = window()
-        if win then win:move(messagesFrame) end
+        if win then placeMessages(win) end
     end, 0.05)
 end
 bindHyper("t", "Messages", "Show / hide Messages", toggleMessages)

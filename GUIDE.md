@@ -941,6 +941,9 @@ a sysdiagnose (a ~400 MB archive in `/private/var/tmp`).
 | Hyper + ` | Cycle the windows stacked on this half (or at this spot) |
 | Hyper + Q | Hide the front app (like `Cmd+H`); focus returns to the previous app |
 
+Every move is instant — Hammerspoon's default 0.2 s slide is off
+(`hs.window.animationDuration = 0`), for tiling, layouts and the Messages float.
+
 Hyper+Q sends an app to the background; `Cmd+Q` on the same key quits it for
 real (`Cmd+W` only closes the window — WhatsApp, Slack and Zoom keep running).
 A stray Hyper+Q is harmless: Hyper+1–6 or the launcher brings the app back.
@@ -1065,7 +1068,10 @@ knows, not only Zoom's: Join on a Teams meeting opens it in the browser.
 | Hyper + T | Show Messages over the right third; press again to hide it and return to the app you were in |
 | Prog (Model 100) | Same, as one key: Chrysalis maps Prog to `F19`, Hammerspoon binds `F19` |
 
-For quick replies without touching the current layout. It's the one Hyper key
+For quick replies without touching the current layout. It floats over the
+right third — on the MacBook that's narrower than Messages allows (504 vs
+~660 pt), so there it takes its minimum width with the right edge pinned to
+the screen's. It's the one Hyper key
 where "again" hides instead of putting the app beside the last window. Pin the conversations you reply to
 most, so Messages opens on them, and allow those people through your work
 Focus (System Settings → Focus → People).
