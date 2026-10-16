@@ -272,6 +272,9 @@ all three come from the `Brewfile`, and `drift.sh` verifies them.
 |---|---|
 | Find files | `Ctrl+P` or `Space f f` |
 | Live grep (search in files) | `Space f g` |
+| Grep the word under the cursor | `Space f w` |
+| Changed files (git status, with diff preview) | `Space g s` |
+| Commits (with diff preview) | `Space g c` |
 | Switch buffers | `Space f b` |
 | Recent files | `Space f r` |
 | File symbols | `Space f s` |
