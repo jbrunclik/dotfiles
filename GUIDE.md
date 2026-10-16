@@ -419,9 +419,12 @@ richer toward the bottom — at each screen's exact pixel size, and sets the Mac
 |---|---|
 | `lowpoly-5120x2880.png` | 5K external display |
 | `lowpoly-3024x1964.png` | 14" MacBook Pro |
-| `lowpoly-1206x2622.png` | iPhone 17 Pro — save to Photos, then Settings → Wallpaper |
+| `lowpoly-1206x2622.png` | iPhone 17 Pro lock screen — save to Photos, then Settings → Wallpaper |
+| `lowpoly-home-1206x2622.png` | iPhone 17 Pro home screen — the same facets, lower and dimmer, so icons read clearly |
 
-The phone version is composed for the tall screen (pattern lower, more dark sky
+In iOS, add the lock screen image, then choose **Customize Home Screen → Photos**
+and pick the home version, so the pair stays together. Leave both unzoomed and
+turn Perspective Zoom off: the files are the screen's exact size. The phone version is composed for the tall screen (pattern lower, more dark sky
 for the clock), not cropped from the desktop one. Fine grain keeps the dark
 gradients from banding, which is also why the files are large.
 

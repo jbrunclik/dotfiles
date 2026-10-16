@@ -201,6 +201,17 @@ let variants: [String: Variant] = [
             glows: [Glow(color: sapphire, x: 0.75, y: 0.10, r: 0.34, a: 0.10)],
             lowpoly: [LowPoly(cell: 0.065, jitter: 0.42, seed: 5, y0: 0.38,
                               colors: [lavender, blue, sapphire, teal], a0: 0.02, a1: 0.30)])),
+    // Phone home screen twin of lowpoly: same mesh and seed, but the facets
+    // start lower and stay dimmer, so icons and labels read clearly over it
+    "lowpoly-home": Variant(
+        landscape: Layout(
+            glows: [Glow(color: sapphire, x: 0.75, y: 0.15, r: 0.30, a: 0.06)],
+            lowpoly: [LowPoly(cell: 0.075, jitter: 0.42, seed: 5, y0: 0.50,
+                              colors: [lavender, blue, sapphire, teal], a0: 0.0, a1: 0.18)]),
+        portrait: Layout(
+            glows: [Glow(color: sapphire, x: 0.75, y: 0.10, r: 0.34, a: 0.06)],
+            lowpoly: [LowPoly(cell: 0.065, jitter: 0.42, seed: 5, y0: 0.62,
+                              colors: [lavender, blue, sapphire, teal], a0: 0.0, a1: 0.18)])),
     "hex": Variant(
         landscape: Layout(
             glows: [Glow(color: teal, x: 0.20, y: 0.85, r: 0.35, a: 0.10)],
@@ -271,7 +282,7 @@ let variants: [String: Variant] = [
                     Wave(color: pink, y: 0.90, amp: 0.020, cycles: 0.7, phase: 0.05, a: 0.13)])),
 ]
 let order = ["aurora", "deepsea", "night", "tide", "swell", "contours", "ripples", "ridges", "bokeh",
-             "lowpoly", "hex", "shards", "halftone", "crystal", "lattice", "blocks", "peaks", "ember"]
+             "lowpoly", "lowpoly-home", "hex", "shards", "halftone", "crystal", "lattice", "blocks", "peaks", "ember"]
 
 func fail(_ message: String) -> Never {
     FileHandle.standardError.write(Data((message + "\n").utf8))

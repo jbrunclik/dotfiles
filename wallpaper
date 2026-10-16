@@ -39,6 +39,13 @@ for size in "${SIZES[@]}"; do
     echo "Wrote $OUT_DIR/$VARIANT-$size.png"
 done
 
+# A phone home-screen twin, if the variant has one (<variant>-home): calmer,
+# so icons read over it. Pair it with the lock screen's in iOS.
+PHONE="${SIZES[2]}"
+if "$TMP/generate" "$VARIANT-home" "${PHONE%x*}" "${PHONE#*x}" "$OUT_DIR/$VARIANT-home-$PHONE.png" 2>/dev/null; then
+    echo "Wrote $OUT_DIR/$VARIANT-home-$PHONE.png"
+fi
+
 # Set it on the Mac — the file matching the main screen's size, if there is one
 if command -v hs >/dev/null; then
     # </dev/null: hs reads commands from stdin when it isn't a terminal
