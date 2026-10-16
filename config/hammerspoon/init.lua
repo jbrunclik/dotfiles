@@ -29,10 +29,19 @@ local cheatsheet = {}
 local sectionNotes = {
     Layouts = "again: swap focus",
     Apps = "again: maximize",
+    Messages = "again: hide",
 }
 local function bindHyper(key, section, desc, fn)
     table.insert(cheatsheet, { key = key, section = section, desc = desc })
     hs.hotkey.bind(hyper, ansiKeys[key] or key, fn)
+end
+
+-- A plain key (no Hyper) that should still be on the cheatsheet — e.g. F18,
+-- which the Model 100's Any key sends. `label` is what the sheet shows.
+-- F13–F20 are physical keys nothing in macOS or the apps uses.
+local function bindPlain(key, label, section, desc, fn)
+    table.insert(cheatsheet, { key = key, label = label, section = section, desc = desc })
+    hs.hotkey.bind({}, key, fn)
 end
 
 -- Find the best window for an app (handles Zoom's multiple windows)
@@ -242,8 +251,8 @@ local function isZoomMuted()
     return nil -- not in a meeting
 end
 
--- Hyper+M = toggle Zoom mute (works from any app, no focus switch)
-bindHyper("m", "Zoom", "Mute / unmute (from any app)", function()
+-- Toggle Zoom mute from any app, without switching focus
+local function toggleZoomMute()
     local zoom = hs.application.get("zoom.us")
     if not zoom then
         hs.alert.show("\u{1F4F5} Zoom not running")
@@ -265,6 +274,34 @@ bindHyper("m", "Zoom", "Mute / unmute (from any app)", function()
     else
         hs.alert.show("\u{26A0}\u{FE0F} Not in a meeting")
     end
+end
+bindHyper("m", "Zoom", "Mute / unmute (from any app)", toggleZoomMute)
+bindPlain("f18", "Any", "Zoom", "Mute / unmute (Model 100 Any key → F18)", toggleZoomMute)
+
+-- Hyper+T = summon / dismiss Messages for a quick reply without touching the
+-- current layout. Messages floats over the right third; pressing again hides
+-- it, and macOS hands focus back to the app you were in. Nothing is remembered
+-- between presses: whether Messages is frontmost decides. On a cold start,
+-- wait (up to 5 s) for its window before placing it.
+local messagesFrame = hs.geometry.rect(2 / 3, 0, 1 / 3, 1)
+bindHyper("t", "Messages", "Show / hide Messages", function()
+    local app = hs.application.get("Messages")
+    if app and app:isFrontmost() then
+        app:hide()
+        return
+    end
+    hs.application.launchOrFocus("Messages")
+    local deadline = hs.timer.secondsSinceEpoch() + 5
+    local function window()
+        local messages = hs.application.get("Messages")
+        return messages and messages:mainWindow()
+    end
+    hs.timer.waitUntil(function()
+        return window() or hs.timer.secondsSinceEpoch() > deadline
+    end, function()
+        local win = window()
+        if win then win:move(messagesFrame) end
+    end, 0.05)
 end)
 
 -- Reload config
@@ -323,7 +360,7 @@ local function cheatsheetSections()
             byName[e.section] = { name = e.section, note = sectionNotes[e.section], entries = {} }
             table.insert(sections, byName[e.section])
         end
-        table.insert(byName[e.section].entries, { key = label(e.key), desc = e.desc })
+        table.insert(byName[e.section].entries, { key = e.label or label(e.key), desc = e.desc })
     end
     local remaps = karabinerEntries()
     if #remaps > 0 then

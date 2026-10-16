@@ -593,7 +593,7 @@ here, layer 0:
 |---|---|---|
 | Right thumb-cluster Fn | Ctrl+Alt+Shift + Left Cmd | Hyper, held |
 | Butterfly | `Cmd+Shift+4` | Shottr area capture (its hotkey; macOS's own `Cmd+Shift+4` is off) |
-| Any | The stock "Any" macro (types a random character) | Free to repurpose |
+| Any | `F18` | Zoom mute (Hammerspoon binds F18; set the key to F18 in Chrysalis) |
 
 **Back it up after every change in Chrysalis:** quit Chrysalis (it holds the
 serial port), run `keyboardio-backup`, and commit `config/keyboardio/model100.json`.
@@ -706,6 +706,18 @@ Press twice to maximize the focused app's window.
 | Shortcut | Action |
 |---|---|
 | Hyper + M | Toggle mute (works from any app, no focus switch) |
+| Any (Model 100) | Same, as one key: Chrysalis maps Any to `F18`, Hammerspoon binds `F18` |
+
+### Messages (Hammerspoon)
+
+| Shortcut | Action |
+|---|---|
+| Hyper + T | Show Messages over the right third; press again to hide it and return to the app you were in |
+
+For quick replies without touching the current layout. It's the one Hyper key
+where "again" hides instead of maximizing. Pin the conversations you reply to
+most, so Messages opens on them, and allow those people through your work
+Focus (System Settings → Focus → People).
 
 ### Utilities
 
