@@ -38,6 +38,7 @@ LINKS=(
     "gh-new-repo|$HOME/.local/bin/gh-new-repo"
     "hyper-cheatsheet|$HOME/.local/bin/hyper-cheatsheet"
     "keyboardio-backup|$HOME/.local/bin/keyboardio-backup"
+    "keyboardio-layers|$HOME/.local/bin/keyboardio-layers"
 )
 
 # Binaries the configs reference but that nothing else verifies. Neovim's

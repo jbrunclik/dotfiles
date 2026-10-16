@@ -591,10 +591,34 @@ here, layer 0:
 
 | Key | Sends | Does |
 |---|---|---|
-| Right thumb-cluster Fn | Ctrl+Alt+Shift + Left Cmd | Hyper, held |
+| Right thumb-cluster Fn | Holds the **Hyper layer**, where every key sends Hyper + itself | Hyper, held — and the keys light up by what they do |
 | Butterfly | `Cmd+Shift+4` | Shottr area capture (its hotkey; macOS's own `Cmd+Shift+4` is off) |
 | Any | `F18` (custom code 109) | Zoom mute (Hammerspoon binds F18) |
 | Prog | `F19` (custom code 110) | Messages show / hide (Hammerspoon binds F19) |
+
+**Colors.** The LEDs run in Colormap mode with per-layer colors (Catppuccin
+Mocha, brightness 96/255):
+
+- **Base** — dim; Prog teal (Messages), Any red (mute), butterfly peach
+  (screenshot), layer keys white.
+- **Hyper** (hold the thumb key) — each bound key in its cheatsheet section's
+  color, unbound keys dark: layouts mauve, windows blue, apps green, Messages
+  teal, Zoom red, reload yellow, Karabiner nav peach. The keyboard *is* the
+  cheatsheet here.
+- **Function** / **Numpad** — only their own keys lit: arrows sky, F-keys pink,
+  media yellow; digits green.
+
+`keyboardio-layers` generates all of this from the dotfiles — the Hyper layer
+from the base layer, its colors from the live cheatsheet data — so **after
+adding or moving a Hyper binding, run `keyboardio-layers --apply`, then
+`keyboardio-backup`** and commit. Without `--apply` it only prints what would
+change. It writes over the same protocol Chrysalis uses and reads every value
+back; if something looks wrong, restore the committed backup with Chrysalis.
+
+Two consequences of Hyper being a layer here: holding Hyper *alone* sends
+nothing, so the on-screen cheatsheet only opens from the MacBook's Caps Lock
+(the lit keyboard replaces it); and Hyper + mouse click doesn't exist on the
+Model 100.
 
 **Back it up after every change in Chrysalis:** quit Chrysalis (it holds the
 serial port), run `keyboardio-backup`, and commit `config/keyboardio/model100.json`.

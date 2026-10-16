@@ -14,7 +14,7 @@ macOS development environment configuration. Catppuccin Mocha everywhere.
 | Default apps | Finder "open with" per file type — text/code → VS Code, HEIC/RAW → Preview, media → IINA, .rar/.7z → The Unarchiver | `config/finder/default-apps` |
 | Git | [delta](https://github.com/dandavison/delta) pager, [lazygit](https://github.com/jesseduffield/lazygit) TUI, [gh](https://cli.github.com/) CLI | `gitconfig` |
 | Keyboard | [Karabiner-Elements](https://karabiner-elements.pqrs.org/) — CapsLock as Hyper / Backspace, Hyper+HJKL arrows, Hyper+,/. Ghostty tabs | `config/karabiner/` |
-| Keyboardio Model 100 | Firmware keymap (Hyper on the thumb-cluster Fn key), backed up with `keyboardio-backup` | `config/keyboardio/model100.json` |
+| Keyboardio Model 100 | Firmware keymap: a lit Hyper layer on the thumb-cluster Fn key, generated with `keyboardio-layers`, backed up with `keyboardio-backup` | `config/keyboardio/model100.json` |
 | Window layouts | [Hammerspoon](https://www.hammerspoon.org/) — hotkey-triggered layouts, app focus, Zoom mute, hold-Hyper cheatsheet (and `hyper-cheatsheet` for a printable PDF of it plus the GUIDE's shortcuts); reloads on save | `config/hammerspoon/init.lua` |
 | Clipboard | [Maccy](https://maccy.app/) — clipboard history | — |
 | Screenshots | [Shottr](https://shottr.cc/) — capture, annotate, OCR | — |

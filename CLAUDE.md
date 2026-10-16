@@ -48,6 +48,8 @@ works this way and what to watch out for, not only the key.
   commands from stdin when that isn't a terminal and otherwise waits forever. Never memoize window state — derive it from live
   positions. Use `hs.alert` only for state feedback (mute, errors), not routine
   actions.
+  After adding or moving a Hyper binding, also run `keyboardio-layers --apply`
+  (the Model 100's lit Hyper layer is generated from it) and `keyboardio-backup`.
   Bind Hyper keys with `bindHyper(key, section, description, fn)` (it binds by
   physical key code, so shortcuts survive the Czech layout), and write
   Karabiner rule descriptions as `[App: ]Hyper+<keys> → <action>`: the

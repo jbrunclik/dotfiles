@@ -16,65 +16,28 @@ Usage:
     keyboardio-backup out.json
 """
 
-import glob
 import json
 import os
-import select
 import sys
-import termios
-import time
 
 SKIP = {"device.reset", "eeprom.erase", "macros.trigger"}
 # Chrysalis stores this one as a JSON boolean; match it so restore reads it the same
 BOOLEANS = {"keymap.onlyCustom"}
 
+sys.dont_write_bytecode = True
 repo = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, os.path.join(repo, "lib"))
+from kaleidoscope_focus import Keyboard  # noqa: E402
+
 out_path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(repo, "config/keyboardio/model100.json")
-
-ports = sorted(glob.glob("/dev/cu.usbmodem*"))
-if not ports:
-    sys.exit("no keyboard found (no /dev/cu.usbmodem* port) — is the Model 100 plugged in?")
-
-try:
-    fd = os.open(ports[0], os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
-except OSError as e:
-    sys.exit(f"cannot open {ports[0]}: {e.strerror} — quit Chrysalis, which holds the port")
-
-attrs = termios.tcgetattr(fd)
-attrs[0] = attrs[1] = attrs[3] = 0  # raw: no input/output/line processing
-attrs[2] = termios.CS8 | termios.CREAD | termios.CLOCAL
-attrs[4] = attrs[5] = termios.B9600  # ignored over USB, but must be set
-termios.tcsetattr(fd, termios.TCSANOW, attrs)
-termios.tcflush(fd, termios.TCIOFLUSH)
-
-
-def ask(command, timeout=5.0):
-    """Send one Focus command; the answer ends with a line holding a single '.'."""
-    os.write(fd, (command + "\n").encode())
-    buf, deadline = b"", time.time() + timeout
-    while time.time() < deadline:
-        ready, _, _ = select.select([fd], [], [], 0.2)
-        if ready:
-            buf += os.read(fd, 65536)
-            text = buf.replace(b"\r", b"")
-            if text == b".\n" or text.endswith(b"\n.\n"):
-                break
-    else:
-        sys.exit(f"no complete answer to '{command}' — is this a Kaleidoscope keyboard?")
-    lines = buf.decode(errors="replace").replace("\r", "").split("\n")[:-2]  # drop "." and ""
-    # The keyboard pads values with a trailing space; Chrysalis trims them
-    return "\n".join(line.rstrip() for line in lines)
-
-
-commands = [c for c in ask("help").split("\n") if c and c not in SKIP]
-if "keymap.custom" not in commands:
-    sys.exit(f"{ports[0]} doesn't look like a Kaleidoscope keyboard (no keymap.custom)")
-
+keyboard = Keyboard()
 settings = {}
-for command in commands:
-    value = ask(command)
+for command in keyboard.commands():
+    if command in SKIP:
+        continue
+    value = keyboard.request(command)
     settings[command] = value == "1" if command in BOOLEANS else value
-os.close(fd)
+keyboard.close()
 
 os.makedirs(os.path.dirname(out_path), exist_ok=True)
 with open(out_path, "w") as f:

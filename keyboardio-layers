@@ -1,0 +1,204 @@
+#!/usr/bin/env python3
+"""Generate the Model 100's Hyper layer and LED colors from the dotfiles.
+
+What it sets, starting from the keyboard's current state:
+
+  * Layer 3 "Hyper": every plain key of the base layer sends Hyper + itself.
+    The Hyper key (base layer, right thumb-cluster) becomes "hold for layer
+    3", so holding it lights that layer — chords behave exactly as before.
+  * Prog → F19 (Messages toggle in Hammerspoon).
+  * Colors (Colormap LED mode, Catppuccin Mocha): the Hyper layer is colored
+    by cheatsheet section, so the keyboard shows what's bound; unbound keys
+    stay dark. Base is dim with the single-purpose keys marked; the Fn and
+    Numpad layers light only their own keys.
+  * Layer names and a calmer LED brightness.
+
+The Hyper bindings come live from Hammerspoon (hyperCheatsheetExport — the
+same data as the hold-Hyper overlay), so re-run after adding a binding.
+
+Dry run by default: prints the plan. --apply writes it to the keyboard over
+the Focus protocol (as Chrysalis does) and reads every value back to verify.
+Afterwards run keyboardio-backup and commit. Quit Chrysalis first.
+
+Usage:
+    keyboardio-layers            # show what would change
+    keyboardio-layers --apply
+"""
+
+import json
+import os
+import subprocess
+import sys
+import tempfile
+
+sys.dont_write_bytecode = True
+repo = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, os.path.join(repo, "lib"))
+from kaleidoscope_focus import Keyboard  # noqa: E402
+
+APPLY = "--apply" in sys.argv[1:]
+LAYERS, KEYS = 8, 64
+BASE, NUMPAD, FN, HYPER = 0, 1, 2, 3
+NAMES = ["QWERTY", "Numpad", "Function", "Hyper"]
+BRIGHTNESS = 96  # of 255
+
+# Kaleidoscope key encoding (raw 16-bit): plain keys are the USB HID usage,
+# optionally with modifier flags in the high byte; layer keys are synthetic.
+TRANSPARENT = 65535
+CTRL, LALT, SHIFT, GUI = 0x01, 0x02, 0x08, 0x10
+HYPER_MODS = (CTRL | LALT | SHIFT | GUI) << 8
+HYPER_KEY = ((CTRL | LALT | SHIFT) << 8) | 0xE3  # Ctrl+Alt+Shift + Left Cmd
+SHIFT_TO_LAYER = 0x4400 + 42                     # + layer (left palm Fn = layer 2 = 17452)
+F18, F19 = 0x6D, 0x6E
+SCREENSHOT = ((SHIFT | GUI) << 8) | 0x21         # Cmd+Shift+4, the butterfly key (Shottr)
+PROG = 0                                         # row 0, col 0 of the base layer
+
+# Palette: 24 RGB colors (Chrysalis reads it in threes). Catppuccin Mocha.
+PALETTE = [
+    (0, 0, 0),        # 0  off
+    (203, 166, 247),  # 1  mauve     Layouts
+    (137, 180, 250),  # 2  blue      Windows
+    (166, 227, 161),  # 3  green     Apps, numpad digits
+    (243, 139, 168),  # 4  red       Zoom (also the Any key)
+    (148, 226, 213),  # 5  teal      Messages (also the Prog key)
+    (249, 226, 175),  # 6  yellow    Hammerspoon, media keys
+    (250, 179, 135),  # 7  peach     Karabiner nav, screenshot key
+    (180, 190, 254),  # 8  lavender  anything else bound
+    (137, 220, 235),  # 9  sky       arrows
+    (245, 194, 231),  # 10 pink      F-keys
+    (88, 91, 112),    # 11 surface2  base layer keys (dim)
+    (205, 214, 244),  # 12 text      Hyper key, layer keys
+] + [(0, 0, 0)] * 11
+SECTION_COLORS = {"Layouts": 1, "Windows": 2, "Apps": 3, "Zoom": 4, "Messages": 5,
+                  "Hammerspoon": 6, "Karabiner": 7}
+
+HID = {chr(65 + i): 0x04 + i for i in range(26)}
+HID.update({str(i): 0x1D + i for i in range(1, 10)})
+HID.update({"0": 0x27, "Tab": 0x2B, "⌫": 0x2A, ",": 0x36, ".": 0x37, "Space": 0x2C})
+
+
+def plain(k):
+    """HID usage of a plain, unmodified key, else None."""
+    return k if k < 0x100 else None
+
+
+def hyper_bindings():
+    """{HID usage: section} for every Hyper binding, asked live from Hammerspoon."""
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "bindings.json")
+        # </dev/null: hs reads commands from stdin when it isn't a terminal
+        subprocess.run(["perl", "-e", "alarm 10; exec @ARGV", "hs", "-c",
+                        f"return hyperCheatsheetExport('{path}')"],
+                       stdin=subprocess.DEVNULL, capture_output=True)
+        if not os.path.exists(path):
+            sys.exit("no data from Hammerspoon — is it running?")
+        sections = json.load(open(path))["sections"]
+    bound = {}
+    for section in sections:
+        for entry in section["entries"]:
+            label = entry["key"]
+            if label in ("Any", "Prog"):  # plain keys, not Hyper chords
+                continue
+            parts = [label] if len(label) == 1 or label in HID else label.split("/")
+            for part in parts:
+                if part in HID:  # arrows etc. aren't on the Model 100's base layer
+                    bound[HID[part]] = section["name"]
+    return bound
+
+
+keyboard = Keyboard()
+keymap = [int(x) for x in keyboard.request("keymap.custom").split()]
+colormap = [int(x) for x in keyboard.request("colormap.map").split()]
+modes = keyboard.request("led.modes").split("\n")
+if len(keymap) != LAYERS * KEYS or len(colormap) != LAYERS * KEYS:
+    sys.exit(f"unexpected keymap/colormap size ({len(keymap)}, {len(colormap)})")
+if "Colormap" not in modes:
+    sys.exit("firmware has no Colormap LED mode")
+
+base = keymap[BASE * KEYS:(BASE + 1) * KEYS]
+hyper_at = [i for i, k in enumerate(base) if k == HYPER_KEY or k == SHIFT_TO_LAYER + HYPER]
+if len(hyper_at) != 1:
+    sys.exit("can't find the Hyper key on the base layer (Ctrl+Alt+Shift+Cmd)")
+bound = hyper_bindings()
+
+new_keymap, new_colormap = list(keymap), list(colormap)
+
+
+def setkey(layer, i, value):
+    new_keymap[layer * KEYS + i] = value
+
+
+def setcolor(layer, i, color):
+    new_colormap[layer * KEYS + i] = color
+
+
+# Base layer: Hyper key holds the Hyper layer; Prog sends F19
+setkey(BASE, hyper_at[0], SHIFT_TO_LAYER + HYPER)
+setkey(BASE, PROG, F19)
+
+# Hyper layer: every plain non-modifier key sends Hyper + itself; the rest
+# (modifiers, layer keys, F18/F19) stays transparent
+for i, k in enumerate(base):
+    h = plain(k)
+    hyper = h is not None and h not in (0, F18, F19) and not 0xE0 <= h <= 0xE7 and i != PROG
+    setkey(HYPER, i, HYPER_MODS | h if hyper else TRANSPARENT)
+
+# Colors
+for i in range(KEYS):
+    k = new_keymap[BASE * KEYS + i]
+    h = plain(k)
+    # Base: dim, single-purpose keys marked
+    setcolor(BASE, i, {F18: 4, F19: 5}.get(h, 7 if k == SCREENSHOT else
+                       12 if k >= 0x4400 and k < 0x4500 else 11))
+    # Hyper: bound keys by section, everything else dark
+    section = bound.get(h) if h is not None else None
+    setcolor(HYPER, i, 12 if k == SHIFT_TO_LAYER + HYPER else
+             SECTION_COLORS.get(section, 8) if section else 0)
+    # Fn: arrows, F-keys, media; Numpad: its keys
+    fk = new_keymap[FN * KEYS + i]
+    fh = plain(fk & 0xFF) if fk != TRANSPARENT and fk < 0x100 else None
+    setcolor(FN, i, 0 if fk == TRANSPARENT else 9 if fh in (0x4F, 0x50, 0x51, 0x52) else
+             10 if fh is not None and (0x3A <= fh <= 0x45) else 6 if fk >= 0x5000 else 8)
+    nk = new_keymap[NUMPAD * KEYS + i]
+    setcolor(NUMPAD, i, 0 if nk == TRANSPARENT else 3)
+
+names = NAMES + [f"#{n}" for n in range(len(NAMES), LAYERS)]
+plan = {
+    "palette": " ".join(str(v) for rgb in PALETTE for v in rgb),
+    "colormap.map": " ".join(map(str, new_colormap)),
+    "keymap.custom": " ".join(map(str, new_keymap)),
+    "keymap.layerNames": " ".join(f"{len(n)} {n}" for n in names) + " 0",
+    "led.brightness": str(BRIGHTNESS),
+    "led_mode.default": str(modes.index("Colormap")),
+}
+
+changed_keys = [i for i in range(LAYERS * KEYS) if new_keymap[i] != keymap[i]]
+print(f"Hyper bindings found: {len(bound)} keys in {len(set(bound.values()))} sections")
+if changed_keys:
+    per_layer = {L: sum(1 for i in changed_keys if i // KEYS == L) for L in range(LAYERS)}
+    print("Keymap: " + ", ".join(f"{n} keys on {NAMES[L] if L < len(NAMES) else L}"
+                                 for L, n in per_layer.items() if n))
+else:
+    print("Keymap: already up to date")
+print(f"Layer names: {', '.join(NAMES)} · LED mode: Colormap · brightness {BRIGHTNESS}/255")
+if not APPLY:
+    print("Dry run — nothing written. Re-run with --apply.")
+    sys.exit(0)
+
+for command, value in plan.items():
+    keyboard.request(command, value)
+keyboard.request("led.mode", plan["led_mode.default"])  # switch now, not just after replug
+
+# Verify by reading back
+problems = []
+for command in ("palette", "colormap.map", "keymap.custom", "led.brightness", "led_mode.default"):
+    if keyboard.request(command).split() != plan[command].split():
+        problems.append(command)
+read_names = [line.split(" ", 1)[1] for line in keyboard.request("keymap.layerNames").split("\n")[:-1]]
+if read_names != names:
+    problems.append(f"keymap.layerNames ({read_names})")
+keyboard.close()
+if problems:
+    sys.exit("written, but these didn't read back as sent: " + ", ".join(problems)
+             + " — restore config/keyboardio/model100.json with Chrysalis if anything misbehaves")
+print("Applied and verified. Now: keyboardio-backup, then commit config/keyboardio/model100.json")
