@@ -447,9 +447,13 @@ bindPlain("f18", "Any", "Zoom", "Mute / unmute (Model 100 Any key → F18)", tog
 -- The work calendar isn't in macOS Calendar, but Zoom's home window has it: its
 -- calendar sidebar is a web view whose cards are readable through AX, and
 -- about 10 minutes before a Zoom meeting (once it's under way too) the card
--- gains a button titled "Start" (you host) or "Join". So no time logic: the
--- cards with that button are the candidates. One → press it; several → pick;
--- none → say so. A hidden Zoom is unhidden first (its windows are invisible
+-- gains a button titled "Start" (you host) or "Join" — for any meeting link,
+-- not only Zoom's: Join on a Teams meeting opens it in the browser. The cards
+-- with that button are the candidates, minus meetings that have already ended
+-- (a finished meeting still open in Zoom keeps its button). The one whose start
+-- is nearest to now wins — at 16:29, the 16:30 meeting beats the one running
+-- since 16:00, which you're presumably in. Only starts within 5 minutes of
+-- each other ask (a picker, soonest first); none → say so. A hidden Zoom is unhidden first (its windows are invisible
 -- to AX until then); a quit one is launched, and its sidebar takes ~9 s to load.
 local function zoomMeetingCards()
     local zoom = getApp("zoom.us")
@@ -481,11 +485,48 @@ local function zoomMeetingCards()
     for _, w in ipairs(ax:attributeValue("AXWindows") or {}) do walk(w, 0) end
     return cards
 end
--- Global so `hs -c` can list what Hyper+Return would press, without pressing
-function zoomJoinableMeetings()
+-- The card's title is its screen-reader text: "<name> <status> [Repeating
+-- event Repeating event] 15:30 - 15:55 Organizer: … press Tab for more
+-- options…". Status is "In 8 min", "Now" or a date. Pull out status and times,
+-- drop meetings that ended (unless that leaves nothing), keep the nearest.
+local function chooseMeetings(found, nowMin)
+    local all, open = {}, {}
+    for _, c in ipairs(found) do
+        local rest = c.detail:sub(#c.name + 2)
+        local sh, sm, eh, em = rest:match("(%d%d?):(%d%d) %- (%d%d?):(%d%d)")
+        c.status = rest:match("^(.-) Repeating event") or rest:match("^(.-) %d%d?:%d%d") or ""
+        c.time = sh and string.format("%s:%s – %s:%s", sh, sm, eh, em) or ""
+        c.start = sh and tonumber(sh) * 60 + tonumber(sm) or math.huge
+        local ending = eh and tonumber(eh) * 60 + tonumber(em)
+        table.insert(all, c)
+        -- An end before the start is past midnight: not over yet
+        if not ending or ending < c.start or ending > nowMin then table.insert(open, c) end
+    end
+    local cards = #open > 0 and open or all
+    for _, c in ipairs(cards) do c.distance = math.abs(c.start - nowMin) end
+    table.sort(cards, function(a, b) return a.distance < b.distance end)
+    -- Keep the nearest, plus any about as near (genuinely simultaneous starts)
+    local picked = {}
+    for _, c in ipairs(cards) do
+        if c.distance - cards[1].distance < 5 then table.insert(picked, c) end
+    end
+    table.sort(picked, function(a, b) return a.start < b.start end)
+    return picked
+end
+local function meetingCandidates()
+    local now = os.date("*t")
+    return chooseMeetings(zoomMeetingCards(), now.hour * 60 + now.min)
+end
+-- Global so `hs -c` can show what Hyper+Return would do, without pressing.
+-- Tests pass made-up cards ({ name, detail } — detail as the card title reads)
+-- and minutes since midnight instead of the live Zoom window and clock.
+function zoomJoinableMeetings(cards, nowMin)
+    local picked = cards and chooseMeetings(cards, nowMin) or meetingCandidates()
     local out = {}
-    for _, c in ipairs(zoomMeetingCards()) do table.insert(out, c.button:attributeValue("AXTitle") .. ": " .. c.name) end
-    return table.concat(out, "\n")
+    for _, c in ipairs(picked) do
+        table.insert(out, string.format("%s (%s · %s)", c.name, c.status, c.time))
+    end
+    return (#picked > 1 and "picker: " or "press: ") .. table.concat(out, " | ")
 end
 
 local function pressMeeting(cards)
@@ -498,16 +539,17 @@ local function pressMeeting(cards)
     end)
     local choices = {}
     for i, c in ipairs(cards) do
-        table.insert(choices, { text = c.name, subText = c.detail, index = i })
+        table.insert(choices, { text = c.name, subText = c.status .. " · " .. c.time, index = i })
     end
-    chooser:choices(choices):show()
+    -- Sized to the meetings, not the default screenful; ⌘1–9 pick a row
+    chooser:choices(choices):rows(#choices):width(30):show()
 end
 
 local function joinNextMeeting()
     local zoom = getApp("zoom.us")
     if zoom and zoom:isHidden() then zoom:unhide() end
     if zoom then
-        local cards = zoomMeetingCards()
+        local cards = meetingCandidates()
         if #cards > 0 then pressMeeting(cards) return end
         if #zoom:allWindows() > 0 then
             hs.alert.show("\u{1F4C5} No Zoom meeting starting soon")
@@ -518,7 +560,7 @@ local function joinNextMeeting()
     launchApp("zoom.us")
     local deadline, cards = hs.timer.secondsSinceEpoch() + 15, {}
     hs.timer.waitUntil(function()
-        cards = zoomMeetingCards()
+        cards = meetingCandidates()
         return #cards > 0 or hs.timer.secondsSinceEpoch() > deadline
     end, function()
         if #cards > 0 then pressMeeting(cards) else hs.alert.show("\u{1F4C5} No Zoom meeting starting soon") end

@@ -970,20 +970,26 @@ alphabetically, System Settings last.
 | Any (Model 100) | Same, as one key: Chrysalis maps Any to `F18`, Hammerspoon binds `F18` |
 | Hyper + Return | Start / join the meeting about to begin |
 
-**Hyper+Return** joins the next Zoom meeting from any app, without touching
-Zoom. The work calendar isn't in macOS Calendar, so it reads Zoom's own: the
-calendar sidebar on Zoom's home screen. About 10 minutes before a Zoom
+**Hyper+Return** joins the meeting about to begin from any app, without
+touching Zoom. The work calendar isn't in macOS Calendar, so it reads Zoom's
+own: the calendar sidebar on Zoom's home screen. About 10 minutes before a
 meeting (and while it's under way) its card gets a **Start** button (you host)
-or **Join**; Hyper+Return presses it. Several at once → a picker; none →
-"No Zoom meeting starting soon". Meetings without a Zoom link (Teams, Meet)
-never get the button, so they're ignored.
+or **Join**; Hyper+Return presses it. That works for any meeting link Zoom
+knows, not only Zoom's: Join on a Teams meeting opens it in the browser.
+
+- Meetings that already ended are skipped — a finished meeting still open in
+  Zoom keeps its Start button.
+- Of the rest, the one whose **start is nearest to now** wins: at 16:29 the
+  16:30 meeting beats the one running since 16:00 (you're presumably in it).
+  Only starts within 5 minutes of each other ask — a picker, soonest first
+  (⌘1–9 pick a row). None → "No Zoom meeting starting soon".
+- To see what it would do: `hs -c 'return zoomJoinableMeetings()'`.
 
 - Zoom only has to be running: hidden is fine (it's unhidden first, since a
   hidden app's windows are invisible to accessibility); if it isn't running,
   it's launched and the sidebar gets ~9 s to load.
 - It depends on Zoom's interface: if an update renames the button, it says
-  "no meeting" rather than pressing anything else. To check what it would
-  press: `hs -c 'return zoomJoinableMeetings()'`.
+  "no meeting" rather than pressing anything else.
 
 ### Messages (Hammerspoon)
 
