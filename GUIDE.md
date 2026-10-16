@@ -10,8 +10,10 @@ everything at once.
 |---|---|
 | New tab | `Cmd+T` |
 | Split right / down | `Cmd+D` / `Cmd+Shift+D` |
-| Navigate splits | `Cmd+Option+Arrow` |
-| Zoom a split (toggle) | `Cmd+Shift+Enter` |
+| Move between splits | `Alt+H/J/K/L` (also `Cmd+Option+Arrow`) |
+| Resize a split | `Alt+Shift+H/J/K/L` |
+| Zoom a split (toggle) | `Alt+Z` (also `Cmd+Shift+Enter`) |
+| Equalize splits | `Alt+=` |
 | Fullscreen | `Cmd+Enter` |
 | Jump to previous / next prompt | `Cmd+Up` / `Cmd+Down` |
 | Clear screen and scrollback | `Cmd+K` |
@@ -28,6 +30,13 @@ The quick terminal is a system-wide dropdown terminal — press
 Prompt jumping (`Cmd+Up/Down`) needs shell integration, which is on: it scrolls
 straight to the start of each command's output — the fastest way back through
 a long build log or a Claude Code session.
+
+**Splits and Neovim windows share the home row:** `Alt+H/J/K/L` moves between
+Ghostty splits, `Ctrl+H/J/K/L` between Neovim windows. Ctrl can't do both —
+the shell and Claude Code need `Ctrl+L` (clear) and `Ctrl+K` (kill to end of
+line) — so the modifier says which layer you're moving in. They're bound to
+physical keys, so the Czech layout doesn't move them. The one casualty is
+readline's `Alt+L` (lowercase the next word).
 
 Two things to know:
 

@@ -45,6 +45,23 @@ keybind = global:ctrl+grave_accent=toggle_quick_terminal
 quick-terminal-position = top
 quick-terminal-animation-duration = 0.15
 
+# --- Splits on the home row ---
+# Alt+H/J/K/L moves between Ghostty splits, Ctrl+H/J/K/L between Neovim
+# windows (keymaps.lua), so both stay on the home row without colliding. Ctrl
+# can't do both: the shell and Claude Code need Ctrl+L and Ctrl+K. Physical
+# key codes, so the Czech layout doesn't move them. The only thing given up
+# is readline's Alt+L (downcase-word).
+keybind = alt+key_h=goto_split:left
+keybind = alt+key_j=goto_split:down
+keybind = alt+key_k=goto_split:up
+keybind = alt+key_l=goto_split:right
+keybind = alt+shift+key_h=resize_split:left,40
+keybind = alt+shift+key_j=resize_split:down,40
+keybind = alt+shift+key_k=resize_split:up,40
+keybind = alt+shift+key_l=resize_split:right,40
+keybind = alt+key_z=toggle_split_zoom
+keybind = alt+equal=equalize_splits
+
 # --- Shell integration (automatic, but explicit for clarity) ---
 shell-integration = detect
 # Keep TERMINFO through sudo, so root TUIs (sudo mtr, sudo btop) can find
