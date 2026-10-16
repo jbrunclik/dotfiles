@@ -794,12 +794,18 @@ local function bandWallpaper(screen)
 
     local band = screen:frame().y - full.y  -- the menu bar's height on this screen
     if band <= 0 then return end            -- menu bar hidden: nothing to cover
-    local prefix = (source:match("([^/]+)%.%w+$") or "wallpaper") .. "-"
+    -- Copies are named after the wallpaper *family* — the sibling's size
+    -- suffix stripped — so the cleanup below keeps every display's copy of the
+    -- current wallpaper. Named after the sibling, drawing the Dell's band
+    -- deleted the MacBook's, and macOS fell back to its default (blue) wallpaper.
+    local base = source:match("([^/]+)%.%w+$") or "wallpaper"
+    local prefix = base:gsub("%-%d+x%d+$", "") .. "-"
     local color = bandColor(screen)
     local name = string.format("%s%dx%d-%d-%s.jpg", prefix,
         math.floor(full.w * scale), math.floor(full.h * scale), math.floor(band * scale), color)
     local target = BAND_DIR .. "/" .. name
-    if current == target then return end
+    -- Already set — but only if the file is still there; a deleted copy is redrawn
+    if current == target and hs.fs.attributes(target) then return end
 
     if not hs.fs.attributes(target) then
         hs.fs.mkdir(BAND_DIR)
