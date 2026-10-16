@@ -22,7 +22,11 @@ if ! command -v brew &>/dev/null; then
 fi
 
 header "Installing Homebrew packages"
-brew bundle install --file="$DOTFILES/Brewfile"
+# Don't let one failed entry abort the whole install (set -e): the mas
+# lines fail until you're signed in to the App Store, and a cask can fail on
+# a flaky download. drift.sh lists whatever is still missing afterwards.
+brew bundle install --file="$DOTFILES/Brewfile" \
+    || warn "some Brewfile entries failed (see above) — continuing; re-run after fixing"
 
 header "Linking config files"
 
@@ -95,7 +99,7 @@ defaults write com.apple.dock minimize-to-application -bool true
 defaults write com.apple.dock mru-spaces -bool false
 # Clicking the wallpaper no longer hides every window
 defaults write com.apple.WindowManager EnableStandardClickToShowDesktop -bool false
-killall Dock
+killall Dock 2>/dev/null || true  # no Dock running, e.g. over SSH
 
 # App preferences worth keeping — only the settings that were actually changed.
 # Written while the apps aren't running yet on a fresh machine; on this one
