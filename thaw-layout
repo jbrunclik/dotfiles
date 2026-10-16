@@ -1,0 +1,237 @@
+#!/usr/bin/env python3
+"""Keep Thaw's menu bar layout in a file you can edit.
+
+The layout is config/thaw/layout (tracked) plus ~/.config/thaw/layout.local
+(untracked, for work-only icons that shouldn't be in a public repo). Each
+lists icons under [visible], [hidden] and [always-hidden], left to right, one
+Thaw identifier per line (`<bundle id>:<item>`, `# name` comments are
+ignored). Local entries go at the left end of their section. Thaw's own
+control items, Control Center and the clock are added automatically.
+
+Thaw keeps the layout in its preferences (MenuBarItemManager.savedSectionOrder)
+and restores it when it starts, moving icons to match. One limit: it won't
+move an icon *into* Visible while that icon sits in a collapsed section
+("skipping the visible-bound move … parked offscreen" in its log) — drag
+those once in Thaw's settings. Moves into the hidden sections work.
+
+Usage:
+    thaw-layout              # compare the file with Thaw (what's live, what's saved)
+    thaw-layout --capture    # write Thaw's current layout into the file(s)
+    thaw-layout --apply      # write the file into Thaw: quits and relaunches it
+"""
+
+import os
+import plistlib
+import re
+import subprocess
+import sys
+import tempfile
+import time
+
+DOMAIN = "com.stonerl.Thaw"
+REPO = os.path.dirname(os.path.realpath(__file__))
+TRACKED = os.path.join(REPO, "config/thaw/layout")
+LOCAL = os.path.expanduser("~/.config/thaw/layout.local")
+# File section name → Thaw's key, in menu bar order (left to right)
+SECTIONS = {"always-hidden": "alwaysHidden", "hidden": "hidden", "visible": "visible"}
+CHEVRON = "com.stonerl.Thaw:Thaw.ControlItem.Visible"
+FIXED_RIGHT = ["com.apple.controlcenter:BentoBox-0", "com.apple.controlcenter:Clock"]
+AUTOMATIC = {CHEVRON, *FIXED_RIGHT}
+
+
+def prefs():
+    return plistlib.loads(subprocess.check_output(["defaults", "export", DOMAIN, "-"]))
+
+
+def read_layout(path):
+    """{file section: [ids]} from a layout file; missing file → empty."""
+    layout = {name: [] for name in SECTIONS}
+    if not os.path.exists(path):
+        return layout
+    section = None
+    with open(path) as f:
+        lines = f.readlines()
+    for n, raw in enumerate(lines, 1):
+        line = raw.split("#", 1)[0].strip()
+        if not line:
+            continue
+        if m := re.fullmatch(r"\[([\w-]+)\]", line):
+            section = m.group(1)
+            if section not in SECTIONS:
+                sys.exit(f"{path}:{n}: unknown section [{section}]")
+        elif section is None:
+            sys.exit(f"{path}:{n}: entry before any [section]")
+        else:
+            layout[section].append(line)
+    return layout
+
+
+def wanted_order():
+    """Thaw's savedSectionOrder for the tracked + local files."""
+    tracked, local = read_layout(TRACKED), read_layout(LOCAL)
+    order = {key: local[name] + tracked[name] for name, key in SECTIONS.items()}
+    order["visible"] = [CHEVRON] + order["visible"] + FIXED_RIGHT
+    seen = {}
+    for key, ids in order.items():
+        for i in ids:
+            if i in seen:
+                sys.exit(f"{i} is listed twice ([{seen[i]}] and [{key}])")
+            seen[i] = key
+    return order
+
+
+def write_layout(path, layout, names, header):
+    with open(path, "w") as f:
+        f.write(header)
+        for name in SECTIONS:
+            f.write(f"\n[{name}]\n")
+            for i in layout[name]:
+                f.write(f"{i:<62} # {names[i]}\n" if names.get(i) else f"{i}\n")
+
+
+# Live positions, read through each app's AXExtrasMenuBar (macOS 26 gives every
+# status item window to Control Center, so window lists can't tell them apart).
+# Thaw's own items are its dividers: always-hidden (if enabled), hidden, chevron.
+LIVE_LUA = r"""
+local out = {}
+local function add(bundle, label, x) table.insert(out, bundle .. "\t" .. label .. "\t" .. x) end
+for bundle in (BUNDLES):gmatch("[^,]+") do
+    for _, app in ipairs(hs.application.applicationsForBundleID(bundle)) do
+        local ax = hs.axuielement.applicationElement(app)
+        ax:setTimeout(0.5)
+        local ok, bar = pcall(function() return ax:attributeValue("AXExtrasMenuBar") end)
+        for _, item in ipairs(ok and bar and bar:attributeValue("AXChildren") or {}) do
+            local p = item:attributeValue("AXPosition")
+            local label = item:attributeValue("AXIdentifier") or item:attributeValue("AXDescription") or ""
+            if p then add(bundle, label, p.x) end
+        end
+    end
+end
+return table.concat(out, "\n")
+"""
+
+
+def ax_label(item):
+    """What AX calls a Control Center item: WiFi → com.apple.menuextra.wifi."""
+    special = {"BentoBox-0": "controlcenter", "WiFi": "wifi"}
+    if item in special:
+        return "com.apple.menuextra." + special[item]
+    return "com.apple.menuextra." + re.sub(r"(?<=[a-z])(?=[A-Z])", "-", item).lower()
+
+
+def live_sections(ids):
+    """{id: section key} for the ids whose icon can be found on screen."""
+    bundles = {i.split(":", 1)[0] for i in ids} | {DOMAIN}
+    lua = LIVE_LUA.replace("BUNDLES", repr(",".join(sorted(bundles))))
+    out = subprocess.run(["perl", "-e", "alarm 30; exec @ARGV", "hs", "-c", lua],
+                         stdin=subprocess.DEVNULL, capture_output=True, text=True, check=False).stdout
+    extras = {}
+    for row in out.splitlines():
+        parts = row.split("\t")
+        if len(parts) == 3:
+            extras.setdefault(parts[0], []).append((parts[1], float(parts[2])))
+    dividers = sorted(x for _, x in extras.get(DOMAIN, []))
+    if len(dividers) < 2:
+        sys.exit("can't find Thaw's dividers — is Thaw running? (and Hammerspoon, for hs)")
+    chevron, always = dividers[-1], dividers[0] if len(dividers) == 3 else None
+    found = {}
+    for i in ids:
+        bundle, item = i.split(":", 1)
+        items = extras.get(bundle, [])
+        if bundle == "com.apple.controlcenter":
+            items = [e for e in items if e[0] == ax_label(item)]
+        elif bundle == "com.apple.systemuiserver":
+            items = [e for e in items if e[0] == item]
+        if len(items) != 1:
+            continue  # not running, or ambiguous
+        x = items[0][1]
+        found[i] = "visible" if x > chevron else "alwaysHidden" if always is not None and x < always else "hidden"
+    return found
+
+
+def report(order, quiet=False):
+    """Print where each icon is versus where the file wants it; True if all match."""
+    want = {i: key for key, ids in order.items() for i in ids if i not in AUTOMATIC}
+    live = live_sections(want)
+    key_names = {key: name for name, key in SECTIONS.items()}
+    ok = True
+    for i, key in want.items():
+        if i not in live:
+            quiet or print(f"  ?  {i} — not on screen (app not running?)")
+        elif live[i] != key:
+            ok = False
+            quiet or print(f"  ✗  {i} — in [{key_names[live[i]]}], file says [{key_names[key]}]")
+    return ok
+
+
+def quit_thaw():
+    subprocess.run(["osascript", "-e", 'quit app "Thaw"'], capture_output=True, check=False)
+    for _ in range(50):
+        if subprocess.run(["pgrep", "-x", "Thaw"], capture_output=True, check=False).returncode:
+            return
+        time.sleep(0.1)
+    sys.exit("Thaw didn't quit")
+
+
+args = sys.argv[1:]
+if args == ["--capture"]:
+    p = prefs()
+    saved, names = p["MenuBarItemManager.savedSectionOrder"], p.get("MenuBarItemResolvedNames", {})
+    local_ids = {i for ids in read_layout(LOCAL).values() for i in ids}
+    known = {i for ids in read_layout(TRACKED).values() for i in ids} | local_ids
+    tracked = {name: [] for name in SECTIONS}
+    local = {name: [] for name in SECTIONS}
+    for name, key in SECTIONS.items():
+        for i in saved.get(key, []):
+            if i not in AUTOMATIC:
+                (local if i in local_ids else tracked)[name].append(i)
+                if known and i not in known:  # first capture: everything is new
+                    print(f"new: {i} ({names.get(i, '?')}) → config/thaw/layout"
+                          " — move it to layout.local if it's work-only")
+    os.makedirs(os.path.dirname(TRACKED), exist_ok=True)
+    write_layout(TRACKED, tracked, names, "# Thaw menu bar layout: `thaw-layout --apply` writes it into Thaw.\n"
+                 "# Left to right within each section; work-only icons go in\n"
+                 "# ~/.config/thaw/layout.local (same format, untracked).\n")
+    if any(local.values()) or os.path.exists(LOCAL):
+        os.makedirs(os.path.dirname(LOCAL), exist_ok=True)
+        write_layout(LOCAL, local, names, "# Work-only Thaw icons, merged into config/thaw/layout"
+                     " (left end of each section). Untracked.\n")
+    print(f"Wrote {os.path.relpath(TRACKED, REPO)}" + (f" and {LOCAL}" if any(local.values()) else ""))
+elif args == ["--apply"]:
+    order = wanted_order()
+    quit_thaw()
+    p = prefs()
+    p["MenuBarItemManager.savedSectionOrder"] = order
+    if order["alwaysHidden"]:
+        p["EnableAlwaysHiddenSection"] = True
+    fd, path = tempfile.mkstemp(suffix=".plist")  # unpredictable name, 0600
+    try:
+        with os.fdopen(fd, "wb") as f:
+            plistlib.dump(p, f)
+        subprocess.run(["defaults", "import", DOMAIN, path], check=True)
+    finally:
+        os.unlink(path)
+    subprocess.run(["open", "-a", "Thaw"], check=True)
+    print("Written; waiting for Thaw to move the icons…")
+    for _ in range(10):  # Thaw settles within a few seconds; give it up to ~20
+        time.sleep(2)
+        try:
+            if report(order, quiet=True):
+                break
+        except SystemExit:  # Thaw's dividers not up yet
+            continue
+    if report(order):
+        print("Every icon is where the file says.")
+    else:
+        sys.exit("Some icons didn't move — see the note on Visible in `thaw-layout --help`.")
+elif not args:
+    order = wanted_order()
+    saved = prefs()["MenuBarItemManager.savedSectionOrder"]
+    same = all(set(saved.get(key, [])) == set(ids) for key, ids in order.items())
+    print("Thaw's saved layout " + ("has the same icons in each section as the file."
+                                    if same else "differs from the file — `--apply` writes the file."))
+    if report(order):
+        print("Every icon on screen is where the file says.")
+else:
+    print(__doc__.strip())
+    sys.exit(0 if args in (["-h"], ["--help"]) else 2)

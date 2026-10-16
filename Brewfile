@@ -35,6 +35,9 @@ cask "scroll-reverser"
 cask "the-unarchiver"
 # Menubar toggle that keeps the Mac awake (instead of a `caffeinate -d` tab)
 cask "keepingyouawake"
+# Menu bar manager: hides icons behind a divider. Free, open-source fork of
+# the abandoned Ice; replaces Bartender
+cask "thaw"
 # Native mpv-based player; QuickTime cannot open .mkv/.webm/.ogg
 cask "iina"
 

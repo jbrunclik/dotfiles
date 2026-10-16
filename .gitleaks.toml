@@ -1,0 +1,14 @@
+# Picked up automatically by gitleaks (the global pre-commit hook) in this repo.
+[extend]
+useDefault = true
+
+# Thaw menu bar identifiers: 1Password names its status item with a fixed
+# UUID, which the generic-api-key rule reads as a secret. Only that exact
+# value, only in the layout file — any other UUID there (some API keys are
+# UUIDs) is still a finding. Another app doing the same gets its own entry.
+[[allowlists]]
+description = "Thaw layout: 1Password's menu bar item identifier"
+condition = "AND"
+paths = ['''^config/thaw/layout$''']
+regexTarget = "secret"
+regexes = ['''^bb3cc23c-6950-4e96-8b40-850e09f46934$''']

@@ -1,0 +1,28 @@
+# Thaw menu bar layout: `thaw-layout --apply` writes it into Thaw.
+# Left to right within each section; work-only icons go in
+# ~/.config/thaw/layout.local (same format, untracked).
+
+[always-hidden]
+com.1password.1password:bb3cc23c-6950-4e96-8b40-850e09f46934   # 1Password
+com.apple.controlcenter:Bluetooth                              # Bluetooth
+com.anthropic.claudefordesktop:Item-0                          # Claude
+com.apple.controlcenter:NowPlaying                             # Now Playing
+com.apple.systemuiserver:Siri                                  # Siri
+com.pilotmoon.scroll-reverser:Item-0                           # Scroll Reverser
+com.garmin.renu.service:Item-0                                 # Garmin Express Service
+notion.id:Item-0                                               # Notion
+us.zoom.xos:Item-0                                             # Zoom
+org.hammerspoon.Hammerspoon:Item-0                             # Hammerspoon
+cc.ffitch.shottr:Item-0                                        # Shottr
+org.p0deje.Maccy:Item-0                                        # Maccy
+
+[hidden]
+info.marcel-dierkes.KeepingYouAwake:Item-0                     # KeepingYouAwake
+io.tailscale.ipn.macsys:Item-0                                 # Tailscale
+
+[visible]
+com.apple.controlcenter:WiFi                                   # WiFi
+com.apple.controlcenter:Sound                                  # Sound
+com.apple.weather.menu:Item-0                                  # Weather
+com.apphousekitchen.aldente-pro:Item-0                         # AlDente
+com.apple.TextInputMenuAgent:Item-0                            # Text Input

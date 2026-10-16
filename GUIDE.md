@@ -472,6 +472,56 @@ displays, where it blends with the wallpaper and Ghostty. No app needed — this
 - To turn it off, remove the "Black menu bar" block from `init.lua` and pick
   your wallpaper again.
 
+## Menu bar icons (Thaw)
+
+[Thaw](https://github.com/thaw-app/Thaw) keeps the menu bar short: icons sit in
+three sections — **Visible**, **Hidden** (shown when you click Thaw's icon) and
+**Always-Hidden** (only in Thaw's own bar). Drag icons between them in Thaw's
+settings; new apps land in Hidden.
+
+- Why Thaw: a free, open-source, actively maintained fork of Ice (abandoned
+  since late 2024). It replaced Bartender, which is paid.
+- It needs **Accessibility** and **Screen Recording** — it reads the menu bar
+  icons to manage them. Launch at login is its own setting.
+- Leave its menu bar appearance options off: the black band is Hammerspoon's
+  (above), and two tools drawing there fight.
+
+**The layout lives in a file:** `config/thaw/layout`, one icon per line under
+`[visible]`, `[hidden]` and `[always-hidden]`, left to right. Work-only icons
+(the IT agents) go in the untracked `~/.config/thaw/layout.local`, same
+format, so they stay out of this public repo.
+
+| Command | Does |
+|---|---|
+| `thaw-layout` | Compares the file with Thaw: its saved layout, and where each icon actually is |
+| `thaw-layout --apply` | Writes the file into Thaw — quits and relaunches it — then checks every icon landed |
+| `thaw-layout --capture` | The other way: after dragging icons in Thaw, writes its layout into the files (local icons stay local; it names anything new so you can move work-only ones) |
+
+How it works: Thaw stores the layout in its preferences
+(`MenuBarItemManager.savedSectionOrder`) and restores it on launch, moving
+icons to match. Where they are is read back through each app's accessibility
+tree via `hs` — Thaw's three icons are the section dividers. One limit is
+Thaw's: it won't move an icon *into* Visible from a collapsed section (its log
+says "skipping the visible-bound move … parked offscreen"); drag that one in
+Thaw's settings, then `--capture`. Moves into the hidden sections always work.
+
+**Per-display profiles.** Thaw switches layout and icon spacing by display
+(Settings → Profiles → Auto-Switch): **Dell** is the full layout; **MacBook**
+moves Weather to Always-Hidden and tightens the spacing by 6 pt, so more icons
+fit beside the notch.
+
+- Spacing is macOS's `NSStatusItemSpacing` (16 by default, 10 on the MacBook),
+  which is system-wide and read only when an app starts — so Thaw rewrites it
+  on a display change and relaunches the apps that own menu bar icons.
+- A profile only knows displays Thaw has seen, so set one up while on that
+  screen: arrange, set the spacing (Displays), then Profiles → Update.
+- `config/thaw/layout` is the default (Dell) layout. On the MacBook,
+  `thaw-layout` reports Weather as differing — that's the profile — and
+  `--apply` there would overwrite it until the next display switch.
+- **Before macOS 27:** the menu bar changes there broke this whole class of
+  tool; Thaw's 27 support is in its 3.0 betas (`thaw@beta`). Check the black
+  band still works afterwards too.
+
 ## macOS settings
 
 `./install.sh` writes these with `defaults write`:
