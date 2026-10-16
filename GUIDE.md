@@ -23,6 +23,7 @@ everything at once.
 | Edit config | `Cmd+,` |
 | Reload config | `Cmd+Shift+,` |
 | Previous / next tab | `Hyper+,` / `Hyper+.` (Karabiner), `Ctrl+Shift+Tab` / `Ctrl+Tab`, or `Cmd+Shift+[` / `]` (U.S. layout only) |
+| Move tab left / right | `Ctrl+,` / `Ctrl+.` (the `<` `>` keys) |
 
 The quick terminal is a system-wide dropdown terminal — press
 `` Ctrl+` `` from any app to toggle it.
@@ -37,6 +38,11 @@ the shell and Claude Code need `Ctrl+L` (clear) and `Ctrl+K` (kill to end of
 line) — so the modifier says which layer you're moving in. They're bound to
 physical keys, so the Czech layout doesn't move them. The one casualty is
 readline's `Alt+L` (lowercase the next word).
+
+**Tabs move on the same keys they switch on:** `Hyper+,/.` switches tabs,
+`Ctrl+,/.` moves the current one (wrapping at the ends). Nothing is given up:
+a terminal has no control character for `,` or `.`, so programs in it never
+receive these chords, and Ghostty's own `,` shortcuts are on Cmd.
 
 Two things to know:
 

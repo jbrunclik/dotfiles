@@ -62,6 +62,15 @@ keybind = alt+shift+key_l=resize_split:right,40
 keybind = alt+key_z=toggle_split_zoom
 keybind = alt+equal=equalize_splits
 
+# --- Moving tabs ---
+# Ctrl+,/. (the < > keys) move the current tab left/right — the keys
+# Hyper+,/. switch tabs with. Free for the taking: legacy terminal encoding
+# has no control character for , or ., so the shell, Neovim and Claude Code
+# never see these chords, and Ghostty's own ,-shortcuts are on Cmd. Physical
+# keys, as above.
+keybind = ctrl+comma=move_tab:-1
+keybind = ctrl+period=move_tab:1
+
 # --- Shell integration (automatic, but explicit for clarity) ---
 shell-integration = detect
 # Keep TERMINFO through sudo, so root TUIs (sudo mtr, sudo btop) can find
