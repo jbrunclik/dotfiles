@@ -33,8 +33,12 @@ commit. Go through what applies:
 - **Anything changed in Chrysalis** (keymap, macros, colors): quit Chrysalis,
   run `keyboardio-backup`, commit. If the base layer changed, rerun
   `keyboardio-layers --apply` first — the Hyper layer is built from it.
-- **Printed cheatsheet**: tell the user to rerun `hyper-cheatsheet` and print
-  it after Hyper bindings or the GUIDE's keyboard tables change.
+- **Printed cheatsheet and README images**: after Hyper bindings or the GUIDE's
+  keyboard tables change, run `hyper-cheatsheet --readme` (refreshes the two
+  images in `docs/`, commit them) and tell the user to rerun `hyper-cheatsheet`
+  and reprint.
+- **README.md is the GitHub storefront**: keep its Highlights and tables true
+  when a headline feature appears, changes or goes away.
 - **A new tool**: the public `Brewfile`, or `~/Brewfile.local` for work or
   machine-only tools (never MDM-installed apps); `REQUIRED_BINS` too if a config
   shells out to it.

@@ -194,6 +194,13 @@ with a `.mise.toml`, the correct versions activate automatically.
 
 ## Python workflow
 
+| Concern | Tool |
+|---|---|
+| Package/project management | `uv` |
+| Linting + formatting | `ruff` (replaces black, isort, flake8) |
+| Type checking (VS Code) | Pylance (built-in Pyright) |
+| Type checking (Neovim) | basedpyright |
+
 ### Project setup with uv
 
 ```bash
@@ -235,6 +242,14 @@ select = ["E", "F", "I", "UP"]
   (mypy has ORM plugins that Pyright lacks)
 
 ## Editor (Neovim)
+
+Plugins: LSP (basedpyright, ruff, ts_ls, yamlls, lua_ls), blink.cmp,
+nvim-treesitter, fzf-lua, gitsigns, lualine, indent-blankline, which-key,
+conform.nvim, nvim-lint, mini.surround, mini.pairs, copilot.vim.
+
+Mason installs the LSP servers, but treesitter parsers are compiled by the
+`tree-sitter` CLI and conform/nvim-lint shell out to `prettier` and `eslint_d` —
+all three come from the `Brewfile`, and `drift.sh` verifies them.
 
 ### Getting around
 

@@ -27,7 +27,7 @@ jobs:
           done
 
       - name: Lua syntax
-        run: find config/nvim -name '*.lua' -print0 | xargs -0 -n1 luac5.4 -p
+        run: find config -name '*.lua' -print0 | xargs -0 -n1 luac5.4 -p
 
       - name: JSON syntax
         run: jq empty config/karabiner/karabiner.json
