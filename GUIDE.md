@@ -260,7 +260,7 @@ select = ["E", "F", "I", "UP"]
 
 Plugins: LSP (basedpyright, ruff, ts_ls, yamlls, lua_ls), blink.cmp,
 nvim-treesitter, fzf-lua, gitsigns, lualine, indent-blankline, which-key,
-conform.nvim, nvim-lint, mini.surround, mini.pairs, copilot.vim.
+conform.nvim, nvim-lint, mini.surround, mini.pairs.
 
 Mason installs the LSP servers, but treesitter parsers are compiled by the
 `tree-sitter` CLI and conform/nvim-lint shell out to `prettier` and `eslint_d` —
@@ -286,15 +286,20 @@ bindings.
 | Action | Keys |
 |---|---|
 | Go to definition | `gd` |
-| Find references | `gr` |
-| Go to implementation | `gi` |
+| Find references | `grr` |
+| Go to implementation | `gri` |
+| Type definition | `grt` |
+| Rename symbol | `grn` |
+| Code action | `gra` |
+| Document symbols | `gO` |
 | Hover docs | `K` |
-| Rename symbol | `Space r n` |
-| Code action | `Space c a` |
-| Type definition | `Space D` |
-| Next diagnostic | `]d` |
-| Previous diagnostic | `[d` |
-| Show diagnostic float | `Space e` |
+| Signature help (insert mode) | `Ctrl+S` |
+| Next / previous diagnostic | `]d` / `[d` |
+| Show diagnostic under cursor | `Ctrl+W d` |
+
+All but `gd` are Neovim's own defaults (0.11+), so they work the same in any
+Neovim. The config only adds `gd`: mapping `gr` or `gi` itself used to shadow
+them — and `gi` is Vim's "go back to where you last typed".
 
 Language servers install automatically via Mason on first use.
 Run `:Mason` to see status. Configured servers:
@@ -327,13 +332,11 @@ Run `:Mason` to see status. Configured servers:
 | Next buffer | `Space b n` |
 | Previous buffer | `Space b p` |
 | Close buffer | `Space b d` |
+| Resize split | `Ctrl+W +` / `-` (height), `Ctrl+W <` / `>` (width) |
 
-### Copilot
-
-- Ghost text appears automatically as you type
-- **Tab** to accept a suggestion
-- Copilot status: `:Copilot status`
-- Copilot logs: `:Copilot log`
+`j` / `k` move by screen line through wrapped text, but with a count (`5j`)
+by real lines — the ones the relative line numbers count. Ctrl+arrow resizing
+isn't mapped: macOS takes Ctrl+←/→ to switch Spaces before Neovim sees them.
 
 ### Completion (blink.cmp)
 

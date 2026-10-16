@@ -1,7 +1,7 @@
 return {
-  -- Formatter
-  -- Python: ruff LSP handles formatting natively (no need for conform)
-  -- Other languages: conform calls prettier
+  -- Formatter: conform runs ruff (organize imports, then format) for Python
+  -- and prettier for the web/config types, on save. Other filetypes fall back
+  -- to the language server's formatting, if it has one.
   {
     "stevearc/conform.nvim",
     event = "BufWritePre",

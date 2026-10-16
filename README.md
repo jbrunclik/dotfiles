@@ -64,7 +64,7 @@ what to watch out for.
 | Component | Tool | Config |
 |---|---|---|
 | IDE | [VS Code](https://code.visualstudio.com/) with Catppuccin, Ruff, Prettier | `config/vscode/` |
-| Editor | [Neovim](https://neovim.io/) with LSP, Treesitter, Copilot | `config/nvim/` |
+| Editor | [Neovim](https://neovim.io/) with LSP, Treesitter, fzf-lua | `config/nvim/` |
 | Git | [delta](https://github.com/dandavison/delta), [lazygit](https://github.com/jesseduffield/lazygit), [gh](https://cli.github.com/), secret-scanning pre-commit hook | `gitconfig`, `config/git/hooks/`, `config/gh/` |
 | Claude Code | [ccstatusline](https://github.com/sirmalloc/ccstatusline) status line matching Starship | `config/ccstatusline/`, `config/claude/` |
 

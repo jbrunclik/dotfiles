@@ -1,3 +1,5 @@
+local servers = { "basedpyright", "ruff", "ts_ls", "yamlls", "lua_ls" }
+
 return {
   -- Mason: auto-install LSP servers
   {
@@ -11,7 +13,9 @@ return {
       "neovim/nvim-lspconfig",
     },
     opts = {
-      ensure_installed = { "basedpyright", "ruff", "ts_ls", "yamlls", "lua_ls" },
+      ensure_installed = servers,
+      -- Enabled below, once, with the shared capabilities
+      automatic_enable = false,
     },
   },
 
@@ -26,22 +30,15 @@ return {
         capabilities = require("blink.cmp").get_lsp_capabilities(),
       })
 
-      -- Enable servers (configs come from mason-lspconfig + lsp/ directory)
-      vim.lsp.enable({ "basedpyright", "ruff", "ts_ls", "yamlls", "lua_ls" })
+      -- Enable servers (configs come from nvim-lspconfig + the lsp/ directory)
+      vim.lsp.enable(servers)
 
-      -- Keymaps on LSP attach
+      -- Neovim maps the rest itself: K, grn grr gri gra grt gO, <C-s>.
+      -- Mapping gr or gi here shadowed those (gi is also "insert where you
+      -- left off"), so only definition, which has no default, is added.
       vim.api.nvim_create_autocmd("LspAttach", {
         callback = function(ev)
-          local map = function(keys, func, desc)
-            vim.keymap.set("n", keys, func, { buffer = ev.buf, desc = desc })
-          end
-          map("gd", vim.lsp.buf.definition, "Go to definition")
-          map("gr", vim.lsp.buf.references, "References")
-          map("gi", vim.lsp.buf.implementation, "Go to implementation")
-          map("K", vim.lsp.buf.hover, "Hover docs")
-          map("<leader>rn", vim.lsp.buf.rename, "Rename symbol")
-          map("<leader>ca", vim.lsp.buf.code_action, "Code action")
-          map("<leader>D", vim.lsp.buf.type_definition, "Type definition")
+          vim.keymap.set("n", "gd", vim.lsp.buf.definition, { buffer = ev.buf, desc = "Go to definition" })
         end,
       })
     end,
