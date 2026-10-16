@@ -866,7 +866,7 @@ a sysdiagnose (a ~400 MB archive in `/private/var/tmp`).
 | Shortcut | Action |
 |---|---|
 | Hyper + A | Tile window left half |
-| Hyper + S | Maximize window (no fullscreen) |
+| Hyper + S | Maximize window (no fullscreen); again on a maximized window: back to a half |
 | Hyper + D | Tile window right half |
 | Hyper + F | Toggle native fullscreen |
 | Hyper + Tab | Toggle focus between left/right windows |

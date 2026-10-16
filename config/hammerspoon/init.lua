@@ -352,9 +352,23 @@ bindHyper("d", "Windows", "Tile right half", function()
     if win then win:move(right) end
 end)
 
-bindHyper("s", "Windows", "Maximize", function()
+-- Hyper+S again, on a window that's already maximized, puts it back on a half:
+-- the one not taken by the next standard window below it (so terminal
+-- maximized over Slack-on-the-right goes left). Decided from that window's
+-- live center, nothing remembered; with nothing below, left.
+bindHyper("s", "Windows", "Maximize (again: back to a half)", function()
     local win = hs.window.focusedWindow()
-    if win then win:maximize() end
+    if not win then return end
+    if not inPosition(win, hs.geometry.rect(0, 0, 1, 1)) then
+        win:maximize()
+        return
+    end
+    local below = hs.fnutils.find(hs.window.orderedWindows(), function(w)
+        return w ~= win and w:isStandard()
+    end)
+    local s = win:screen():frame()
+    local belowLeft = below and below:frame().center.x < s.x + s.w / 2
+    win:move(belowLeft and right or left)
 end)
 
 -- Hyper+Q = send the front app to the background, as Cmd+H does: macOS hands
