@@ -9,6 +9,9 @@ hostnames, or employer-specific detail in tracked files.
   `LOCAL_FILES`. `install.sh` and `drift.sh` both source it.
 - `install.sh` — Brewfile, symlinks, macOS `defaults`, Finder default apps,
   Claude Code bootstrap, VS Code extensions. `drift.sh` reports divergence.
+  It takes no arguments: `install.sh --help` runs a full install.
+- `thaw-layout` — the menu bar layout in `config/thaw/layout`, compared with
+  and applied to Thaw.
 - `config/<tool>/` — per-tool config; most files are symlinked into place, so
   editing the repo file changes the live config.
 - `GUIDE.md` — user-facing reference for every shortcut and workaround.
@@ -39,6 +42,10 @@ commit. Go through what applies:
   and reprint.
 - **README.md is the GitHub storefront**: keep its Highlights and tables true
   when a headline feature appears, changes or goes away.
+- **A new app with a menu bar icon**: decide its Thaw section; if not Hidden
+  (the default), drag it on each display and Update that display's profile,
+  then `thaw-layout --capture` on the Dell. Work-only icons go in
+  `~/.config/thaw/layout.local`, never `config/thaw/layout`.
 - **A new tool**: the public `Brewfile`, or `~/Brewfile.local` for work or
   machine-only tools (never MDM-installed apps); `REQUIRED_BINS` too if a config
   shells out to it.
@@ -79,6 +86,13 @@ commit. Go through what applies:
   "zoom.us Sidebar Web Content"). Write
   Karabiner rule descriptions as `[App: ]Hyper+<keys> → <action>`: the
   hold-Hyper cheatsheet is generated from both.
+- **Thaw** keeps the layout in `config/thaw/layout` (the Dell/default
+  layout); per-display profiles override it. Never `thaw-layout --apply` on
+  the MacBook — it overwrites that profile until the next display switch.
+  Thaw won't move an icon into Visible from a collapsed section: ask the
+  user to drag it. Update a profile only while on its display. An icon ID
+  containing a UUID trips gitleaks: add that exact value to
+  `.gitleaks.toml`, never a broader pattern.
 - **Ghostty** doesn't watch its config: Cmd+Shift+, (or the Ghostty >
   Reload Configuration menu) before testing in a new tab. Validate with
   `/Applications/Ghostty.app/Contents/MacOS/ghostty +validate-config`.
