@@ -260,7 +260,7 @@ select = ["E", "F", "I", "UP"]
 
 Plugins: LSP (basedpyright, ruff, ts_ls, yamlls, lua_ls), blink.cmp,
 nvim-treesitter, fzf-lua, gitsigns, lualine, indent-blankline, which-key,
-conform.nvim, nvim-lint, mini.surround, mini.pairs.
+conform.nvim, nvim-lint, mini.surround, mini.pairs, oil.nvim.
 
 Mason installs the LSP servers, but treesitter parsers are compiled by the
 `tree-sitter` CLI and conform/nvim-lint shell out to `prettier` and `eslint_d` —
@@ -280,6 +280,24 @@ all three come from the `Brewfile`, and `drift.sh` verifies them.
 
 **Tip:** Press `Space` and wait — which-key will show all available
 bindings.
+
+### Files (oil.nvim)
+
+A directory opens as a buffer listing its files — **edit the list to change
+the files**, then `:w`. Oil shows every change and asks before applying it.
+
+| Action | Keys |
+|---|---|
+| Open the current file's folder (again: up a level) | `-` |
+| Open a file or folder | `Enter` |
+| Rename / move | edit the name (a path moves it) |
+| Delete (to the Trash) | `dd` |
+| Copy / move | `yy` here, `p` in another folder |
+| New file / folder | a new line (`name` or `name/`) |
+| Apply changes | `:w` |
+
+`nvim .` opens Oil instead of netrw. Hidden files are shown — dotfiles are
+most of what gets edited here.
 
 ### LSP (code intelligence)
 
