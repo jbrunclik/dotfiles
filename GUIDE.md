@@ -806,7 +806,7 @@ brightness 200/255):
   | `,` `.` — Ghostty tabs | white |
   | 1–6 — apps, each in its own color | Ghostty mauve (its Catppuccin accent), Dia yellow, Chrome green, Slack pink, Notion white, Zoom blue |
   | Z X C V — layouts · ` Tab Q A S D F, left thumb Cmd Shift — windows | mauve · blue |
-  | T Messages · M Zoom mute · R reload | teal · red · yellow |
+  | T Messages · M Return — Zoom mute, join | teal · red |
   | Space — launcher | green (like the app keys) |
 
 - **Function** / **Numpad** — only their own keys lit, by kind: F-keys pink,
@@ -1064,14 +1064,12 @@ where "again" hides instead of putting the app beside the last window. Pin the c
 most, so Messages opens on them, and allow those people through your work
 Focus (System Settings → Focus → People).
 
-### Utilities
-
-| Shortcut | Action |
-|---|---|
-| Hyper + R | Reload Hammerspoon config |
+### Reloading
 
 Saving any `.lua` file in `config/hammerspoon/` reloads Hammerspoon on its own
-(`hs.pathwatcher`), so Hyper+R is rarely needed.
+(`hs.pathwatcher`), so there's no reload key — Hyper+R is free. To reload
+without an edit: `(hs -c 'hs.reload()' &)` in a terminal (in the background:
+in the foreground `hs` waits on the reload and hangs).
 
 ### Debugging
 
@@ -1150,11 +1148,10 @@ cheatsheet:
 bindHyper("g", "Layouts", "Figma | Chrome", function() tilePair("Figma", "Google Chrome") end)
 ```
 
-Pick a key that isn't already bound — the bottom row `Z`/`X`/`C`/`V` holds the
-existing layouts, `A`/`S`/`D`/`F` do single-window placement, `1`–`6` focus apps,
-`M` mutes Zoom, `R` reloads, `Tab`/`Left`/`Right` move focus, `H`/`J`/`K`/`L` are
-arrow keys in Karabiner, and `,`/`.`/`/` are reserved by macOS (see Ghostty
-tabs above). Saving the file reloads Hammerspoon.
+Pick a key that isn't already bound — hold Hyper for the cheatsheet, or look
+at the lit Hyper layer on the Model 100 (dark keys are free). `,`/`.`/`/` are
+reserved by macOS (see Ghostty tabs above). Saving the file reloads
+Hammerspoon.
 
 ## Learning path
 

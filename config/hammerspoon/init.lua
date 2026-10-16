@@ -611,10 +611,8 @@ bindHyper("t", "Messages", "Show / hide Messages", toggleMessages)
 appHyperKeys["Messages"] = "t"
 bindPlain("f19", "Prog", "Messages", "Show / hide Messages (Model 100 Prog key → F19)", toggleMessages)
 
--- Reload config
-bindHyper("r", "Hammerspoon", "Reload config (saving a .lua file also does)", function()
-    hs.reload()
-end)
+-- No reload key: saving a .lua file reloads (below), so Hyper+R is free for
+-- something used daily. Without an edit: `(hs -c 'hs.reload()' &)`.
 
 -- Auto-reload when a .lua file in this directory is saved. Watches the repo
 -- directory this file was dofile'd from, not hs.configdir (~/.hammerspoon only
