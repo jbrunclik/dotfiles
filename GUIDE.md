@@ -417,6 +417,14 @@ while Touch ID works for apps, means something outside the dotfiles blocks
 biometric prompts for root processes — on a managed Mac, ask IT (endpoint
 security or MDM). `pam_reattach`, the tmux fix, doesn't help in that case.
 
+App preferences `install.sh` also sets (only the ones changed from default):
+
+| App | Setting |
+|---|---|
+| AlDente | Charge limit 80 % (macOS native; its lowest), sailing mode 5 %, automatic discharge, heat protection (pauses charging above 35 °C — heat wears a battery faster than charge level), percentage in the menu bar |
+| Scroll Reverser | Reverse scrolling for the mouse only, not the trackpad |
+| gh | `~/.config/gh/config.yml` is symlinked (aliases such as `gh co`); `hosts.yml` with the token stays out of the repo |
+
 Key repeat needs a logout; Finder picks up the extension setting on restart
 (`killall Finder`). The Dock settings apply when `install.sh` restarts the Dock.
 
@@ -720,9 +728,20 @@ registration after updates.
 
 ## Clipboard (Maccy)
 
-Maccy keeps a searchable clipboard history. Press `Cmd+Shift+V` (default)
-to open the picker, then type to fuzzy-search past copies. Configure
-the hotkey in Maccy preferences.
+Maccy keeps a searchable clipboard history. Press `Cmd+Shift+C` (Maccy's
+default) to open the picker, then type to fuzzy-search past copies.
+
+| Action | Shortcut |
+|---|---|
+| Open clipboard history | `Cmd+Shift+C` |
+| Pin / unpin an item | `Option+P` |
+| Delete an item | `Option+Backspace` |
+
+The global hotkey takes `Cmd+Shift+C` from every app, e.g. Chrome's "inspect
+element" and VS Code's "open terminal". That's deliberate: the more common
+`Cmd+Shift+V` is "paste without formatting" in Slack, Notion and Chrome, which
+gets used far more. Settings are all Maccy's defaults, so
+none are tracked; only "launch at login" needs setting once.
 
 ## Screenshots (Shottr)
 

@@ -97,6 +97,25 @@ defaults write com.apple.dock mru-spaces -bool false
 defaults write com.apple.WindowManager EnableStandardClickToShowDesktop -bool false
 killall Dock
 
+# App preferences worth keeping — only the settings that were actually changed.
+# Written while the apps aren't running yet on a fresh machine; on this one
+# they're already set. (AlDente's plist also holds the license email, so never
+# export the whole domain.)
+header "Setting app preferences"
+# AlDente: hold the battery at 80 % (macOS 26's native limit, whose floor is
+# 80), sailing mode 5 %, discharge down to the limit, and heat protection —
+# heat wears a battery faster than charge level, and this Mac lives plugged in
+defaults write com.apphousekitchen.aldente-pro chargeVal -float 80
+defaults write com.apphousekitchen.aldente-pro sailingMode -bool true
+defaults write com.apphousekitchen.aldente-pro sailingLevel -float 5
+defaults write com.apphousekitchen.aldente-pro automaticDischarge -bool true
+defaults write com.apphousekitchen.aldente-pro useTahoeNativeLimit -bool true
+defaults write com.apphousekitchen.aldente-pro heatProtectMode -bool true
+defaults write com.apphousekitchen.aldente-pro showPercentage -bool true
+# Scroll Reverser: reverse the mouse (KensingtonWorks), not the trackpad
+defaults write com.pilotmoon.scroll-reverser InvertScrollingOn -bool true
+defaults write com.pilotmoon.scroll-reverser ReverseTrackpad -bool false
+
 # Picked up the next time Finder starts (logout, or `killall Finder`)
 header "Showing all file extensions in Finder"
 defaults write -globalDomain AppleShowAllExtensions -bool true
@@ -160,7 +179,7 @@ warn "Install manually (no Homebrew cask):"
 echo -e "    - KensingtonWorks — mouse/trackball driver, from kensington.com"
 echo -e "    - Shokz Connect — headphone firmware and settings, from shokz.com"
 warn "Open and configure manually:"
-echo -e "    - Maccy — set clipboard hotkey (default: Cmd+Shift+V), launch at login"
+echo -e "    - Maccy — enable launch at login (hotkey: Cmd+Shift+C, the default)"
 echo -e "    - Shottr — set screenshot hotkeys, launch at login"
 warn "Install Chrome theme from Web Store:"
 echo -e "    - Search 'Catppuccin Chrome Theme Mocha' or visit the Chrome Web Store"

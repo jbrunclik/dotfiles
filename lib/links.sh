@@ -31,6 +31,8 @@ LINKS=(
     "config/mc/skins/catppuccin-mocha.ini|$HOME/.local/share/mc/skins/catppuccin-mocha.ini"
     "config/vscode/settings.json|$HOME/Library/Application Support/Code/User/settings.json"
     "config/lazygit/config.yml|$HOME/Library/Application Support/lazygit/config.yml"
+    # Only config.yml: hosts.yml next to it holds the auth token
+    "config/gh/config.yml|$HOME/.config/gh/config.yml"
     "config/btop/themes/catppuccin_mocha.theme|$HOME/.config/btop/themes/catppuccin_mocha.theme"
     "config/karabiner|$HOME/.config/karabiner"
     "gh-new-repo|$HOME/.local/bin/gh-new-repo"
