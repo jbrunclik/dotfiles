@@ -40,7 +40,17 @@ APPLY = "--apply" in sys.argv[1:]
 LAYERS, KEYS = 8, 64
 BASE, NUMPAD, FN, HYPER = 0, 1, 2, 3
 NAMES = ["QWERTY", "Numpad", "Function", "Hyper"]
-BRIGHTNESS = 96  # of 255
+BRIGHTNESS = 200  # of 255; LEDs under keycaps are hard to see much lower
+
+# The color map is indexed by LED, not by key: the LEDs are wired in a
+# different order. KEY_LED[row][col] is the LED under each key — the same table
+# Chrysalis uses for the Model 100's colormap editor.
+KEY_LED = [
+    [3, 4, 11, 12, 19, 20, 26, 27, 36, 37, 43, 44, 51, 52, 59, 60],
+    [2, 5, 10, 13, 18, 21, 25, 28, 35, 38, 42, 45, 50, 53, 58, 61],
+    [1, 6, 9, 14, 17, 22, 24, 29, 34, 39, 41, 46, 49, 54, 57, 62],
+    [0, 7, 8, 15, 16, 23, 31, 30, 33, 32, 40, 47, 48, 55, 56, 63],
+]
 
 # Kaleidoscope key encoding (raw 16-bit): plain keys are the USB HID usage,
 # optionally with modifier flags in the high byte; layer keys are synthetic.
@@ -53,21 +63,22 @@ F18, F19 = 0x6D, 0x6E
 SCREENSHOT = ((SHIFT | GUI) << 8) | 0x21         # Cmd+Shift+4, the butterfly key (Shottr)
 PROG = 0                                         # row 0, col 0 of the base layer
 
-# Palette: 24 RGB colors (Chrysalis reads it in threes). Catppuccin Mocha.
+# Palette: 24 RGB colors (Chrysalis reads it in threes). Catppuccin Mocha's
+# color families, but saturated: its pastels read as near-white on LEDs.
 PALETTE = [
     (0, 0, 0),        # 0  off
-    (203, 166, 247),  # 1  mauve     Layouts
-    (137, 180, 250),  # 2  blue      Windows
-    (166, 227, 161),  # 3  green     Apps, numpad digits
-    (243, 139, 168),  # 4  red       Zoom (also the Any key)
-    (148, 226, 213),  # 5  teal      Messages (also the Prog key)
-    (249, 226, 175),  # 6  yellow    Hammerspoon, media keys
-    (250, 179, 135),  # 7  peach     Karabiner nav, screenshot key
-    (180, 190, 254),  # 8  lavender  anything else bound
-    (137, 220, 235),  # 9  sky       arrows
-    (245, 194, 231),  # 10 pink      F-keys
-    (88, 91, 112),    # 11 surface2  base layer keys (dim)
-    (205, 214, 244),  # 12 text      Hyper key, layer keys
+    (150, 40, 255),   # 1  mauve     Layouts
+    (0, 70, 255),     # 2  blue      Windows
+    (0, 255, 40),     # 3  green     Apps, numpad digits
+    (255, 0, 40),     # 4  red       Zoom (also the Any key)
+    (0, 255, 170),    # 5  teal      Messages (also the Prog key)
+    (255, 190, 0),    # 6  yellow    Hammerspoon, media keys
+    (255, 80, 0),     # 7  peach     Karabiner nav, screenshot key
+    (110, 120, 255),  # 8  lavender  anything else bound
+    (0, 190, 255),    # 9  sky       arrows
+    (255, 30, 150),   # 10 pink      F-keys
+    (35, 35, 60),     # 11 surface   base layer keys (dim)
+    (220, 220, 230),  # 12 text      Hyper key, layer keys
 ] + [(0, 0, 0)] * 11
 SECTION_COLORS = {"Layouts": 1, "Windows": 2, "Apps": 3, "Zoom": 4, "Messages": 5,
                   "Hammerspoon": 6, "Karabiner": 7}
@@ -129,7 +140,8 @@ def setkey(layer, i, value):
 
 
 def setcolor(layer, i, color):
-    new_colormap[layer * KEYS + i] = color
+    """Color the key at position i (row * 16 + col) — stored at its LED's index."""
+    new_colormap[layer * KEYS + KEY_LED[i // 16][i % 16]] = color
 
 
 # Base layer: Hyper key holds the Hyper layer; Prog sends F19

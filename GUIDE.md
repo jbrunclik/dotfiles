@@ -597,7 +597,8 @@ here, layer 0:
 | Prog | `F19` (custom code 110) | Messages show / hide (Hammerspoon binds F19) |
 
 **Colors.** The LEDs run in Colormap mode with per-layer colors (Catppuccin
-Mocha, brightness 96/255):
+Mocha's color families, saturated — its pastels read as near-white on LEDs;
+brightness 200/255):
 
 - **Base** — dim; Prog teal (Messages), Any red (mute), butterfly peach
   (screenshot), layer keys white.
@@ -608,6 +609,8 @@ Mocha, brightness 96/255):
 - **Function** / **Numpad** — only their own keys lit: arrows sky, F-keys pink,
   media yellow; digits green.
 
+The color map is indexed by LED, not by key — the LEDs are wired in a different
+order (the table is in `keyboardio-layers`, the same one Chrysalis uses).
 `keyboardio-layers` generates all of this from the dotfiles — the Hyper layer
 from the base layer, its colors from the live cheatsheet data — so **after
 adding or moving a Hyper binding, run `keyboardio-layers --apply`, then
