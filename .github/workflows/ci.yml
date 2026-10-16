@@ -53,6 +53,7 @@ jobs:
               case "$bin" in
                   rg)          formula=ripgrep ;;
                   delta)       formula=git-delta ;;
+            difft)       formula=difftastic ;;
                   tree-sitter) formula=tree-sitter-cli ;;
                   gm)          formula=graphicsmagick ;;
                   *)      formula="$bin" ;;
