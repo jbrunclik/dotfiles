@@ -109,6 +109,13 @@ KARABINER_COLORS = [("Arrow", 9), ("Page", 8), ("Word", 7), ("Line", 7),
 HID = {chr(65 + i): 0x04 + i for i in range(26)}
 HID.update({str(i): 0x1D + i for i in range(1, 10)})
 HID.update({"0": 0x27, "Tab": 0x2B, "⌫": 0x2A, ",": 0x36, ".": 0x37, "Space": 0x2C})
+# Not on the base layer, but the Hyper layer sends them from the left thumb
+HID.update({"←": 0x50, "→": 0x4F})
+LCMD, LSHIFT = 0xE3, 0xE1
+# Hyper+←/→ (focus left/right half): the base layer has no arrows, so the
+# Hyper layer sends them from the left thumb's Cmd and Shift — idle during a
+# Hyper chord, which already holds every modifier. Cmd is the outer of the two.
+THUMB_ARROWS = {LCMD: HID["←"], LSHIFT: HID["→"]}
 
 
 def plain(k):
@@ -175,7 +182,7 @@ def hyper_bindings():
                 continue
             parts = [label] if len(label) == 1 or label in HID else label.split("/")
             for part in parts:
-                if part in HID:  # arrows etc. aren't on the Model 100's base layer
+                if part in HID:  # Hyper+↑/↓, F-keys etc. have no key on the Hyper layer
                     bound[HID[part]] = hyper_color(section["name"], entry["desc"])
     return bound
 
@@ -228,6 +235,8 @@ for i, k in enumerate(base):
     h = plain(k)
     hyper = h is not None and h not in (0, F18, F19) and not 0xE0 <= h <= 0xE7 and i != PROG
     setkey(HYPER, i, HYPER_MODS | h if hyper else TRANSPARENT)
+    if h in THUMB_ARROWS and i % 16 < 8:  # left half only
+        setkey(HYPER, i, HYPER_MODS | THUMB_ARROWS[h])
 
 # Colors
 for i in range(KEYS):
@@ -236,9 +245,11 @@ for i in range(KEYS):
     # Base: dim, single-purpose keys marked
     setcolor(BASE, i, {F18: 4, F19: 5}.get(h, 7 if k == SCREENSHOT else
                        12 if is_layer_key(k) else BASE_GRADIENT[(i % 16) // 4]))
-    # Hyper: bound keys by what they do, everything else dark
+    # Hyper: bound keys by what they do (the key the Hyper layer sends, which
+    # isn't the base key under the thumb arrows), everything else dark
+    sent = new_keymap[HYPER * KEYS + i]
     setcolor(HYPER, i, 12 if k == SHIFT_TO_LAYER + HYPER else
-             bound.get(h, 0) if h is not None else 0)
+             bound.get(sent & 0xFF, 0) if sent != TRANSPARENT else 0)
     # Every other layer that has keys of its own: by key type
     for layer in range(LAYERS):
         if layer in (BASE, HYPER):

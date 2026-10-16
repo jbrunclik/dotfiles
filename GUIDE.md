@@ -688,7 +688,7 @@ brightness 200/255):
   | Backspace — forward delete | pink |
   | `,` `.` — Ghostty tabs | white |
   | 1–6 — apps, each in its own color | Ghostty mauve (its Catppuccin accent), Dia yellow, Chrome green, Slack pink, Notion white, Zoom blue |
-  | Z X C V — layouts · Tab Q A S D F — windows | mauve · blue |
+  | Z X C V — layouts · Tab Q A S D F, left thumb Cmd Shift — windows | mauve · blue |
   | T Messages · M Zoom mute · R reload | teal · red · yellow |
   | Space — launcher | green (like the app keys) |
 
@@ -714,6 +714,12 @@ adding or moving a Hyper binding, run `keyboardio-layers --apply`, then
 `keyboardio-backup`** and commit. Without `--apply` it only prints what would
 change. It writes over the same protocol Chrysalis uses and reads every value
 back; if something looks wrong, restore the committed backup with Chrysalis.
+
+The base layer has no arrow keys, so on the Hyper layer the **left thumb's
+Cmd and Shift send Hyper+← and Hyper+→** (focus left / right half). They're
+idle during a Hyper chord anyway — Hyper already holds every modifier. This is
+an override in `keyboardio-layers` (`THUMB_ARROWS`); everything else on the
+layer is generated from the base layer.
 
 Two consequences of Hyper being a layer here: holding Hyper *alone* sends
 nothing, so the on-screen cheatsheet only opens from the MacBook's Caps Lock
@@ -806,7 +812,7 @@ a sysdiagnose (a ~400 MB archive in `/private/var/tmp`).
 | Hyper + D | Tile window right half |
 | Hyper + F | Toggle native fullscreen |
 | Hyper + Tab | Toggle focus between left/right windows |
-| Hyper + Left/Right | Focus window in that direction (MacBook arrow keys) |
+| Hyper + Left/Right | Focus window in that direction (MacBook arrows; Model 100: left thumb Cmd / Shift) |
 | Hyper + Q | Hide the front app (like `Cmd+H`); focus returns to the previous app |
 
 Hyper+Q sends an app to the background; `Cmd+Q` on the same key quits it for
