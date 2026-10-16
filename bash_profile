@@ -12,6 +12,8 @@ export PATH="${HOME}/.local/bin:${PATH}"
 HISTSIZE=50000
 HISTFILESIZE=100000
 HISTCONTROL=ignoreboth:erasedups
+# Timestamps: `history` shows when each command ran (stored as #epoch lines)
+HISTTIMEFORMAT='%F %T  '
 shopt -s histappend
 # Flush each command to the history file immediately so parallel tabs share it
 PROMPT_COMMAND='history -a'

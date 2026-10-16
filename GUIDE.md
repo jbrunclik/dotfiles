@@ -68,6 +68,12 @@ Examples:
 - Type `ssh` then press Up → cycles through your SSH sessions
 - Type `docker` then press Up → cycles through docker commands
 
+History keeps 100,000 lines with timestamps (`history | tail` shows when each
+command ran), shared across tabs as you type. `~/.bashrc` only sources
+`~/.bash_profile`: a non-login shell (typing `bash`, some editor terminals)
+reads only `.bashrc`, and without it ran on bash's defaults — and on exit
+trimmed the shared history file to 500 lines.
+
 ### Line editing (readline)
 
 The same keys work in every readline prompt — bash, `python`, `psql`, `mysql`.

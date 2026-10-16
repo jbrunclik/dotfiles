@@ -17,6 +17,7 @@
 
 LINKS=(
     "bash_profile|$HOME/.bash_profile"
+    "bashrc|$HOME/.bashrc"
     "inputrc|$HOME/.inputrc"
     "gitconfig|$HOME/.gitconfig"
     "ssh_config|$HOME/.ssh/config"
