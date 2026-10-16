@@ -505,14 +505,16 @@ Thaw's: it won't move an icon *into* Visible from a collapsed section (its log
 says "skipping the visible-bound move … parked offscreen"); drag that one in
 Thaw's settings, then `--capture`. Moves into the hidden sections always work.
 
-**Per-display profiles.** Thaw switches layout and icon spacing by display
-(Settings → Profiles → Auto-Switch): **Dell** is the full layout; **MacBook**
-moves Weather to Always-Hidden and tightens the spacing by 6 pt, so more icons
-fit beside the notch.
+**Per-display profiles.** Thaw switches layout by display (Settings →
+Profiles → Auto-Switch): **Dell** is the full layout; **MacBook** moves
+Weather to Always-Hidden, so more icons fit beside the notch.
 
-- Spacing is macOS's `NSStatusItemSpacing` (16 by default, 10 on the MacBook),
-  which is system-wide and read only when an app starts — so Thaw rewrites it
-  on a display change and relaunches the apps that own menu bar icons.
+- Icon spacing is 6 pt tighter than macOS's default — on **both** displays, on
+  purpose. It's macOS's `NSStatusItemSpacing` (16 by default, 10 here), which
+  is system-wide and read only when an app starts: different spacing per
+  display would make Thaw relaunch every app with a menu bar icon on each
+  plug and unplug — Zoom mid-call included. The same value means a switch
+  changes nothing.
 - A profile only knows displays Thaw has seen, so set one up while on that
   screen: arrange, set the spacing (Displays), then Profiles → Update.
 - `config/thaw/layout` is the default (Dell) layout. On the MacBook,
