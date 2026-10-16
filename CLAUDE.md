@@ -14,12 +14,32 @@ hostnames, or employer-specific detail in tracked files.
 - `GUIDE.md` — user-facing reference for every shortcut and workaround.
   `README.md` — what's included and how to install.
 
-## Keep the docs in step with behavior
+## After every change: keep everything in step
 
-Every change to behavior — a shortcut, remap, setting, workaround or new tool —
-updates `GUIDE.md` in the same commit, and `README.md` too when it changes what
-is included or what `install.sh` does. Document the non-obvious part: why it
-works this way and what to watch out for, not only the key.
+A change isn't done until everything derived from it is updated, in the same
+commit. Go through what applies:
+
+- **Any behavior** (shortcut, remap, setting, workaround, new tool): `GUIDE.md`,
+  plus `README.md` when it changes what's included or what `install.sh` does.
+  Document the non-obvious part — why it works this way and what to watch out
+  for — not only the key.
+- **A Hyper binding added, moved or renamed** (Hammerspoon `bindHyper` or a
+  Karabiner rule): the on-screen cheatsheet follows by itself; then run
+  `keyboardio-layers --apply` (the Model 100's lit Hyper layer is generated
+  from the same data) and `keyboardio-backup`, and commit the backup. A new
+  cheatsheet section or app needs a color in `keyboardio-layers`
+  (`SECTION_COLORS`, `APP_COLORS`, `KARABINER_COLORS`; 16 colors max) and a
+  row in the GUIDE's color table.
+- **Anything changed in Chrysalis** (keymap, macros, colors): quit Chrysalis,
+  run `keyboardio-backup`, commit. If the base layer changed, rerun
+  `keyboardio-layers --apply` first — the Hyper layer is built from it.
+- **Printed cheatsheet**: tell the user to rerun `hyper-cheatsheet` and print
+  it after Hyper bindings or the GUIDE's keyboard tables change.
+- **A new tool**: the public `Brewfile`, or `~/Brewfile.local` for work or
+  machine-only tools (never MDM-installed apps); `REQUIRED_BINS` too if a config
+  shells out to it.
+- **A macOS setting**: `install.sh`, and apply it on this machine.
+- **Last**: `./drift.sh` is clean.
 
 ## Conventions
 
@@ -48,8 +68,6 @@ works this way and what to watch out for, not only the key.
   commands from stdin when that isn't a terminal and otherwise waits forever. Never memoize window state — derive it from live
   positions. Use `hs.alert` only for state feedback (mute, errors), not routine
   actions.
-  After adding or moving a Hyper binding, also run `keyboardio-layers --apply`
-  (the Model 100's lit Hyper layer is generated from it) and `keyboardio-backup`.
   Bind Hyper keys with `bindHyper(key, section, description, fn)` (it binds by
   physical key code, so shortcuts survive the Czech layout), and write
   Karabiner rule descriptions as `[App: ]Hyper+<keys> → <action>`: the
