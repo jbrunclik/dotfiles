@@ -28,7 +28,7 @@ local cheatsheet = {}
 -- What pressing a key again does, shown once per cheatsheet section
 local sectionNotes = {
     Layouts = "again: swap focus",
-    Apps = "again: maximize",
+    Apps = "again: beside",
     Messages = "again: hide",
 }
 local function bindHyper(key, section, desc, fn)
@@ -115,19 +115,25 @@ end
 local left  = hs.geometry.rect(0, 0, 0.5, 1)
 local right = hs.geometry.rect(0.5, 0, 0.5, 1)
 
+local threshold = 20
+
+-- Check if a window occupies a given unit rect of its screen (position only)
+local function inPosition(win, unitRect)
+    if not win then return false end
+    local f = win:frame()
+    local s = win:screen():frame()
+    return math.abs(f.x - (s.x + unitRect.x * s.w)) < threshold
+        and math.abs(f.y - (s.y + unitRect.y * s.h)) < threshold
+        and math.abs(f.w - unitRect.w * s.w) < threshold
+        and math.abs(f.h - unitRect.h * s.h) < threshold
+end
+
 -- Check if a window occupies a given unit rect AND is the topmost window there.
 -- Position-only checks are fooled by windows stacked at the same coordinates
 -- (e.g. Slack and Dia both tiled right, with one covering the other).
 local function isTiled(win, unitRect)
-    if not win then return false end
+    if not inPosition(win, unitRect) then return false end
     local f = win:frame()
-    local s = win:screen():frame()
-    local threshold = 20
-    local inPosition = math.abs(f.x - (s.x + unitRect.x * s.w)) < threshold
-        and math.abs(f.y - (s.y + unitRect.y * s.h)) < threshold
-        and math.abs(f.w - unitRect.w * s.w) < threshold
-        and math.abs(f.h - unitRect.h * s.h) < threshold
-    if not inPosition then return false end
     -- Check that no other standard window is above this one at the same position
     for _, w in ipairs(hs.window.orderedWindows()) do
         if w == win then return true end
@@ -141,6 +147,84 @@ local function isTiled(win, unitRect)
     return true
 end
 
+-- Apps whose window has to be opened rather than launched: with no Finder
+-- window open, Finder's "main window" is the Desktop
+local openers = {
+    Finder = function() hs.task.new("/usr/bin/open", nil, { os.getenv("HOME") }):start() end,
+}
+
+-- Call ready(wins) once every named app has a standard window (bestWindow),
+-- launching any that hasn't. Shared by the layouts and "beside".
+--
+-- Cold start (an app not running, or running without a window): launchOrFocus()
+-- returns before the window exists, and Slack or Notion take seconds to create
+-- one. So poll every 0.1 s, up to 10 s, until the windows exist, then call
+-- ready — and again 0.5 s later with settling = true (move only, no focus),
+-- because Electron apps restore their own saved frame just after the window
+-- appears, undoing the first move. A window still missing at the deadline is
+-- nil in wins. When all windows already exist, ready runs at once.
+local function whenWindows(names, ready)
+    local wins = {}
+    local function found()
+        local all = true
+        for i, name in ipairs(names) do
+            if not wins[i] then
+                local w = bestWindow(name)
+                if w and w:isStandard() then wins[i] = w else all = false end
+            end
+        end
+        return all
+    end
+    -- A hidden app's windows are invisible to Hammerspoon until it's unhidden,
+    -- so unhide first and give its windows 0.3 s to show (they take ~20 ms)
+    -- before opening one — otherwise Finder's opener adds a second window
+    -- next to the hidden one
+    local unhidden = {}
+    for i, name in ipairs(names) do
+        local app = getApp(name)
+        if app and app:isHidden() then
+            app:unhide()
+            unhidden[i] = true
+        end
+    end
+    if found() then
+        ready(wins)
+        return
+    end
+    local function open(hidden)
+        for i, name in ipairs(names) do
+            if not wins[i] and (unhidden[i] or false) == hidden then
+                (openers[name] or launchApp)(name)
+            end
+        end
+    end
+    open(false)
+    local start, graceOver = hs.timer.secondsSinceEpoch(), false
+    hs.timer.waitUntil(function()
+        if found() then return true end
+        local elapsed = hs.timer.secondsSinceEpoch() - start
+        if not graceOver and elapsed > 0.3 then
+            graceOver = true
+            open(true)
+        end
+        return elapsed > 10
+    end, function()
+        ready(wins)
+        hs.timer.doAfter(0.5, function() ready(wins, true) end)
+    end, 0.1)
+end
+
+-- Raise `back`, then `front` over it. Rapid focus() calls race with the macOS
+-- window server — the second call lands before the first is processed, so the
+-- final z-order is unpredictable. A 50 ms gap lets each call settle; it's
+-- imperceptible to humans but enough for the window server.
+local function raisePair(back, front)
+    if back then back:focus() end
+    hs.timer.doAfter(0.05, function()
+        if front then front:focus() end
+    end)
+end
+
 -- Tile two apps side by side; repeat press cycles focus.
 --
 -- KEY PRINCIPLE: never rely on memoized state — always derive from live window
@@ -151,18 +235,6 @@ end
 -- the expected apps are actually in position. This also handles layout switching
 -- (e.g. Hyper+V then Hyper+C) correctly — a leftover window from a previous
 -- layout won't match because isTiled checks the specific app's window.
---
--- Rapid focus() calls race with the macOS window server — the second call
--- lands before the first is processed, so the final z-order is unpredictable.
--- A 50 ms gap between focus(right) and focus(left) lets each call settle.
--- This is imperceptible to humans but enough for the window server.
---
--- Cold start (an app not running, or running without a window): launchOrFocus()
--- returns before the window exists, and Slack or Notion take seconds to create
--- one. So poll every 0.1 s, up to 10 s, until both windows exist, then tile —
--- and move them once more 0.5 s later, because Electron apps restore their own
--- saved frame just after the window appears, undoing the first move. When both
--- apps already have windows, tiling takes ~50 ms (one timer tick).
 local function tilePair(leftApp, rightApp)
     local lw = bestWindow(leftApp)
     local rw = bestWindow(rightApp)
@@ -172,37 +244,32 @@ local function tilePair(leftApp, rightApp)
         if la and la:isFrontmost() then rw:focus() else lw:focus() end
         return
     end
-    -- Launch any app that isn't running yet
-    if not lw then launchApp(leftApp) end
-    if not rw then launchApp(rightApp) end
-    -- Position windows and set z-order with a gap between focus calls
-    local function tile()
-        lw = lw or bestWindow(leftApp)
-        rw = rw or bestWindow(rightApp)
-        if lw then lw:move(left) end
-        if rw then rw:move(right) end
-        -- Focus right first (brings above old occupant), then left after a tick
-        if rw then rw:focus() end
-        hs.timer.doAfter(0.05, function()
-            if lw then lw:focus() end
-        end)
-    end
-    if lw and rw then
-        tile()
-        return
-    end
-    local deadline = hs.timer.secondsSinceEpoch() + 10
-    hs.timer.waitUntil(function()
-        lw = lw or bestWindow(leftApp)
-        rw = rw or bestWindow(rightApp)
-        return (lw and rw) or hs.timer.secondsSinceEpoch() > deadline
-    end, function()
-        tile()
-        hs.timer.doAfter(0.5, function()
-            if lw then lw:move(left) end
-            if rw then rw:move(right) end
-        end)
-    end, 0.1)
+    whenWindows({ leftApp, rightApp }, function(wins, settling)
+        local l, r = wins[1], wins[2]
+        if l then l:move(left) end
+        if r then r:move(right) end
+        -- Right first (brings it above the old occupant), then left on top
+        if not settling then raisePair(r, l) end
+    end)
+end
+
+-- Put an app's window on the other half from `anchor`, the window you're
+-- working in: an anchor tiled right stays right and the app goes left;
+-- tiled left, maximized or anything else, the anchor takes the left half.
+-- The app ends up focused — it was summoned to be used. Whatever was on that
+-- half stays underneath (Hyper+` reaches it). Sides are decided from the
+-- anchor's live frame on every call, so the Electron re-move lands the same.
+local function placeBeside(name, anchor)
+    if not anchor then return end
+    whenWindows({ name }, function(wins, settling)
+        local win = wins[1]
+        if not win or win == anchor then return end
+        local anchorHalf, otherHalf = left, right
+        if inPosition(anchor, right) then anchorHalf, otherHalf = right, left end
+        anchor:move(anchorHalf)
+        win:move(otherHalf)
+        if not settling then raisePair(anchor, win) end
+    end)
 end
 
 -- Layouts (bottom row: Z, X, C, V)
@@ -311,10 +378,16 @@ local appKeys = {
 -- Both presses go through bestWindow, so Zoom in a call means the call window,
 -- never its meetings list ("Zoom Workplace"), and every app gets its real
 -- window rather than whichever one macOS last activated.
+-- The second press puts the app beside the window you came from: the next
+-- standard window below it in z-order, so nothing is remembered. With nothing
+-- to pair with it maximizes, as Hyper+S does.
 local function focusApp(name)
     local win = bestWindow(name)
     if win and win == hs.window.focusedWindow() then
-        win:maximize()
+        local cameFrom = hs.fnutils.find(hs.window.orderedWindows(), function(w)
+            return w ~= win and w:isStandard()
+        end)
+        if cameFrom then placeBeside(name, cameFrom) else win:maximize() end
     elseif win then
         win:focus()
     else
@@ -625,15 +698,13 @@ local launcherActions = {
     -- With no Finder window open, its "main window" is the Desktop: open one
     Finder = function()
         local win = bestWindow("Finder")
-        if win and win:isStandard() then
-            focusApp("Finder")
-        else
-            hs.task.new("/usr/bin/open", nil, { os.getenv("HOME") }):start()
-        end
+        if win and win:isStandard() then focusApp("Finder") else openers.Finder() end
     end,
 }
 
-local launcherByCode, launcherEntries = {}, {}
+-- Shift+key puts the app beside the front window instead (placeBeside) — a
+-- tiled half even for Messages, whose plain key floats it
+local launcherByCode, launcherEntries, launcherBeside = {}, {}, {}
 for _, app in ipairs(launcherApps) do
     local key, name = app[1], app[2]
     -- An app already in front hides instead, so the same key summons and
@@ -643,6 +714,7 @@ for _, app in ipairs(launcherApps) do
         local running = getApp(name)
         if running and running:isFrontmost() then running:hide() else action() end
     end
+    launcherBeside[ansiKeys[key]] = function() placeBeside(name, hs.window.focusedWindow()) end
     local hyperKey = appHyperKeys[name]
     table.insert(launcherEntries, {
         key = key:upper(),
@@ -661,7 +733,8 @@ end
 -- hotkeys are dispatched before event taps see the key.
 launcherTap = hs.eventtap.new({ types.keyDown }, function(e)
     local m = e:getFlags()
-    local action = not (m.cmd or m.alt or m.ctrl) and launcherByCode[e:getKeyCode()]
+    local action = not (m.cmd or m.alt or m.ctrl)
+        and (m.shift and launcherBeside or launcherByCode)[e:getKeyCode()]
     closeLauncher()
     if action then action() end
     return true
@@ -670,7 +743,7 @@ end)
 bindHyper("space", "Launcher", "App launcher: then one key (panel lists them)", function()
     if launcherPanel then closeLauncher(); return end
     launcherPanel = overlayCanvas(overlayText(
-        { { name = "Launcher", entries = launcherEntries } }, "Esc or any other key to close"))
+        { { name = "Launcher", entries = launcherEntries } }, "Shift+key: beside this window · Esc or any other key to close"))
     launcherPanel:level(hs.canvas.windowLevels.overlay):show()
     launcherTap:start()
     launcherTimer = hs.timer.doAfter(3, closeLauncher)

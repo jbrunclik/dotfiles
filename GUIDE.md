@@ -853,10 +853,19 @@ own saved position right after opening.
 | Hyper + 5 | Notion |
 | Hyper + 6 | Zoom |
 
-The first press brings up the app's main window, the second maximizes it
-(launching the app if it has no window). For Zoom that's the **call** window
-during a meeting, never the meetings list ("Zoom Workplace"); the Zoom layouts
-(Hyper+X/C/V) pick the same way.
+The first press brings up the app's main window (launching the app if it has
+no window). The second puts it **beside the window you came from**, so
+`Hyper+4 4` from the terminal gives "terminal + Slack" without a fixed layout:
+
+- The window you came from keeps its half if it's tiled; if it was maximized
+  or floating, it takes the left half. The app gets the other half and the
+  focus. Whatever was on that half stays underneath — Hyper+` reaches it.
+- "The window you came from" is the next window down in the stacking order,
+  so nothing is remembered between presses. With no other window it
+  maximizes instead. Hyper+S is the maximize key now.
+
+For Zoom that's the **call** window during a meeting, never the meetings list
+("Zoom Workplace"); the Zoom layouts (Hyper+X/C/V) pick the same way.
 
 ### Launcher (Hammerspoon)
 
@@ -880,6 +889,11 @@ alphabetically, System Settings last.
 
 - If the app is already in front, its key hides it instead (like Hyper+Q), so
   `Hyper+Space W` both summons and dismisses WhatsApp.
+- **Shift+key puts the app beside the window you're in**, like a second
+  press of Hyper+1–6: `Hyper+Space Shift+C` is "this + Claude". Same rules —
+  a tiled window keeps its half, anything else takes the left — and a hidden
+  or not-yet-running app is unhidden or launched first. Shift+T tiles Messages
+  as a half instead of floating it.
 - The panel shows straight away; typing the letter from memory just flashes it.
 - `Escape`, any key not in the list, `Hyper+Space` again or 3 s of nothing
   closes it without doing anything. Its keys only work while it's open — an
@@ -905,7 +919,7 @@ alphabetically, System Settings last.
 | Prog (Model 100) | Same, as one key: Chrysalis maps Prog to `F19`, Hammerspoon binds `F19` |
 
 For quick replies without touching the current layout. It's the one Hyper key
-where "again" hides instead of maximizing. Pin the conversations you reply to
+where "again" hides instead of putting the app beside the last window. Pin the conversations you reply to
 most, so Messages opens on them, and allow those people through your work
 Focus (System Settings → Focus → People).
 
