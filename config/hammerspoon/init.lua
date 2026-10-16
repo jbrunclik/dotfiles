@@ -410,15 +410,15 @@ local function cheatsheetText()
     return out
 end
 
-local sheet
-local function showCheatsheet()
+-- The overlay, centered on the main screen; not shown yet
+local function cheatsheetCanvas()
     local text = cheatsheetText()
     local size = hs.drawing.getTextDrawingSize(text)
     local pad = 28
     local w, h = size.w + 2 * pad, size.h + 2 * pad
     local f = hs.screen.mainScreen():frame()
-    sheet = hs.canvas.new({ x = f.x + (f.w - w) / 2, y = f.y + (f.h - h) / 2, w = w, h = h })
-    sheet:appendElements(
+    local canvas = hs.canvas.new({ x = f.x + (f.w - w) / 2, y = f.y + (f.h - h) / 2, w = w, h = h })
+    canvas:appendElements(
         {
             type = "rectangle", action = "strokeAndFill",
             fillColor = { hex = "#1e1e2e", alpha = 0.97 },
@@ -427,6 +427,22 @@ local function showCheatsheet()
         },
         { type = "text", text = text, frame = { x = pad, y = pad, w = size.w + 4, h = size.h } }
     )
+    return canvas
+end
+
+-- Used by `hyper-cheatsheet --readme`: renders the overlay to a PNG for the
+-- README. Drawn from the canvas itself, never a screenshot, so nothing else on
+-- screen can end up in the image.
+function hyperCheatsheetImage(path)
+    local canvas = cheatsheetCanvas()
+    local ok = canvas:imageFromCanvas():saveToFile(path)
+    canvas:delete()
+    return ok
+end
+
+local sheet
+local function showCheatsheet()
+    sheet = cheatsheetCanvas()
     sheet:level(hs.canvas.windowLevels.overlay):show()
 end
 

@@ -13,7 +13,13 @@ set -euo pipefail
 # Usage:
 #   hyper-cheatsheet                  # writes ~/Desktop/hyper-cheatsheet.pdf
 #   hyper-cheatsheet path/to/out.pdf
+#   hyper-cheatsheet --readme         # refreshes the README's images in docs/
 
+README=0
+if [ "${1:-}" = "--readme" ]; then
+    README=1
+    shift
+fi
 OUT="${1:-$HOME/Desktop/hyper-cheatsheet.pdf}"
 # Resolve the repo through the ~/.local/bin symlink
 DOTFILES="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
@@ -35,5 +41,17 @@ perl -e 'alarm 10; exec @ARGV' \
 
 swiftc -O -o "$TMP/cheatsheet-pdf" "$RENDERER" 2>/dev/null \
     || { echo "failed to compile $RENDERER" >&2; exit 1; }
+if [ "$README" -eq 1 ]; then
+    # Page 1 of the printout, and the overlay drawn straight from its canvas
+    # (never a screenshot, so nothing else on screen can leak into the repo)
+    mkdir -p "$DOTFILES/docs"
+    "$TMP/cheatsheet-pdf" "$TMP/bindings.json" "$DOTFILES/GUIDE.md" "$TMP/sheet.pdf" \
+        "$DOTFILES/docs/hyper-cheatsheet-print.png"
+    perl -e 'alarm 10; exec @ARGV' \
+        hs -c "return hyperCheatsheetImage('$DOTFILES/docs/hyper-cheatsheet-overlay.png')" </dev/null >/dev/null 2>&1 || true
+    [ -s "$DOTFILES/docs/hyper-cheatsheet-overlay.png" ] || { echo "overlay image failed" >&2; exit 1; }
+    echo "Wrote docs/hyper-cheatsheet-print.png and docs/hyper-cheatsheet-overlay.png"
+    exit 0
+fi
 "$TMP/cheatsheet-pdf" "$TMP/bindings.json" "$DOTFILES/GUIDE.md" "$OUT"
 echo "Wrote $OUT"

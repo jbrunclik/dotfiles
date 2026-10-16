@@ -11,7 +11,8 @@
 // rather than a silently shorter sheet. Each page shrinks its font until it
 // fits. Rendering uses WebKit's createPDF and PDFKit — macOS only, no other
 // dependencies. Run via the hyper-cheatsheet script:
-//   cheatsheet-pdf <bindings.json> <GUIDE.md> <out.pdf>
+//   cheatsheet-pdf <bindings.json> <GUIDE.md> <out.pdf> [page1.png]
+// With a fourth argument it also saves page 1 as a 2x PNG (for the README).
 
 import AppKit
 import PDFKit
@@ -36,7 +37,9 @@ func fail(_ message: String) -> Never {
 }
 
 let args = CommandLine.arguments
-guard args.count == 4 else { fail("usage: cheatsheet-pdf <bindings.json> <GUIDE.md> <out.pdf>") }
+guard args.count == 4 || args.count == 5 else {
+    fail("usage: cheatsheet-pdf <bindings.json> <GUIDE.md> <out.pdf> [page1.png]")
+}
 guard let data = FileManager.default.contents(atPath: args[1]),
       let hyper = try? JSONDecoder().decode(Sheet.self, from: data) else {
     fail("cannot read cheatsheet JSON from \(args[1])")
@@ -45,6 +48,7 @@ guard let guide = try? String(contentsOfFile: args[2], encoding: .utf8) else {
     fail("cannot read \(args[2])")
 }
 let output = URL(fileURLWithPath: args[3])
+let pagePNG = args.count == 5 ? URL(fileURLWithPath: args[4]) : nil
 
 // MARK: - GUIDE.md parsing
 
@@ -279,6 +283,14 @@ final class Renderer: NSObject, WKNavigationDelegate {
                     self.start()
                 } else {
                     guard self.result.write(to: output) else { fail("cannot write \(output.path)") }
+                    if let pagePNG, let first = self.result.page(at: 0) {
+                        // 2x, so text stays crisp on retina screens
+                        let image = first.thumbnail(of: NSSize(width: page.width * 2, height: page.height * 2),
+                                                    for: .mediaBox)
+                        guard let tiff = image.tiffRepresentation,
+                              let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]),
+                              (try? png.write(to: pagePNG)) != nil else { fail("cannot write \(pagePNG.path)") }
+                    }
                     exit(0)
                 }
             }
