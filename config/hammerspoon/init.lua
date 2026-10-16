@@ -211,7 +211,11 @@ bindHyper("x", "Layouts", "Zoom | Notion", function() tilePair("zoom.us", "Notio
 bindHyper("c", "Layouts", "Zoom | Slack", function() tilePair("zoom.us", "Slack") end)
 bindHyper("v", "Layouts", "Zoom | Dia", function() tilePair("zoom.us", "Dia") end)
 
--- Hyper+Tab = toggle focus between left and right windows
+-- Hyper+Tab = toggle focus between left and right windows.
+-- These three only consider standard windows: the input-mode indicator macOS
+-- shows beside the cursor after a US/CZ switch is an AXDialog owned by the
+-- front app, sits on top of the z-order, and would otherwise be "focused" —
+-- a press that does nothing. Zoom's control strips are non-standard too.
 bindHyper("tab", "Windows", "Focus the other half", function()
     local screen = hs.screen.mainScreen()
     local mid = screen:frame().w / 2
@@ -219,7 +223,9 @@ bindHyper("tab", "Windows", "Focus the other half", function()
     if not current then return end
     local targetSide = current:frame().x < mid and "right" or "left"
     local wins = hs.fnutils.filter(hs.window.orderedWindows(), function(w)
-        if targetSide == "left" then
+        if not w:isStandard() then
+            return false
+        elseif targetSide == "left" then
             return w:frame().x < mid
         else
             return w:frame().x >= mid
@@ -231,14 +237,14 @@ end)
 -- Hyper+Left/Right = focus window in that direction
 bindHyper("left", "Windows", "Focus left half", function()
     local wins = hs.fnutils.filter(hs.window.orderedWindows(), function(w)
-        return w:frame().x < hs.screen.mainScreen():frame().w / 2
+        return w:isStandard() and w:frame().x < hs.screen.mainScreen():frame().w / 2
     end)
     if wins[1] then wins[1]:focus() end
 end)
 
 bindHyper("right", "Windows", "Focus right half", function()
     local wins = hs.fnutils.filter(hs.window.orderedWindows(), function(w)
-        return w:frame().x >= hs.screen.mainScreen():frame().w / 2
+        return w:isStandard() and w:frame().x >= hs.screen.mainScreen():frame().w / 2
     end)
     if wins[1] then wins[1]:focus() end
 end)
