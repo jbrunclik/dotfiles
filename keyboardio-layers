@@ -108,7 +108,7 @@ KARABINER_COLORS = [("Arrow", 9), ("Page", 8), ("Word", 7), ("Line", 7),
 
 HID = {chr(65 + i): 0x04 + i for i in range(26)}
 HID.update({str(i): 0x1D + i for i in range(1, 10)})
-HID.update({"0": 0x27, "Tab": 0x2B, "⌫": 0x2A, ",": 0x36, ".": 0x37, "Space": 0x2C, "`": 0x35})
+HID.update({"0": 0x27, "Tab": 0x2B, "⌫": 0x2A, ",": 0x36, ".": 0x37, "Space": 0x2C, "`": 0x35, "Return": 0x28})
 # Not on the base layer, but the Hyper layer sends them from the left thumb
 HID.update({"←": 0x50, "→": 0x4F})
 LCMD, LSHIFT = 0xE3, 0xE1

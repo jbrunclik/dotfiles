@@ -18,7 +18,8 @@ same on a MacBook and a Keyboardio Model 100. Catppuccin Mocha everywhere.
   to put it beside the window you came from — Hyper+Space then one letter
   reaches the rest (W WhatsApp, C Claude…; Shift+letter for "beside"),
   Hyper+A/S/D tile or maximize. Messages pops over the current layout and hides again
-  (Hyper+T); Zoom mutes from any app (Hyper+M, or one key on the Model 100).
+  (Hyper+T); Zoom mutes from any app (Hyper+M, or one key on the Model 100),
+  and Hyper+Return joins the meeting about to begin.
 - **A nav layer under the right hand.** Hyper+H/J/K/L are arrows; U/I page,
   O/P line start/end, B/W word jumps — in every app, terminal included.
 - **It documents itself.** Hold Hyper alone for an on-screen cheatsheet; hold
@@ -56,7 +57,7 @@ what to watch out for.
 |---|---|---|
 | Hyper key, nav layer | [Karabiner-Elements](https://karabiner-elements.pqrs.org/) — Caps Lock is Hyper when held, Backspace when tapped | `config/karabiner/` |
 | Keyboardio Model 100 | Firmware keymap with a lit Hyper layer — `keyboardio-layers`, `keyboardio-backup` | `config/keyboardio/model100.json` |
-| Windows, apps, cheatsheet | [Hammerspoon](https://www.hammerspoon.org/) — layouts, app focus, Messages, Zoom mute; reloads on save | `config/hammerspoon/` |
+| Windows, apps, cheatsheet | [Hammerspoon](https://www.hammerspoon.org/) — layouts, app focus, Messages, Zoom mute and join; reloads on save | `config/hammerspoon/` |
 
 **Editors and Git**
 

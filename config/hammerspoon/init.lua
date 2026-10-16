@@ -443,6 +443,89 @@ end
 bindHyper("m", "Zoom", "Mute / unmute (from any app)", toggleZoomMute)
 bindPlain("f18", "Any", "Zoom", "Mute / unmute (Model 100 Any key → F18)", toggleZoomMute)
 
+-- Hyper+Return = start / join the meeting that's about to begin, from any app.
+-- The work calendar isn't in macOS Calendar, but Zoom's home window has it: its
+-- calendar sidebar is a web view whose cards are readable through AX, and
+-- about 10 minutes before a Zoom meeting (once it's under way too) the card
+-- gains a button titled "Start" (you host) or "Join". So no time logic: the
+-- cards with that button are the candidates. One → press it; several → pick;
+-- none → say so. A hidden Zoom is unhidden first (its windows are invisible
+-- to AX until then); a quit one is launched, and its sidebar takes ~9 s to load.
+local function zoomMeetingCards()
+    local zoom = getApp("zoom.us")
+    if not zoom then return {} end
+    local ax = hs.axuielement.applicationElement(zoom)
+    ax:setTimeout(1)
+    local cards = {}
+    local function walk(e, depth)
+        if depth > 16 then return end
+        local children = e:attributeValue("AXChildren") or {}
+        if e:attributeValue("AXRole") == "AXGroup" then
+            local name, button
+            for _, c in ipairs(children) do
+                local role = c:attributeValue("AXRole")
+                if role == "AXStaticText" and not name then name = c:attributeValue("AXValue") end
+                if role == "AXButton" then
+                    local t = c:attributeValue("AXTitle")
+                    if t == "Start" or t == "Join" then button = c end
+                end
+            end
+            if button then
+                -- The card's own title reads "<name> In 6 min … 15:30 - 15:55 …"
+                table.insert(cards, { name = name or "?", detail = e:attributeValue("AXTitle") or "", button = button })
+                return
+            end
+        end
+        for _, c in ipairs(children) do walk(c, depth + 1) end
+    end
+    for _, w in ipairs(ax:attributeValue("AXWindows") or {}) do walk(w, 0) end
+    return cards
+end
+-- Global so `hs -c` can list what Hyper+Return would press, without pressing
+function zoomJoinableMeetings()
+    local out = {}
+    for _, c in ipairs(zoomMeetingCards()) do table.insert(out, c.button:attributeValue("AXTitle") .. ": " .. c.name) end
+    return table.concat(out, "\n")
+end
+
+local function pressMeeting(cards)
+    if #cards == 1 then
+        cards[1].button:performAction("AXPress")
+        return
+    end
+    local chooser = hs.chooser.new(function(choice)
+        if choice then cards[choice.index].button:performAction("AXPress") end
+    end)
+    local choices = {}
+    for i, c in ipairs(cards) do
+        table.insert(choices, { text = c.name, subText = c.detail, index = i })
+    end
+    chooser:choices(choices):show()
+end
+
+local function joinNextMeeting()
+    local zoom = getApp("zoom.us")
+    if zoom and zoom:isHidden() then zoom:unhide() end
+    if zoom then
+        local cards = zoomMeetingCards()
+        if #cards > 0 then pressMeeting(cards) return end
+        if #zoom:allWindows() > 0 then
+            hs.alert.show("\u{1F4C5} No Zoom meeting starting soon")
+            return
+        end
+    end
+    -- Not running, or no home window: open it and wait for the sidebar
+    launchApp("zoom.us")
+    local deadline, cards = hs.timer.secondsSinceEpoch() + 15, {}
+    hs.timer.waitUntil(function()
+        cards = zoomMeetingCards()
+        return #cards > 0 or hs.timer.secondsSinceEpoch() > deadline
+    end, function()
+        if #cards > 0 then pressMeeting(cards) else hs.alert.show("\u{1F4C5} No Zoom meeting starting soon") end
+    end, 0.5)
+end
+bindHyper("return", "Zoom", "Start / join the meeting about to begin", joinNextMeeting)
+
 -- Hyper+T = summon / dismiss Messages for a quick reply without touching the
 -- current layout. Messages floats over the right third; pressing again hides
 -- it, and macOS hands focus back to the app you were in. Nothing is remembered
@@ -495,7 +578,7 @@ end):start()
 -- bindHyper registry, Karabiner remaps from karabiner.json's rule descriptions
 -- (any rule written "[App: ]Hyper+<keys> → <action>"), so nothing is listed by
 -- hand.
-local keyLabels = { tab = "Tab", left = "←", right = "→", space = "Space" }
+local keyLabels = { tab = "Tab", left = "←", right = "→", space = "Space", ["return"] = "Return" }
 
 local function karabinerEntries()
     local config = hs.json.read(configDir .. "/../karabiner/karabiner.json")

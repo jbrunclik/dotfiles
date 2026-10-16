@@ -968,6 +968,22 @@ alphabetically, System Settings last.
 |---|---|
 | Hyper + M | Toggle mute (works from any app, no focus switch) |
 | Any (Model 100) | Same, as one key: Chrysalis maps Any to `F18`, Hammerspoon binds `F18` |
+| Hyper + Return | Start / join the meeting about to begin |
+
+**Hyper+Return** joins the next Zoom meeting from any app, without touching
+Zoom. The work calendar isn't in macOS Calendar, so it reads Zoom's own: the
+calendar sidebar on Zoom's home screen. About 10 minutes before a Zoom
+meeting (and while it's under way) its card gets a **Start** button (you host)
+or **Join**; Hyper+Return presses it. Several at once → a picker; none →
+"No Zoom meeting starting soon". Meetings without a Zoom link (Teams, Meet)
+never get the button, so they're ignored.
+
+- Zoom only has to be running: hidden is fine (it's unhidden first, since a
+  hidden app's windows are invisible to accessibility); if it isn't running,
+  it's launched and the sidebar gets ~9 s to load.
+- It depends on Zoom's interface: if an update renames the button, it says
+  "no meeting" rather than pressing anything else. To check what it would
+  press: `hs -c 'return zoomJoinableMeetings()'`.
 
 ### Messages (Hammerspoon)
 
