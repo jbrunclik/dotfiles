@@ -540,7 +540,8 @@ Things to know:
 
 - After the Mac sleeps or switches networks, the shared connection can be dead
   without SSH knowing; the next command waits until `ServerAlive` gives up
-  (~3 min). `ssh -O exit <host>` fixes it right away.
+  (~45 s: a keepalive every 15 s, 3 missed). `ssh -O exit <host>` fixes it
+  right away.
 - Everything to one host shares one connection: a big `scp` slows an
   interactive session there, and if it drops, they all drop.
 - **Agent forwarding follows the first connection.** If the shared connection

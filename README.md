@@ -17,7 +17,7 @@ macOS development environment configuration. Catppuccin Mocha everywhere.
 | Window layouts | [Hammerspoon](https://www.hammerspoon.org/) — hotkey-triggered layouts, app focus, Zoom mute, hold-Hyper cheatsheet (and `hyper-cheatsheet` for a printable PDF of it plus the GUIDE's shortcuts); reloads on save | `config/hammerspoon/init.lua` |
 | Clipboard | [Maccy](https://maccy.app/) — clipboard history | — |
 | Screenshots | [Shottr](https://shottr.cc/) — capture, annotate, OCR | — |
-| SSH | Shared defaults (agent, keepalive, compression, connection reuse) | `ssh_config` |
+| SSH | Shared defaults (agent, keepalive, connection reuse) | `ssh_config` |
 | File manager | [Midnight Commander](https://midnight-commander.org/) | `config/mc/skins/catppuccin-mocha.ini` |
 | Syntax highlighting | [bat](https://github.com/sharkdp/bat) | `config/bat/config` |
 | Packages | [Homebrew](https://brew.sh/) | `Brewfile` |

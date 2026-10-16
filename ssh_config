@@ -4,11 +4,12 @@ Include ~/.ssh/config.local
 Host *
     AddKeysToAgent yes
     IdentityFile ~/.ssh/id_ed25519
-    ServerAliveInterval 60
+    # Notice a dead connection within ~45 s (15 s × 3). With connection reuse
+    # below, that's how long a command can hang after sleep or a Wi-Fi change.
+    ServerAliveInterval 15
     ServerAliveCountMax 3
     # Reuse one connection per host: repeat git fetch/push skips the ~1 s
     # handshake. If it hangs after sleep or a network change: ssh -O exit <host>
     ControlMaster auto
     ControlPath ~/.ssh/cm-%C
     ControlPersist 10m
-    Compression yes
