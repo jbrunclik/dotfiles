@@ -586,68 +586,78 @@ local function joinNextMeeting()
 end
 bindHyper("return", "Zoom", "Start / join the meeting about to begin", joinNextMeeting)
 
--- Hyper+T = summon / dismiss Messages for a quick reply without touching the
--- current layout. Messages floats over the right third; pressing again hides
--- it, and macOS hands focus back to the app you were in. Nothing is remembered
--- between presses: whether Messages is frontmost decides. On a cold start,
+-- Quick-reply floats: summon / dismiss a messenger without touching the
+-- current layout. It floats over the right third; pressing again hides it,
+-- and macOS hands focus back to the app you were in. Nothing is remembered
+-- between presses: whether the app is frontmost decides. On a cold start,
 -- wait (up to 5 s) for its window before placing it.
--- Messages refuses to be narrower than this (measured): a third of the
--- MacBook screen is 504 pt, so asking for a third made it keep the third's
--- left edge and run 156 pt off the right. A fixed property of the app, not
--- window state, so it's a constant rather than something read back.
-local MESSAGES_MIN_WIDTH = 660
+--
+-- Each app refuses to be narrower than a minimum (measured), wider than a
+-- third of the MacBook screen (504 pt): asked for a third, it kept the
+-- third's left edge and ran off the right. A fixed property of the app, not
+-- window state, so constants rather than something read back. The float is
+-- a third, flush right — or two thirds where the minimum won't fit a third.
+local FLOAT_MIN_WIDTH = {
+    Messages = 660,
+    WhatsApp = 800,
+}
 
-local function placeMessages(win)
+local function placeFloat(win, minWidth)
     local s = win:screen():frame()
-    local w = math.max(s.w / 3, MESSAGES_MIN_WIDTH)
+    -- A third, or two thirds where the app can't fit in a third (both
+    -- messengers on the MacBook): squeezed to its minimum, the fixed
+    -- sidebars leave the conversation a narrow strip
+    local w = minWidth > s.w / 3 and s.w * 2 / 3 or s.w / 3
     win:setFrame({ x = s.x + s.w - w, y = s.y, w = w, h = s.h })
-    -- Fallback if the minimum ever grows: Messages widens itself back only
-    -- some time after the move, so watch for an overflow for 1.5 s and pin
-    -- the right edge
+    -- Fallback if a minimum ever grows: apps widen themselves back only some
+    -- time after a move, so watch for an overflow for 1.5 s and pin the
+    -- right edge
     local deadline = hs.timer.secondsSinceEpoch() + 1.5
-        hs.timer.waitUntil(function()
-            local f = win:frame()
-            return f.x + f.w > s.x + s.w + 1 or hs.timer.secondsSinceEpoch() > deadline
-        end, function()
-            local f = win:frame()
-            if f.x + f.w > s.x + s.w + 1 then
-                f.x = s.x + s.w - f.w
-                win:setFrame(f)
-            end
-        end, 0.05)
+    hs.timer.waitUntil(function()
+        local f = win:frame()
+        return f.x + f.w > s.x + s.w + 1 or hs.timer.secondsSinceEpoch() > deadline
+    end, function()
+        local f = win:frame()
+        if f.x + f.w > s.x + s.w + 1 then
+            f.x = s.x + s.w - f.w
+            win:setFrame(f)
+        end
+    end, 0.05)
 end
 
-local function toggleMessages()
-    local app = getApp("Messages")
+local function toggleFloat(name)
+    local app = getApp(name)
     if app and app:isFrontmost() then
         app:hide()
         return
     end
     local function window()
-        local messages = getApp("Messages")
-        return messages and messages:mainWindow()
+        local running = getApp(name)
+        return running and running:mainWindow()
     end
+    local minWidth = FLOAT_MIN_WIDTH[name] or 0
     -- Running (hidden or behind): unhide and place in the same tick, so it
     -- doesn't show at its old spot first
     if app then
         app:unhide()
         local win = window()
         if win then
-            placeMessages(win)
+            placeFloat(win, minWidth)
             win:focus()
             return
         end
     end
     -- Cold start: wait (up to 5 s) for its window
-    launchApp("Messages")
+    launchApp(name)
     local deadline = hs.timer.secondsSinceEpoch() + 5
     hs.timer.waitUntil(function()
         return window() or hs.timer.secondsSinceEpoch() > deadline
     end, function()
         local win = window()
-        if win then placeMessages(win) end
+        if win then placeFloat(win, minWidth) end
     end, 0.05)
 end
+local function toggleMessages() toggleFloat("Messages") end
 bindHyper("t", "Messages", "Show / hide Messages", toggleMessages)
 appHyperKeys["Messages"] = "t"
 bindPlain("f19", "Prog", "Messages", "Show / hide Messages (Model 100 Prog key → F19)", toggleMessages)
@@ -873,6 +883,7 @@ local launcherApps = {
 local launcherActions = {
     -- The same float-over-the-right-third as Hyper+T
     Messages = toggleMessages,
+    WhatsApp = function() toggleFloat("WhatsApp") end,
     -- With no Finder window open, its "main window" is the Desktop: open one
     Finder = function()
         local win = bestWindow("Finder")

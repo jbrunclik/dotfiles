@@ -1026,7 +1026,9 @@ alphabetically, System Settings last.
 - `Escape`, any key not in the list, `Hyper+Space` again or 3 s of nothing
   closes it without doing anything. Its keys only work while it's open — an
   event tap swallows them — so they never reach the app underneath.
-- `T` does what Hyper+T does (Messages over the right third). `F` opens a new
+- `T` does what Hyper+T does (Messages over the right third), and `W` floats
+  WhatsApp the same way — a quick reply without disturbing the layout; `W`
+  again hides it and focus returns to where you were. `F` opens a new
   Finder window at home when none is open — otherwise Finder's only "window"
   is the Desktop and nothing would appear.
 - The list is `launcherApps` in `init.lua`; a new app also needs its bundle ID
@@ -1069,9 +1071,13 @@ knows, not only Zoom's: Join on a Teams meeting opens it in the browser.
 | Prog (Model 100) | Same, as one key: Chrysalis maps Prog to `F19`, Hammerspoon binds `F19` |
 
 For quick replies without touching the current layout. It floats over the
-right third — on the MacBook that's narrower than Messages allows (504 vs
-~660 pt), so there it takes its minimum width with the right edge pinned to
-the screen's. It's the one Hyper key
+right third — or the right **two thirds** where the app can't fit in a third.
+That's the MacBook: a third is 504 pt, but Messages won't go below ~660 and
+WhatsApp (launcher `W`, same float) below 800, and squeezed to the minimum
+their fixed sidebars leave a narrow strip for the conversation. On the Dell
+a third (853 pt) fits both. The minimums are measured constants in
+`FLOAT_MIN_WIDTH` in `init.lua`; asking an app for less makes it keep its
+left edge and run off the screen. It's the one Hyper key
 where "again" hides instead of putting the app beside the last window. Pin the conversations you reply to
 most, so Messages opens on them, and allow those people through your work
 Focus (System Settings → Focus → People).
