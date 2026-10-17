@@ -938,6 +938,61 @@ bindHyper("space", "Launcher", "App launcher: then one key (panel lists them)", 
     launcherTimer = hs.timer.doAfter(3, closeLauncher)
 end)
 
+-- URL router. Hammerspoon is the default browser and sends each link opened
+-- from another app (Slack, Notion, Zoom, mail, the terminal) to a browser:
+-- hosts on the machine-local work list open in Chrome's Work profile, the rest
+-- in Dia. The list stays out of this public repo; without it everything goes
+-- to Dia. A line with a dot matches that domain and its subdomains, a word
+-- without one any host containing it. Re-read per link, so edits apply at once.
+local WORK_DOMAINS_FILE = os.getenv("HOME") .. "/.config/url-router/work.local"
+-- Chrome's folder for the Work profile ("Default" here: chrome://version shows it)
+local CHROME_WORK_PROFILE = "Default"
+local CHROME_BINARY = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+
+local function isWorkHost(host)
+    local f = io.open(WORK_DOMAINS_FILE, "r")
+    if not f or not host then return false end
+    host = host:lower()
+    for line in f:lines() do
+        local rule = line:gsub("#.*", ""):match("^%s*(.-)%s*$"):lower()
+        if rule ~= "" then
+            local hit
+            if rule:find("%.") then
+                hit = host == rule or host:sub(-#rule - 1) == "." .. rule
+            else
+                hit = host:find(rule, 1, true) ~= nil
+            end
+            if hit then f:close() return true end
+        end
+    end
+    f:close()
+    return false
+end
+
+-- Global so `hs -c` can check where a URL would go without opening it
+function urlRouterTarget(url)
+    return isWorkHost(hs.http.urlParts(url).host) and "Chrome (Work)" or "Dia"
+end
+
+local function openInChromeWork(url)
+    local profile = "--profile-directory=" .. CHROME_WORK_PROFILE
+    if getApp("Google Chrome") then
+        -- Running: the binary hands the URL to the open Chrome and exits.
+        -- (`open --args` would be ignored by a running app.)
+        hs.task.new(CHROME_BINARY, nil, { profile, url }):start()
+    else
+        hs.task.new("/usr/bin/open", nil, { "-b", BUNDLE_IDS["Google Chrome"], "--args", profile, url }):start()
+    end
+end
+
+hs.urlevent.httpCallback = function(_, host, _, url)
+    if isWorkHost(host) then
+        openInChromeWork(url)
+    else
+        hs.urlevent.openURLWithBundle(url, BUNDLE_IDS["Dia"])
+    end
+end
+
 -- Black menu bar. macOS 26's menu bar is transparent, so a bright wallpaper
 -- shows through it (and frames the MacBook's notch). Instead of an app, draw a
 -- black band, exactly the menu bar's height, into a copy of the wallpaper and

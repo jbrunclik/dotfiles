@@ -1063,6 +1063,30 @@ knows, not only Zoom's: Join on a Teams meeting opens it in the browser.
 - It depends on Zoom's interface: if an update renames the button, it says
   "no meeting" rather than pressing anything else.
 
+### Links: work in Chrome, the rest in Dia (Hammerspoon)
+
+Hammerspoon is the default browser and routes every link opened from another
+app — Slack, Notion, Zoom, Mail, the terminal: hosts on your work list open in
+**Chrome's Work profile**, everything else in **Dia**. Links clicked inside a
+browser stay in that browser.
+
+The list is `~/.config/url-router/work.local` — machine-local and untracked,
+so no employer detail lands in this repo; without it every link goes to Dia.
+One rule per line: with a dot it matches that domain and its subdomains
+(`miro.com` matches `app.miro.com`, not `evilmiro.com`); a single word matches
+any host containing it (`yourcompany` covers all its domains, and its Slack,
+Zoom and SSO subdomains). It's re-read per link, so edits apply at once.
+
+- Shared domains are the limit: Gmail and Calendar serve both accounts from
+  the same host, so a host can only go one way. Docs/Drive/Calendar → work,
+  Gmail → Dia (personal mail lives there).
+- Check where a URL would go: `hs -c 'return urlRouterTarget("https://…")'`.
+- Becoming the default browser takes a click in macOS's dialog:
+  `hs -c 'hs.urlevent.setDefaultHandler("http")'`. An MDM may reset it —
+  `drift.sh` checks, whenever the work list exists.
+- The Work profile is Chrome's `Default` folder (`CHROME_WORK_PROFILE` in
+  `init.lua`; `chrome://version` shows a profile's folder).
+
 ### Messages (Hammerspoon)
 
 | Shortcut | Action |

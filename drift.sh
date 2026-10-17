@@ -187,6 +187,26 @@ else
     echo -e "  ${YELLOW}SKIP${RESET}     swiftc not found"
 fi
 
+# URL router: with a work-domain list present, Hammerspoon must be the default
+# browser, or links quietly stop being routed (an MDM can reset it)
+echo ""
+header "Default browser (URL router):"
+if [ -f "$HOME/.config/url-router/work.local" ]; then
+    handler="$(python3 -c '
+import plistlib, os
+p = os.path.expanduser("~/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist")
+hs = [h.get("LSHandlerRoleAll", "") for h in plistlib.load(open(p, "rb")).get("LSHandlers", []) if h.get("LSHandlerURLScheme") == "https"]
+print(hs[0] if hs else "none")' 2>/dev/null || echo unknown)"
+    if [ "$handler" = "org.hammerspoon.hammerspoon" ]; then
+        echo -e "  ${GREEN}OK${RESET}       https → Hammerspoon"
+    else
+        echo -e "  ${YELLOW}CHANGED${RESET}  https → $handler (expected Hammerspoon; run hs -c 'hs.urlevent.setDefaultHandler(\"http\")')"
+        DRIFTED=1
+    fi
+else
+    echo -e "  ${YELLOW}SKIP${RESET}     no ~/.config/url-router/work.local — every link goes to Dia"
+fi
+
 # Check VS Code extensions
 echo ""
 header "VS Code extensions:"

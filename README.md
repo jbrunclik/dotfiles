@@ -57,7 +57,7 @@ what to watch out for.
 |---|---|---|
 | Hyper key, nav layer | [Karabiner-Elements](https://karabiner-elements.pqrs.org/) — Caps Lock is Hyper when held, Backspace when tapped | `config/karabiner/` |
 | Keyboardio Model 100 | Firmware keymap with a lit Hyper layer — `keyboardio-layers`, `keyboardio-backup` | `config/keyboardio/model100.json` |
-| Windows, apps, cheatsheet | [Hammerspoon](https://www.hammerspoon.org/) — layouts, app focus, Messages, Zoom mute and join; reloads on save | `config/hammerspoon/` |
+| Windows, apps, cheatsheet | [Hammerspoon](https://www.hammerspoon.org/) — layouts, app focus, Messages, Zoom mute and join, a link router (work → Chrome, rest → Dia); reloads on save | `config/hammerspoon/` |
 
 **Editors and Git**
 
