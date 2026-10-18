@@ -849,6 +849,7 @@ brightness 200/255):
   | 1–6 — apps, each in its own color | Ghostty mauve (its Catppuccin accent), Dia yellow, Chrome green, Slack pink, Notion white, Zoom blue |
   | Z X C V — layouts · ` Tab Q A S D F, left thumb Cmd Shift — windows | mauve · blue |
   | T Messages · M Return — Zoom mute, join | teal · red |
+  | 0 — keep awake | yellow |
   | Space — launcher | green (like the app keys) |
 
 - **Function** / **Numpad** — only their own keys lit, by kind: F-keys pink,
@@ -1160,6 +1161,16 @@ left edge and run off the screen. It's the one Hyper key
 where "again" hides instead of putting the app beside the last window. Pin the conversations you reply to
 most, so Messages opens on them, and allow those people through your work
 Focus (System Settings → Focus → People).
+
+### Keep awake (Hammerspoon)
+
+| Shortcut | Action |
+|---|---|
+| Hyper + 0 | Toggle KeepingYouAwake — the Mac and display stay awake while on |
+
+It goes through KeepingYouAwake's `keepingyouawake:///toggle` URL, so its menu
+bar icon can stay hidden in Thaw. The alert says which way it went: while on,
+KeepingYouAwake runs a `caffeinate` process, which is what's checked.
 
 ### Reloading
 

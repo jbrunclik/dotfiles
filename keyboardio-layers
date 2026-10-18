@@ -93,7 +93,7 @@ PALETTE = [
 # of these is what reads as "softly lit" under the keycaps; much lower is invisible.
 BASE_GRADIENT = [11, 13, 14, 15]
 SECTION_COLORS = {"Layouts": 1, "Windows": 2, "Apps": 3, "Zoom": 4, "Messages": 5,
-                  "Hammerspoon": 6, "Karabiner": 7, "Launcher": 3}
+                  "Hammerspoon": 6, "Karabiner": 7, "Launcher": 3, "Utilities": 6}
 # Hyper+1–6: each app in its own theme/brand color (keyed by the cheatsheet label)
 APP_COLORS = {"Ghostty": 1,  # its Catppuccin Mocha accent, mauve
               "Dia": 6,      # yellow icon

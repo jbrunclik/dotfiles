@@ -69,6 +69,7 @@ local BUNDLE_IDS = {
     ["System Settings"] = "com.apple.systempreferences",
     ["Music"] = "com.apple.Music",
     ["Signal"] = "org.whispersystems.signal-desktop",
+    ["KeepingYouAwake"] = "info.marcel-dierkes.KeepingYouAwake",
 }
 
 local function getApp(name)
@@ -586,6 +587,19 @@ local function joinNextMeeting()
     end, 0.5)
 end
 bindHyper("return", "Zoom", "Start / join the meeting about to begin", joinNextMeeting)
+
+-- Hyper+0 = toggle KeepingYouAwake through its URL scheme, no menu bar click.
+-- Its state isn't visible otherwise, so the alert says which way it went:
+-- while active it runs a `caffeinate` child process, which is what's checked.
+local function toggleAwake()
+    hs.urlevent.openURL("keepingyouawake:///toggle")
+    hs.timer.doAfter(0.7, function()
+        local app = getApp("KeepingYouAwake")
+        local on = app and hs.execute("/usr/bin/pgrep -P " .. app:pid() .. " caffeinate"):match("%d")
+        hs.alert.show(on and "\u{2615} Awake: on" or "\u{1F634} Awake: off")
+    end)
+end
+bindHyper("0", "Utilities", "Keep the Mac awake (KeepingYouAwake on / off)", toggleAwake)
 
 -- Quick-reply floats: summon / dismiss a messenger without touching the
 -- current layout. It floats over the right third; pressing again hides it,
