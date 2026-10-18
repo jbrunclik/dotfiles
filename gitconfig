@@ -64,6 +64,20 @@
 
 [commit]
     verbose = true
+    # Every commit and tag is signed with the SSH key (Verified on GitHub and
+    # GitLab once its public key is uploaded there as a signing key). The key
+    # path is user.signingkey in ~/.gitconfig.local — it holds the home path.
+    gpgsign = true
+
+[tag]
+    gpgSign = true
+
+[gpg]
+    format = ssh
+
+[gpg "ssh"]
+    # Lets `git log --show-signature` verify your own signatures locally
+    allowedSignersFile = ~/.ssh/allowed_signers
 
 [rebase]
     autosquash = true

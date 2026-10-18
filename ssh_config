@@ -1,8 +1,15 @@
 # Shared defaults — host-specific entries go in ~/.ssh/config.local
 Include ~/.ssh/config.local
 
+# UseKeychain is Apple's own option; other OpenSSH builds would reject it
+IgnoreUnknown UseKeychain
+
 Host *
     AddKeysToAgent yes
+    # The key's passphrase lives in the login keychain (stored once with
+    # `ssh-add --apple-use-keychain ~/.ssh/id_ed25519`), so the key loads by
+    # itself after a reboot instead of asking for the passphrase again
+    UseKeychain yes
     IdentityFile ~/.ssh/id_ed25519
     # Notice a dead connection within ~45 s (15 s × 3). With connection reuse
     # below, that's how long a command can hang after sleep or a Wi-Fi change.

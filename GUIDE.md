@@ -751,6 +751,42 @@ Things to know:
 - A shared connection also keeps the local agent it started with. After
   switching agents (e.g. to 1Password's), close open ones with `ssh -O exit`.
 
+### The key: passphrase in the Keychain, commits signed
+
+`~/.ssh/id_ed25519` keeps its passphrase, which lives in the login keychain:
+`UseKeychain yes` loads the key after a reboot without asking. Store it once
+with `ssh-add --apple-use-keychain ~/.ssh/id_ed25519` (in a terminal: it asks
+for the passphrase).
+
+Every commit and tag is **signed with the same key** (`gpg.format = ssh`,
+`commit.gpgsign`), so they show **Verified** on GitHub and GitLab — once the
+public key is uploaded there *as a signing key* (separate from the login key):
+
+| Where | How |
+|---|---|
+| GitHub | `gh ssh-key add ~/.ssh/id_ed25519.pub --type signing` (needs `gh auth refresh -s admin:ssh_signing_key` once) |
+| GitLab | Profile → SSH Keys → the key → usage *Authentication & Signing* |
+| Check locally | `git log --show-signature -1` — verified against `~/.ssh/allowed_signers` |
+| New machine | `user.signingkey = ~/.ssh/id_ed25519.pub` (full path) in `~/.gitconfig.local`, and an `allowed_signers` line: `<email> namespaces="git" <public key>` |
+
+**Work repos get the work email by folder, not per repo.** In
+`~/.gitconfig.local` (untracked, so the folder name stays out of this repo):
+
+```ini
+[includeIf "gitdir:~/work/"]
+    path = ~/.gitconfig.work      # [user] email = you@company.com
+```
+
+Every repo under that folder — current and future clones — commits with the
+work email and signs with the same SSH key; everything else stays personal.
+Don't set `user.email` or signing in a repo's own `.git/config`: it wins over
+the rule, silently. Add the work email to `~/.ssh/allowed_signers` too, for
+local verification. GitLab shows Verified when the commit email is one
+verified on that GitLab account.
+
+Why not 1Password's SSH agent: with the lid closed (no Touch ID) and no Apple
+Watch, each approval means typing the 1Password password.
+
 ## Hyper key
 
 Hyper (Cmd+Option+Ctrl+Shift) is a dedicated modifier that doesn't
