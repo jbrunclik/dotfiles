@@ -1087,6 +1087,25 @@ Zoom and SSO subdomains). It's re-read per link, so edits apply at once.
 - The Work profile is Chrome's `Default` folder (`CHROME_WORK_PROFILE` in
   `init.lua`; `chrome://version` shows a profile's folder).
 
+### Screen-share guard (Hammerspoon)
+
+When you start sharing in Zoom, **Slack, Messages, WhatsApp, Signal and Dia
+hide** — the messengers and the personal browser — silently, since an alert
+would show on the shared screen. They stay hidden afterwards (Hyper+4, Hyper+T
+or the launcher bring each back), so sharing again can't re-expose them.
+
+- Trigger: Zoom's "zoom share toolbar window", which exists only while you
+  share, checked every half second. A window filter caught only the first
+  share — Zoom's floating windows don't reliably send the notifications it
+  relies on.
+- Dia ignores the normal hide request; the guard falls back to its own
+  "Hide Dia" menu item (what Cmd+H does), which works.
+- Notification banners are macOS's job, and it already does it: with
+  "Allow notifications when mirroring or sharing the display" **off** (the
+  default; System Settings → Notifications), a Zoom share counts, so banners
+  don't show — tested with a real iMessage mid-share (no banner; the watch
+  still buzzed). Leave that switch off.
+
 ### Messages (Hammerspoon)
 
 | Shortcut | Action |

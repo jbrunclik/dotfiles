@@ -68,6 +68,7 @@ local BUNDLE_IDS = {
     ["Finder"] = "com.apple.finder",
     ["System Settings"] = "com.apple.systempreferences",
     ["Music"] = "com.apple.Music",
+    ["Signal"] = "org.whispersystems.signal-desktop",
 }
 
 local function getApp(name)
@@ -936,6 +937,58 @@ bindHyper("space", "Launcher", "App launcher: then one key (panel lists them)", 
     launcherPanel:level(hs.canvas.windowLevels.overlay):show()
     launcherTap:start()
     launcherTimer = hs.timer.doAfter(3, closeLauncher)
+end)
+
+-- Screen-share guard: when a Zoom share starts, hide the apps that shouldn't
+-- be on a shared screen — messengers and the personal browser. Zoom opens a
+-- window titled "zoom share toolbar window" only while you share (observed
+-- live; also a "zoom share statusbar window"), destroyed on stop and created
+-- afresh on each share, so its appearance is the trigger. Checked every
+-- 0.5 s: hs.window.filter caught only the first share's window — Zoom's
+-- floating windows don't reliably send the AX notifications it relies on.
+-- Nothing is restored afterwards: they stay hidden until summoned (Hyper+4,
+-- Hyper+T, the launcher), so a second share can't re-expose them. Silent on
+-- purpose: an alert would land on the very screen being shared.
+-- Banners are macOS's job: with "Allow notifications when mirroring or sharing
+-- the display" off (the default), it suppresses them during a Zoom share.
+local SHARE_HIDE = { "Slack", "Messages", "WhatsApp", "Signal", "Dia" }
+
+local function hideForShare()
+    local hidden = {}
+    for _, name in ipairs(SHARE_HIDE) do
+        local app = getApp(name)
+        if app and not app:isHidden() then
+            app:hide()
+            table.insert(hidden, name)
+        end
+    end
+    -- Some apps ignore the hide request (Dia does: hide() and stays put).
+    -- Their own "Hide <App>" menu item — what Cmd+H does — works, so use it
+    -- for anything still visible a moment later.
+    hs.timer.doAfter(0.3, function()
+        for _, name in ipairs(hidden) do
+            local app = getApp(name)
+            if app and not app:isHidden() then app:selectMenuItem("Hide " .. name) end
+        end
+    end)
+end
+
+local function zoomSharing()
+    local zoom = getApp("zoom.us")
+    if not zoom then return false end
+    for _, w in ipairs(zoom:allWindows()) do
+        if w:title() == "zoom share toolbar window" then return true end
+    end
+    return false
+end
+
+-- Only the off → on edge hides; `wasSharing` is re-derived from Zoom's live
+-- windows every tick. Global so the timer isn't garbage-collected.
+local wasSharing = zoomSharing()
+shareGuard = hs.timer.doEvery(0.5, function()
+    local sharing = zoomSharing()
+    if sharing and not wasSharing then hideForShare() end
+    wasSharing = sharing
 end)
 
 -- URL router. Hammerspoon is the default browser and sends each link opened
