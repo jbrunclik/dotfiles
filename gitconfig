@@ -22,6 +22,10 @@
     autoSetupRemote = true
     # Also push annotated tags on the pushed commits (lightweight tags stay local)
     followTags = true
+    # --force-with-lease also refuses when the remote has commits you fetched
+    # but never looked at (a background fetch updates the lease without you
+    # having seen them)
+    useForceIfIncludes = true
 
 [pull]
     rebase = true
@@ -42,6 +46,9 @@
     algorithm = histogram
     # Moved lines get their own color (delta renders it), so refactors read as moves
     colorMoved = default
+    # Prefixes say what's compared: i/ index, w/ working tree, c/ commit,
+    # instead of a/ and b/ everywhere (delta strips them in its file headers)
+    mnemonicPrefix = true
     # `git difftool` (alias `git dft`) shows a structural diff: difftastic
     # compares syntax trees, so reformatting and re-indenting don't show as
     # changes. delta stays the pager for everything else.
@@ -72,6 +79,8 @@
 
 [tag]
     gpgSign = true
+    # v1.10 after v1.9, not between v1.1 and v1.2
+    sort = version:refname
 
 [gpg]
     format = ssh
@@ -83,6 +92,9 @@
 [rebase]
     autosquash = true
     autostash = true
+    # Stacked branches: rebasing the top branch also moves every branch that
+    # points into it, so the stack stays a stack
+    updateRefs = true
 
 [branch]
     sort = -committerdate

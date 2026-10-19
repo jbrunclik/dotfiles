@@ -816,6 +816,15 @@ A failing global or repo hook stops the commit or push as usual.
   commits. Lightweight tags (`git tag name`) stay local
 - **`help.autocorrect = prompt`** — a typo like `git stauts` asks
   "Run 'status' instead [y/N]?" (interactive terminals only)
+- **`rebase.updateRefs`** — stacked branches: rebasing the top branch also
+  moves every branch that points into it, so `feat1` → `feat2` stays a stack
+- **`push.useForceIfIncludes`** — `git push --force-with-lease` also refuses
+  when the remote has commits you fetched but never integrated; a background
+  fetch (lazygit, VS Code) otherwise quietly updates the lease
+- **`tag.sort = version:refname`** — `git tag` lists `v1.9` before `v1.10`
+- **`diff.mnemonicPrefix`** — paths in raw diffs say what's compared: `i/`
+  index, `w/` working tree, `c/` commit, instead of `a/` and `b/` (delta's
+  file headers strip them either way)
 
 Tried and dropped: `core.fsmonitor` + `core.untrackedCache`. On a 31k-file repo
 they made `git status` *slower* (30.6 ms vs 21.4 ms, warm cache) — APFS plus
