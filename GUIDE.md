@@ -256,7 +256,6 @@ Tips:
 
 ### CLI tips
 
-Tips:
 - `bat` supports `bat file.py -l python` to force a language
 - `fd` respects `.gitignore` by default — use `fd -H` to include hidden files
 - `rg -t py "import"` to search only Python files
@@ -1210,6 +1209,27 @@ window — up to 10 s, since Slack and Notion take a few seconds — then tiles,
 and repeats the move half a second later because Electron apps restore their
 own saved position right after opening.
 
+#### Adding a new layout
+
+Edit `config/hammerspoon/init.lua` and bind a key to `tilePair(leftApp, rightApp)`.
+Add each new app to `BUNDLE_IDS` with its bundle ID
+(`osascript -e 'id of app "Figma"'`): apps are looked up by bundle ID, because a
+name matches any process whose name contains it — Zoom runs a helper called
+"zoom.us Sidebar Web Content" that a name lookup picked instead of Zoom, which
+broke the Zoom layouts and mute. Bind through `bindHyper(key, section,
+description, fn)` rather than `hs.hotkey.bind`, so the binding shows up in the
+cheatsheet:
+
+```lua
+["Figma"] = "com.figma.Desktop",  -- in BUNDLE_IDS
+bindHyper("g", "Layouts", "Figma | Chrome", function() tilePair("Figma", "Google Chrome") end)
+```
+
+Pick a key that isn't already bound — hold Hyper for the cheatsheet, or look
+at the lit Hyper layer on the Model 100 (dark keys are free). `,`/`.`/`/` are
+reserved by macOS (see Tabs above). Saving the file reloads
+Hammerspoon.
+
 ### App focus (Hammerspoon)
 
 | Shortcut | App |
@@ -1392,10 +1412,13 @@ The `hs` CLI lets you query Hammerspoon from the terminal:
 
 ```bash
 hs -c 'hs.window.focusedWindow():frame()'   # inspect focused window
-hs -c 'hs.application.get("Slack"):allWindows()'  # list app windows
+hs -c 'hs.application.applicationsForBundleID("com.tinyspeck.slackmacgap")[1]:allWindows()'  # an app's windows
 ```
 
-If an app's windows are invisible to Hammerspoon (returns 0 windows),
+Look apps up by bundle ID, as `getApp` does in `init.lua` (it's local, so `hs
+-c` can't call it): `hs.application.get("name")` can return a helper process
+instead of the app. If an app's windows are invisible to Hammerspoon (returns 0
+windows),
 restart the app — Electron apps like Slack can lose their accessibility
 registration after updates.
 
@@ -1440,55 +1463,29 @@ Shottr replaces the built-in screenshot tool with annotation and OCR:
 
 | Action | Shortcut |
 |---|---|
-| Capture area | Configure in Shottr preferences |
-| Capture window | Configure in Shottr preferences |
-| Scrolling capture | Configure in Shottr preferences |
+| Capture an area | `Cmd+Shift+4` (the Model 100's butterfly key sends it) |
+| Capture the whole screen | `Cmd+Shift+3` |
+| Recognize text or a QR code on screen | `Cmd+Ctrl+Option+O` |
+| Scrolling capture, a window, repeat the last area, delayed | Shottr's menu (its icon is in Thaw's always-hidden section) |
+
+Shottr took over `Cmd+Shift+3`/`4` from macOS (whose own shortcuts are off in
+System Settings → Keyboard → Keyboard Shortcuts → Screenshots); its settings
+live in its sandbox, set in its own Settings window.
 
 After capture: annotate with arrows, boxes, blur, or text.
 Use the OCR button to extract text from any screenshot.
 
-### Adding a new layout
+## Habits worth building
 
-Edit `config/hammerspoon/init.lua` and bind a key to `tilePair(leftApp, rightApp)`.
-Add each new app to `BUNDLE_IDS` with its bundle ID
-(`osascript -e 'id of app "Figma"'`): apps are looked up by bundle ID, because a
-name matches any process whose name contains it — Zoom runs a helper called
-"zoom.us Sidebar Web Content" that a name lookup picked instead of Zoom, which
-broke the Zoom layouts and mute. Bind through `bindHyper(key, section,
-description, fn)` rather than `hs.hotkey.bind`, so the binding shows up in the
-cheatsheet:
+Each of these is set up and fast; the shell history says the old habit still
+wins. Swap one at a time.
 
-```lua
-["Figma"] = "com.figma.Desktop",  -- in BUNDLE_IDS
-bindHyper("g", "Layouts", "Figma | Chrome", function() tilePair("Figma", "Google Chrome") end)
-```
-
-Pick a key that isn't already bound — hold Hyper for the cheatsheet, or look
-at the lit Hyper layer on the Model 100 (dark keys are free). `,`/`.`/`/` are
-reserved by macOS (see Tabs above). Saving the file reloads
-Hammerspoon.
-
-## Learning path
-
-Week 1:
-- Get used to the new prompt (starship) and colors (catppuccin)
-- Use `cat`, `ls`, `ll` as normal — they're aliased to modern tools
-- Practice `Ctrl+R` for fuzzy history search
-- Type partial commands + Up arrow for filtered history
-
-Week 2:
-- Start using zoxide — just `cd` normally, it learns
-- Try `rg "pattern"` instead of grep
-- Open files with `vim` (aliased to nvim)
-- Use `Ctrl+P` to find files, `Space f g` to search in files
-
-Week 3:
-- Explore LSP features: hover with `K`, go-to-definition with `gd`
-- Try gitsigns: `]h` / `[h` to jump between changes, `Space h p` to preview
-- Use `Space` to discover more keybindings via which-key
-- Try `uv init` and `uv add` for a new Python project
-
-Week 4:
-- Get comfortable with format-on-save
-- Try `mise` for project-specific Python/Node versions
-- Customize — edit configs directly in `~/src/dotfiles/` (they're symlinked)
+| Instead of | Use | Why |
+|---|---|---|
+| `cd`, then `cd src/<project>` | `cd <project>` (or `cd <fragment>`) from anywhere | `CDPATH` finds anything in `~/src`; zoxide ranks the rest |
+| `git status`, `log`, `diff`, `add -p`, `commit` one at a time | `lazygit` | All of them on one screen; space stages a file, or a hunk or line inside it |
+| `cat`/`less` on a Markdown file | `glow file.md` | Rendered: headings, tables, code blocks |
+| `grep -r` | `rg pattern` | Recursive by default, skips `.gitignore`d files, much faster |
+| `find . -name` | `fd pattern` | Same, for file names; `-e py` for an extension |
+| `caffeinate` in a spare tab | Hyper+0 | KeepingYouAwake, shown in the menu bar; no tab to keep open |
+| Retyping a long command | `Ctrl+R` | Fuzzy search over every tab's history |
