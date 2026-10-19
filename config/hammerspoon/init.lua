@@ -26,7 +26,7 @@ local ansiKeys = {
     b = 11, q = 12, w = 13, e = 14, r = 15, y = 16, t = 17, o = 31, u = 32,
     i = 34, p = 35, l = 37, j = 38, k = 40, n = 45, m = 46,
     ["1"] = 18, ["2"] = 19, ["3"] = 20, ["4"] = 21, ["5"] = 23, ["6"] = 22,
-    ["7"] = 26, ["8"] = 28, ["9"] = 25, ["0"] = 29, [","] = 43, ["`"] = 50,
+    ["7"] = 26, ["8"] = 28, ["9"] = 25, ["0"] = 29, [","] = 43, ["`"] = 50, [";"] = 41,
 }
 local cheatsheet = {}
 -- What pressing a key again does, shown once per cheatsheet section
@@ -35,9 +35,20 @@ local sectionNotes = {
     Apps = "again: beside",
     Messages = "again: hide",
 }
-local function bindHyper(key, section, desc, fn)
-    table.insert(cheatsheet, { key = key, section = section, desc = desc })
-    hs.hotkey.bind(hyper, ansiKeys[key] or key, fn)
+-- Counts Hyper presses, so a delayed follow-up (whenWindows' settling pass)
+-- can tell that another key came in meanwhile and stand down. A count of
+-- keypresses, not window state.
+local hyperPresses = 0
+local function bindHyperKey(key, fn)
+    hs.hotkey.bind(hyper, ansiKeys[key] or key, function()
+        hyperPresses = hyperPresses + 1
+        fn()
+    end)
+end
+-- `label`, when given, is what the cheatsheet shows instead of the key
+local function bindHyper(key, section, desc, fn, label)
+    table.insert(cheatsheet, { key = key, label = label, section = section, desc = desc })
+    bindHyperKey(key, fn)
 end
 
 -- A plain key (no Hyper) that should still be on the cheatsheet — e.g. F18,
@@ -103,10 +114,12 @@ local function bestWindow(appName)
                 return w
             end
         end
-        -- Strategy 3: largest visible window (skip the "Zoom" dashboard)
+        -- Strategy 3: largest visible window, skipping the home window
+        -- ("Zoom Workplace" since 2024, "Zoom" before)
         local best, bestArea = nil, 0
         for _, w in ipairs(app:allWindows()) do
-            if w:isStandard() and w:isVisible() and w:title() ~= "Zoom" then
+            local t = w:title()
+            if w:isStandard() and w:isVisible() and t ~= "Zoom" and not t:find("^Zoom Workplace") then
                 local s = w:size()
                 local area = s.w * s.h
                 if area > bestArea then best, bestArea = w, area end
@@ -137,20 +150,49 @@ end
 -- Check if a window occupies a given unit rect AND is the topmost window there.
 -- Position-only checks are fooled by windows stacked at the same coordinates
 -- (e.g. Slack and Dia both tiled right, with one covering the other).
+-- "Covered": a standard window above it hides more than half of it — the
+-- same half (Slack over Dia), or a maximized window over the whole layout
+-- (Ghostty over Zoom | Notion), which a same-x-and-width test missed.
 local function isTiled(win, unitRect)
     if not inPosition(win, unitRect) then return false end
     local f = win:frame()
-    -- Check that no other standard window is above this one at the same position
     for _, w in ipairs(hs.window.orderedWindows()) do
         if w == win then return true end
-        if w:isStandard() then
-            local wf = w:frame()
-            if math.abs(wf.x - f.x) < threshold and math.abs(wf.w - f.w) < threshold then
-                return false -- another window is above ours at the same spot
-            end
+        if w:isStandard() and f:intersect(w:frame()).area > f.area / 2 then
+            return false
         end
     end
     return true
+end
+
+-- Hyper+Down's memory: each window's frame from just before Hammerspoon last
+-- moved it. The one exception to deriving everything from live frames —
+-- "where was it before" can't be read off the screen — and it's used only to
+-- restore; nothing decides a layout from it. Keyed by window id, so a closed
+-- window's entry is simply never asked for.
+local previousFrame = {}
+local function remember(win)
+    if win and win:id() then previousFrame[win:id()] = win:frame() end
+end
+-- Move to a unit rect, remembering where it was (not on settling passes,
+-- which only repeat a move the first pass already remembered)
+local function moveWin(win, unitRect, settling)
+    if not win then return end
+    if not settling then remember(win) end
+    win:move(unitRect)
+end
+local function setWinFrame(win, frame)
+    remember(win)
+    win:setFrame(frame)
+end
+
+-- The next standard window below `win` in z-order that isn't another window
+-- of the same app — what "the window you came from" means for "beside"
+local function windowBelow(win)
+    local pid = win and win:application() and win:application():pid()
+    return hs.fnutils.find(hs.window.orderedWindows(), function(w)
+        return w ~= win and w:isStandard() and w:application():pid() ~= pid
+    end)
 end
 
 -- Apps whose window has to be opened rather than launched: with no Finder
@@ -205,6 +247,7 @@ local function whenWindows(names, ready)
         end
     end
     open(false)
+    local press = hyperPresses
     local start, graceOver = hs.timer.secondsSinceEpoch(), false
     hs.timer.waitUntil(function()
         if found() then return true end
@@ -216,7 +259,11 @@ local function whenWindows(names, ready)
         return elapsed > 10
     end, function()
         ready(wins)
-        hs.timer.doAfter(0.5, function() ready(wins, true) end)
+        -- Not if another Hyper key came in meanwhile: re-moving the windows
+        -- would undo it
+        hs.timer.doAfter(0.5, function()
+            if hyperPresses == press then ready(wins, true) end
+        end)
     end, 0.1)
 end
 
@@ -252,8 +299,8 @@ local function tilePair(leftApp, rightApp)
     end
     whenWindows({ leftApp, rightApp }, function(wins, settling)
         local l, r = wins[1], wins[2]
-        if l then l:move(left) end
-        if r then r:move(right) end
+        moveWin(l, left, settling)
+        moveWin(r, right, settling)
         -- Right first (brings it above the old occupant), then left on top
         if not settling then raisePair(r, l) end
     end)
@@ -272,8 +319,8 @@ local function placeBeside(name, anchor)
         if not win or win == anchor then return end
         local anchorHalf, otherHalf = left, right
         if inPosition(anchor, right) then anchorHalf, otherHalf = right, left end
-        anchor:move(anchorHalf)
-        win:move(otherHalf)
+        moveWin(anchor, anchorHalf, settling)
+        moveWin(win, otherHalf, settling)
         if not settling then raisePair(anchor, win) end
     end)
 end
@@ -294,6 +341,15 @@ bindHyper("tab", "Windows", "Focus the other half", function()
     local mid = screen:frame().w / 2
     local current = hs.window.focusedWindow()
     if not current then return end
+    -- Nothing tiled (maximized, floating): no "other half", so the next
+    -- window down instead, like Cmd+` across apps
+    if not inPosition(current, left) and not inPosition(current, right) then
+        local nextDown = hs.fnutils.find(hs.window.orderedWindows(), function(w)
+            return w ~= current and w:isStandard()
+        end)
+        if nextDown then nextDown:focus() end
+        return
+    end
     local targetSide = current:frame().x < mid and "right" or "left"
     local wins = hs.fnutils.filter(hs.window.orderedWindows(), function(w)
         if not w:isStandard() then
@@ -328,17 +384,89 @@ end)
 -- bottom-most window of the stack to the front: with A over B over C that's
 -- C, then B, then A again. Raising the one just below the top would only
 -- ever flip between the top two. Derived from live frames and z-order.
-bindHyper("`", "Windows", "Cycle windows stacked on this half", function()
+-- Also on Hyper+; — on the MacBook, ` with Caps Lock held is a stretch.
+local function cycleStack()
     local current = hs.window.focusedWindow()
     if not current then return end
     local f = current:frame()
     local function samePlace(w)
         local g = w:frame()
-        return w:isStandard() and math.abs(g.x - f.x) < 20 and math.abs(g.y - f.y) < 20
-            and math.abs(g.w - f.w) < 20 and math.abs(g.h - f.h) < 20
+        return w:isStandard() and math.abs(g.x - f.x) < threshold and math.abs(g.y - f.y) < threshold
+            and math.abs(g.w - f.w) < threshold and math.abs(g.h - f.h) < threshold
     end
     local stack = hs.fnutils.filter(hs.window.orderedWindows(), samePlace)
     if #stack > 1 then stack[#stack]:focus() end
+end
+bindHyper("`", "Windows", "Cycle windows stacked on this half", cycleStack, "`/;")
+bindHyperKey(";", cycleStack)
+
+-- Hyper+E = swap sides: the topmost left and right windows trade halves, and
+-- the focused one keeps focus. One side empty: the focused window moves over.
+bindHyper("e", "Windows", "Swap the two halves", function()
+    local current = hs.window.focusedWindow()
+    if not current then return end
+    local l = hs.fnutils.find(hs.window.orderedWindows(), function(w) return w:isStandard() and inPosition(w, left) end)
+    local r = hs.fnutils.find(hs.window.orderedWindows(), function(w) return w:isStandard() and inPosition(w, right) end)
+    if l and r then
+        moveWin(l, right)
+        moveWin(r, left)
+        raisePair(current == l and r or l, current)
+    elseif l or r then
+        moveWin(current, inPosition(current, left) and right or left)
+    end
+end)
+
+-- Hyper+Up = reading frame: centered, two thirds of the width, full height —
+-- a maximized window is too wide to read on the 5K. On the MacBook's own
+-- screen it just maximizes. Again (already in the frame): maximize.
+local reading = hs.geometry.rect(1 / 6, 0, 2 / 3, 1)
+bindHyper("up", "Windows", "Reading frame: centered ⅔ (MacBook: maximize)", function()
+    local win = hs.window.focusedWindow()
+    if not win then return end
+    local builtin = win:screen():name():find("^Built%-in")
+    if builtin or inPosition(win, reading) then
+        moveWin(win, hs.geometry.rect(0, 0, 1, 1))
+    else
+        moveWin(win, reading)
+    end
+end)
+
+-- Hyper+Down = put the window back where it was before Hammerspoon last
+-- moved it (tiles, maximize, swap, the reading frame, floats). Again: back.
+bindHyper("down", "Windows", "Restore the previous position (again: undo)", function()
+    local win = hs.window.focusedWindow()
+    local frame = win and win:id() and previousFrame[win:id()]
+    if frame then setWinFrame(win, frame) end
+end)
+
+-- Hyper+G = every window in one fuzzy list, front to back (minimized ones
+-- last), typed over app name and title. Ghostty titles carry the folder and
+-- the running command, so a particular Claude session is a few keystrokes.
+windowPicker = hs.chooser.new(function(choice)
+    if not choice then return end
+    local win = hs.window.get(choice.id)
+    if not win then return end
+    if win:isMinimized() then win:unminimize() end
+    win:focus()
+end)
+windowPicker:searchSubText(true)
+bindHyper("g", "Windows", "Pick a window by app or title", function()
+    local choices, seen = {}, {}
+    local function add(w)
+        if seen[w:id()] or not w:isStandard() then return end
+        seen[w:id()] = true
+        local app = w:application()
+        table.insert(choices, {
+            text = w:title() ~= "" and w:title() or app:name(),
+            subText = app:name() .. (w:isMinimized() and " · minimized" or ""),
+            image = hs.image.imageFromAppBundle(app:bundleID() or ""),
+            id = w:id(),
+        })
+    end
+    for _, w in ipairs(hs.window.orderedWindows()) do add(w) end
+    for _, w in ipairs(hs.window.allWindows()) do if w:isMinimized() then add(w) end end
+    windowPicker:choices(choices)
+    windowPicker:show()
 end)
 
 -- Hyper+F = toggle native fullscreen
@@ -350,12 +478,12 @@ end)
 -- Hyper+ASD = tile left / maximize / tile right
 bindHyper("a", "Windows", "Tile left half", function()
     local win = hs.window.focusedWindow()
-    if win then win:move(left) end
+    moveWin(win, left)
 end)
 
 bindHyper("d", "Windows", "Tile right half", function()
     local win = hs.window.focusedWindow()
-    if win then win:move(right) end
+    moveWin(win, right)
 end)
 
 -- Hyper+S again, on a window that's already maximized, puts it back on a half:
@@ -366,7 +494,7 @@ bindHyper("s", "Windows", "Maximize (again: back to a half)", function()
     local win = hs.window.focusedWindow()
     if not win then return end
     if not inPosition(win, hs.geometry.rect(0, 0, 1, 1)) then
-        win:maximize()
+        moveWin(win, hs.geometry.rect(0, 0, 1, 1))
         return
     end
     local below = hs.fnutils.find(hs.window.orderedWindows(), function(w)
@@ -374,7 +502,7 @@ bindHyper("s", "Windows", "Maximize (again: back to a half)", function()
     end)
     local s = win:screen():frame()
     local belowLeft = below and below:frame().center.x < s.x + s.w / 2
-    win:move(belowLeft and right or left)
+    moveWin(win, belowLeft and right or left)
 end)
 
 -- Hyper+Q = send the front app to the background, as Cmd+H does: macOS hands
@@ -404,10 +532,10 @@ local appKeys = {
 local function focusApp(name)
     local win = bestWindow(name)
     if win and win == hs.window.focusedWindow() then
-        local cameFrom = hs.fnutils.find(hs.window.orderedWindows(), function(w)
-            return w ~= win and w:isStandard()
-        end)
-        if cameFrom then placeBeside(name, cameFrom) else win:maximize() end
+        -- Another window of the same app (a second Chrome) isn't "where you
+        -- came from"
+        local cameFrom = windowBelow(win)
+        if cameFrom then placeBeside(name, cameFrom) else moveWin(win, hs.geometry.rect(0, 0, 1, 1)) end
     elseif win then
         win:focus()
     else
@@ -657,7 +785,7 @@ local function placeFloat(win, minWidth)
     -- messengers on the MacBook): squeezed to its minimum, the fixed
     -- sidebars leave the conversation a narrow strip
     local w = minWidth > s.w / 3 and s.w * 2 / 3 or s.w / 3
-    win:setFrame({ x = s.x + s.w - w, y = s.y, w = w, h = s.h })
+    setWinFrame(win, { x = s.x + s.w - w, y = s.y, w = w, h = s.h })
     -- Fallback if a minimum ever grows: apps widen themselves back only some
     -- time after a move, so watch for an overflow for 1.5 s and pin the
     -- right edge
@@ -732,7 +860,7 @@ end):start()
 -- bindHyper registry, Karabiner remaps from karabiner.json's rule descriptions
 -- (any rule written "[App: ]Hyper+<keys> → <action>"), so nothing is listed by
 -- hand.
-local keyLabels = { tab = "Tab", left = "←", right = "→", space = "Space", ["return"] = "Return" }
+local keyLabels = { tab = "Tab", left = "←", right = "→", up = "↑", down = "↓", space = "Space", ["return"] = "Return" }
 
 -- The selected Karabiner profile's rules ({} if the file or any level is
 -- missing), so a second profile or a hand-edit can't break the overlay or PDF
@@ -1009,6 +1137,10 @@ for _, app in ipairs(launcherApps) do
     -- "window" is Finder's desktop (an AXScrollArea), nothing to tile against.
     launcherBeside[ansiKeys[key]] = function()
         local anchor = hs.window.focusedWindow()
+        -- In front is the app itself (a second Chrome window): beside the
+        -- window below it instead
+        local app = getApp(name)
+        if anchor and app and anchor:application():pid() == app:pid() then anchor = windowBelow(anchor) end
         if anchor and anchor:isStandard() then
             placeBeside(name, anchor)
         else

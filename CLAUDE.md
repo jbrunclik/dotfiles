@@ -80,7 +80,8 @@ commit. Go through what applies:
   is saved. Query live state with `hs -c '<lua>'`; don't run `hs -c 'hs.reload()'`
   in the foreground, it hangs. In scripts, give `hs` `</dev/null` — it reads
   commands from stdin when that isn't a terminal and otherwise waits forever. Never memoize window state — derive it from live
-  positions. Use `hs.alert` only for state feedback (mute, errors), not routine
+  positions (the one exception: Hyper+Down's `previousFrame`, used only to
+  restore). Use `hs.alert` only for state feedback (mute, errors), not routine
   actions.
   Bind Hyper keys with `bindHyper(key, section, description, fn)` (it binds by
   physical key code, so shortcuts survive the Czech layout). Look apps up

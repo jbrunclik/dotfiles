@@ -1031,7 +1031,7 @@ brightness 200/255):
   | Backspace — forward delete | pink |
   | `,` `.` — previous / next tab | white |
   | 1–6 — apps, each in its own color | Ghostty mauve (its Catppuccin accent), Dia yellow, Chrome green, Slack pink, Notion white, Zoom blue |
-  | Z X C V — layouts · ` Tab Q A S D F, left thumb Cmd Shift — windows | mauve · blue |
+  | Z X C V — layouts · ` ; Tab Q A S D E F G, left thumb arrows — windows | mauve · blue |
   | T Messages · M Return — Zoom mute, join | teal · red |
   | 0 — keep awake | yellow |
   | Space — launcher | green (like the app keys) |
@@ -1059,11 +1059,14 @@ adding or moving a Hyper binding, run `keyboardio-layers --apply`, then
 change. It writes over the same protocol Chrysalis uses and reads every value
 back; if something looks wrong, restore the committed backup with Chrysalis.
 
-The base layer has no arrow keys, so on the Hyper layer the **left thumb's
-Cmd and Shift send Hyper+← and Hyper+→** (focus left / right half). They're
-idle during a Hyper chord anyway — Hyper already holds every modifier. This is
-an override in `keyboardio-layers` (`THUMB_ARROWS`); everything else on the
-layer is generated from the base layer.
+The base layer has no arrow keys, so on the Hyper layer the **left thumb arc
+sends the four Hyper+arrows**, outer to inner: Ctrl ↑ (reading frame),
+Backspace ↓ (restore), Cmd ← and Shift → (focus left / right half). The
+modifiers are idle during a Hyper chord anyway — Hyper already holds every
+one. Backspace gives up Hyper+⌫ (forward delete) on this keyboard; forward
+delete stays on Fn+Backspace. This is an override in `keyboardio-layers`
+(`THUMB_ARROWS`); everything else on the layer is generated from the base
+layer.
 
 Two consequences of Hyper being a layer here: holding Hyper *alone* sends
 nothing, so the on-screen cheatsheet only opens from the MacBook's Caps Lock
@@ -1130,7 +1133,7 @@ Hammerspoon running and the Xcode Command Line Tools (`swiftc`).
 | Hyper + U / I | Page up / Page down |
 | Hyper + O / P | Line start / end (Cmd+Left/Right) |
 | Hyper + B / W | Word back / forward (Option+Left/Right) |
-| Hyper + Backspace | Forward delete |
+| Hyper + Backspace | Forward delete (Model 100: Fn+Backspace — its Hyper+Backspace is ↓) |
 | Hyper + **right Shift** + any of the above but Backspace | The same, selecting (Shift+arrow, Shift+Cmd+←, …) |
 
 Works system-wide: Slack, Notion, Chrome, Ghostty, etc.
@@ -1175,9 +1178,13 @@ sysdiagnose.
 | Hyper + S | Maximize window (no fullscreen); again on a maximized window: back to a half |
 | Hyper + D | Tile window right half |
 | Hyper + F | Toggle native fullscreen |
-| Hyper + Tab | Toggle focus between left/right windows |
+| Hyper + E | Swap the two halves (the focused window keeps focus) |
+| Hyper + Up | Reading frame: centered, ⅔ wide, full height; again: maximize. On the MacBook's screen: maximize (Model 100: left thumb Ctrl) |
+| Hyper + Down | Put the window back where it was before the last move; again: undo that (Model 100: left thumb Backspace) |
+| Hyper + Tab | Toggle focus between left/right windows; nothing tiled: the next window down |
 | Hyper + Left/Right | Focus window in that direction (MacBook arrows; Model 100: left thumb Cmd / Shift) |
-| Hyper + ` | Cycle the windows stacked on this half (or at this spot) |
+| Hyper + ` (or ;) | Cycle the windows stacked on this half (or at this spot) |
+| Hyper + G | Pick any window from a list, typing part of its app or title |
 | Hyper + Q | Hide the front app (like `Cmd+H`); focus returns to the previous app |
 
 Every move is instant — Hammerspoon's default 0.2 s slide is off
@@ -1192,7 +1199,24 @@ exactly where the focused one is — Slack and Notion both tiled right, two
 maximized windows, two floats on top of each other. Hyper+Tab and Hyper+Left/Right
 only ever reach the topmost window of a half; this gets at the ones under it.
 Each press raises the bottom-most of the stack, so three windows come round in
-turn rather than the top two swapping.
+turn rather than the top two swapping. Hyper+; does the same from the right
+hand — on the MacBook, ` with Caps Lock held is a stretch.
+
+Hyper+G lists every window front to back (minimized ones last) with its app's
+icon; typing filters on title and app name. Ghostty's titles carry the folder
+and the running command, so a particular Claude session is a few keystrokes.
+
+**Hyper+Down is the one thing that remembers.** Everything else is derived
+from live window positions on each press, but "where was it before" can't be
+read off the screen: each window's frame from just before Hammerspoon last
+moved it (tiles, layouts, maximize, swap, the reading frame, the messenger
+floats) is kept, by window id, and used only to restore. Moves made by
+dragging or by an app itself aren't recorded.
+
+A layout started cold (an app launching) moves its windows again 0.5 s later,
+because Slack and Notion restore their own saved frame just after appearing.
+That second pass stands down if you've pressed another Hyper key meanwhile,
+so it can't undo it.
 
 ### Layouts (Hammerspoon, bottom row)
 
