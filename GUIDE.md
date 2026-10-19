@@ -50,6 +50,12 @@ receive these chords, and Ghostty's own `,` shortcuts are on Cmd.
 
 Things to know:
 
+- **Programs can write the clipboard, but reading it asks.** A program in the
+  terminal reads the clipboard through an escape code (OSC 52), which Ghostty
+  prompts for (`clipboard-read = ask`). With `allow` any program, a remote
+  host over ssh, or escape codes hidden in a `cat`'d file could read it
+  silently — and it often holds a 1Password secret. Writes stay allowed:
+  remote Neovim and tmux copy through them.
 - **A long command finishing in the background rings and notifies.** A
   command that ran 10 s or more and ends while Ghostty isn't focused bounces
   the dock icon, puts 🔔 in its tab title (no sound) and posts a banner. The
@@ -1498,6 +1504,13 @@ element" and VS Code's "open terminal". That's deliberate: the more common
 `Cmd+Shift+V` is "paste without formatting" in Slack, Notion and Chrome, which
 gets used far more. Settings are all Maccy's defaults, so
 none are tracked; only "launch at login" needs setting once.
+
+Passwords stay out of it: 1Password marks what it copies as concealed, and
+Maccy's default ignore list skips concealed and transient clipboard types.
+macOS 26's own clipboard history in Spotlight doesn't — it would keep them
+for hours — so **System Settings → Spotlight → Results from Clipboard is
+off**. It can't be set from a script (the settings pane is sandboxed), so
+`install.sh` lists it among the manual steps.
 
 ## Screenshots (Shottr)
 

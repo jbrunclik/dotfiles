@@ -36,7 +36,11 @@ cursor-style-blink = false
 mouse-hide-while-typing = true
 
 # --- Clipboard ---
-clipboard-read = allow
+# Reads ask first (Ghostty's default): with `allow`, any program — over ssh,
+# or escape codes in a `cat`'d file — could read the clipboard silently via
+# OSC 52, and it often holds a 1Password secret. Writes stay allowed (remote
+# Neovim and tmux copy through them); local Neovim uses pbcopy/pbpaste.
+clipboard-read = ask
 clipboard-write = allow
 copy-on-select = clipboard
 
