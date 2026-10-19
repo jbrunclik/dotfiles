@@ -59,20 +59,6 @@ brew bundle install --file="$DOTFILES/Brewfile" \
 
 header "Linking config files"
 
-link() {
-    local src="$1" dst="$2"
-    mkdir -p "$(dirname "$dst")"
-    if [ -e "$dst" ] && [ ! -L "$dst" ]; then
-        # Never overwrite an earlier backup: the first .bak is the original
-        local bak="${dst}.bak"
-        [ -e "$bak" ] && bak="${dst}.bak.$(date +%Y%m%d-%H%M%S)"
-        echo -e "  ${YELLOW}Backing up${RESET} $dst -> $bak"
-        mv "$dst" "$bak"
-    fi
-    ln -sfn "$src" "$dst"
-    echo -e "  ${GREEN}✓${RESET} $dst -> $src"
-}
-
 for entry in "${LINKS[@]}"; do
     link "$DOTFILES/${entry%%|*}" "${entry#*|}"
 done

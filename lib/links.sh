@@ -146,6 +146,22 @@ default_matches() {
     esac
 }
 
+# Links src to dst, moving a real file at dst aside first. install.sh links
+# LINKS with it; CI runs it into a temp $HOME.
+link() {
+    local src="$1" dst="$2"
+    mkdir -p "$(dirname "$dst")"
+    if [ -e "$dst" ] && [ ! -L "$dst" ]; then
+        # Never overwrite an earlier backup: the first .bak is the original
+        local bak="${dst}.bak"
+        [ -e "$bak" ] && bak="${dst}.bak.$(date +%Y%m%d-%H%M%S)"
+        echo -e "  ${YELLOW:-}Backing up${RESET:-} $dst -> $bak"
+        mv "$dst" "$bak"
+    fi
+    ln -sfn "$src" "$dst"
+    echo -e "  ${GREEN:-}✓${RESET:-} $dst -> $src"
+}
+
 # Compiles config/finder/set-default-apps.swift into a temp dir and runs it
 # against config/finder/default-apps. Pass --check to report drift only.
 set_default_apps() {

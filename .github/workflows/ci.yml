@@ -71,3 +71,68 @@ jobs:
               fi
           done
           exit $status
+
+  # Things only a Mac can check: names in the Brewfile that Homebrew renamed
+  # or dropped, the link step on a clean $HOME, and the Ghostty config. Free
+  # for public repos.
+  macos:
+    runs-on: macos-latest
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_ANALYTICS: 1
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Every Brewfile formula and cask still exists
+        run: |
+          # Same parsing as drift.sh. One name at a time: a batch `brew info`
+          # fails as a whole on the first unknown name.
+          status=0 known=()
+          while read -r f; do
+              if brew info --formula --json=v2 "$f" > "$RUNNER_TEMP/info-f-${f//\//_}.json" 2>/dev/null; then
+                  known+=("$RUNNER_TEMP/info-f-${f//\//_}.json")
+              else
+                  echo "::error::Brewfile: no formula '$f'"; status=1
+              fi
+          done < <(grep -E '^brew "' Brewfile | sed -E 's/^brew "([^"]+)".*/\1/')
+          while read -r c; do
+              if brew info --cask --json=v2 "$c" > "$RUNNER_TEMP/info-c-$c.json" 2>/dev/null; then
+                  known+=("$RUNNER_TEMP/info-c-$c.json")
+              else
+                  echo "::error::Brewfile: no cask '$c'"; status=1
+              fi
+          done < <(grep -E '^cask "' Brewfile | sed -E 's/^cask "([^"]+)".*/\1/')
+          # Disabled can't be installed any more; deprecated still installs
+          # but is on its way out
+          notes=$(jq -r '
+              (.formulae + .casks)[]
+              | (.full_token // .full_name) as $id
+              | if .disabled then "::error::Brewfile: \($id) is disabled (\(.disable_reason // "no reason given"))"
+                elif .deprecated then "::warning::Brewfile: \($id) is deprecated (\(.deprecation_reason // "no reason given"))"
+                else empty end' "${known[@]}")
+          [ -n "$notes" ] && echo "$notes"
+          grep -q '::error::' <<< "$notes" && status=1
+          echo "checked ${#known[@]} known formulae and casks"
+          exit $status
+
+      - name: Link step into an empty $HOME
+        run: |
+          export HOME="$RUNNER_TEMP/home" DOTFILES="$PWD"
+          mkdir -p "$HOME"
+          # shellcheck disable=SC1091
+          source lib/links.sh
+          status=0
+          for entry in "${LINKS[@]}"; do
+              src="$DOTFILES/${entry%%|*}" dst="${entry#*|}"
+              [ -e "$src" ] || { echo "::error::LINKS: $src doesn't exist"; status=1; continue; }
+              link "$src" "$dst" > /dev/null
+              [ -e "$dst" ] && [ "$(readlink "$dst")" = "$src" ] \
+                  || { echo "::error::LINKS: $dst doesn't resolve to $src"; status=1; }
+          done
+          echo "linked ${#LINKS[@]} entries into $HOME"
+          exit $status
+
+      - name: Ghostty config is valid
+        run: |
+          brew install --cask ghostty > /dev/null
+          /Applications/Ghostty.app/Contents/MacOS/ghostty +validate-config --config-file="$PWD/config/ghostty/config"

@@ -167,7 +167,9 @@ scripts keep it in the repo (quit Chrysalis first — it holds the port):
   Code settings, Neovim parsers, VS Code extensions, Touch ID for `sudo`.
   Non-zero exit on drift.
 - CI lints every push: shellcheck, Python/Lua/JSON/YAML syntax, and that every
-  binary a config shells out to has a Brewfile entry.
+  binary a config shells out to has a Brewfile entry. A macOS job checks every
+  Brewfile formula and cask still exists (and isn't disabled or deprecated),
+  links everything into an empty `$HOME`, and validates the Ghostty config.
 - Global git hooks run [gitleaks](https://github.com/gitleaks/gitleaks) in every
   repo: pre-commit on each commit, and pre-push on every commit about to leave
   the machine — the backstop for commits that skip pre-commit (git absorb's
