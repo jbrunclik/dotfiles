@@ -1352,15 +1352,22 @@ Zoom and SSO subdomains). It's re-read per link, so edits apply at once.
 
 ### Screen-share guard (Hammerspoon)
 
-When you start sharing in Zoom, **Slack, Messages, WhatsApp, Signal and Dia
-hide** — the messengers and the personal browser — silently, since an alert
-would show on the shared screen. They stay hidden afterwards (Hyper+4, Hyper+T
+When you start sharing your **screen** in Zoom, **Slack, Messages, WhatsApp,
+Signal and Dia hide** — the messengers and the personal browser — silently,
+since an alert would show on the shared screen. Sharing a single window hides
+nothing: viewers see only that window, and the guard used to hide the very
+app being shared (a Dia window). They stay hidden afterwards (Hyper+4, Hyper+T
 or the launcher bring each back), so sharing again can't re-expose them.
 
 - Trigger: Zoom's "zoom share toolbar window", which exists only while you
   share, checked every half second. A window filter caught only the first
   share — Zoom's floating windows don't reliably send the notifications it
-  relies on.
+  relies on. Screen or window: Zoom's "Annotation - Zoom" window covers
+  exactly what's shared — the whole screen with its menu bar, or the window's
+  frame (observed on test shares). `hs -c 'return zoomShareKind()'` shows
+  what it sees.
+- The check reads Zoom's windows with a 0.25 s accessibility timeout, so a
+  hung Zoom can't freeze Hammerspoon (and every hotkey) on each tick.
 - Dia ignores the normal hide request; the guard falls back to its own
   "Hide Dia" menu item (what Cmd+H does), which works.
 - Notification banners are macOS's job, and it already does it: with

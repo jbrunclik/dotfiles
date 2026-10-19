@@ -1063,23 +1063,57 @@ local function hideForShare()
     end)
 end
 
-local function zoomSharing()
+-- What Zoom is sharing: nil, "screen" or "window". Read through AX with a
+-- short timeout rather than allWindows(): this runs every 0.5 s on
+-- Hammerspoon's main thread, and a hung Zoom would otherwise hold it for the
+-- default AX timeout each tick — every hotkey frozen. While Zoom isn't
+-- running the check is just a bundle-ID lookup (~1 ms with it up).
+-- A share always opens "zoom share toolbar window"; its "Annotation - Zoom"
+-- window covers exactly what's shared (observed live): the whole screen,
+-- menu bar included, for a screen share; the window's own frame for a window
+-- share. No annotation window found → assume the screen, the safe side.
+local function zoomShare()
     local zoom = getApp("zoom.us")
-    if not zoom then return false end
-    for _, w in ipairs(zoom:allWindows()) do
-        if w:title() == "zoom share toolbar window" then return true end
+    if not zoom then return nil end
+    local ax = hs.axuielement.applicationElement(zoom)
+    ax:setTimeout(0.25)
+    local ok, windows = pcall(function() return ax:attributeValue("AXWindows") end)
+    local sharing, annotation = false, nil
+    for _, w in ipairs(ok and windows or {}) do
+        local title = w:attributeValue("AXTitle")
+        if title == "zoom share toolbar window" then sharing = true end
+        if title == "Annotation - Zoom" then
+            local pos, size = w:attributeValue("AXPosition"), w:attributeValue("AXSize")
+            if pos and size then annotation = hs.geometry.rect(pos.x, pos.y, size.w, size.h) end
+        end
     end
-    return false
+    if not sharing then return nil end
+    if not annotation then return "screen" end
+    for _, screen in ipairs(hs.screen.allScreens()) do
+        local f = screen:fullFrame()
+        if math.abs(f.x - annotation.x) < 2 and math.abs(f.y - annotation.y) < 2
+            and math.abs(f.w - annotation.w) < 2 and math.abs(f.h - annotation.h) < 2 then
+            return "screen"
+        end
+    end
+    return "window"
 end
 
--- Only the off → on edge hides; `wasSharing` is re-derived from Zoom's live
--- windows every tick. Global so the timer isn't garbage-collected.
-local wasSharing = zoomSharing()
+-- Only the off → on edge hides; `wasScreenShare` is re-derived from Zoom's
+-- live windows every tick. Global so the timer isn't garbage-collected.
+-- A window share shows viewers that one window only — hiding the other apps
+-- protects nothing, and hid the very app being shared (a Dia window) — so
+-- only a screen share hides. A share that changes from window to screen
+-- (Zoom's "Share" again) counts as starting.
+local wasScreenShare = zoomShare() == "screen"
 shareGuard = hs.timer.doEvery(0.5, function()
-    local sharing = zoomSharing()
-    if sharing and not wasSharing then hideForShare() end
-    wasSharing = sharing
+    local screenShare = zoomShare() == "screen"
+    if screenShare and not wasScreenShare then hideForShare() end
+    wasScreenShare = screenShare
 end)
+
+-- Global so `hs -c` can show what the guard sees right now
+function zoomShareKind() return zoomShare() or "none" end
 
 -- URL router. Hammerspoon is the default browser and sends each link opened
 -- from another app (Slack, Notion, Zoom, mail, the terminal) to a browser:
