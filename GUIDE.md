@@ -1186,8 +1186,8 @@ sysdiagnose.
 | Hyper + F | Toggle native fullscreen |
 | Hyper + E | Swap the two halves (the focused window keeps focus) |
 | Hyper + Up | Reading frame: centered, ⅔ wide, full height; again: maximize. On the MacBook's screen: maximize (Model 100: left thumb Ctrl) |
-| Hyper + Down | Put the window back where it was before the last move; again: undo that (Model 100: left thumb Backspace) |
-| Hyper + Tab | Toggle focus between left/right windows; nothing tiled: the next window down |
+| Hyper + Down | Undo the last move — every window it moved (both halves of a layout); again: redo (Model 100: left thumb Backspace) |
+| Hyper + Tab | Toggle focus between left/right windows; nothing tiled, or the other half empty: the next window down |
 | Hyper + Left/Right | Focus window in that direction (MacBook arrows; Model 100: left thumb Cmd / Shift) |
 | Hyper + ` (or ;) | Cycle the windows stacked on this half (or at this spot) |
 | Hyper + G | Pick any window from a list, typing part of its app or title |
@@ -1214,10 +1214,12 @@ and the running command, so a particular Claude session is a few keystrokes.
 
 **Hyper+Down is the one thing that remembers.** Everything else is derived
 from live window positions on each press, but "where was it before" can't be
-read off the screen: each window's frame from just before Hammerspoon last
-moved it (tiles, layouts, maximize, swap, the reading frame, the messenger
-floats) is kept, by window id, and used only to restore. Moves made by
-dragging or by an app itself aren't recorded.
+read off the screen. So the last action is kept: every window one Hyper press
+moved (a layout or swap moves two; tiles, maximize, the reading frame, the
+messenger floats, "beside"), each with its frame from before, by window id —
+used only to undo. A mistaken Hyper+Z is one press from undone, both halves
+at once, whichever window is in front. Moves made by dragging or by an app
+itself aren't recorded.
 
 A layout started cold (an app launching) moves its windows again 0.5 s later,
 because Slack and Notion restore their own saved frame just after appearing.
@@ -1315,7 +1317,9 @@ alphabetically, System Settings last.
   a tiled window keeps its half, anything else takes the left — and a hidden
   or not-yet-running app is unhidden or launched first. Shift+T tiles Messages
   as a half instead of floating it. With no window in front (the desktop
-  focused), Shift+key just brings the app forward, as the plain key does.
+  focused), Shift+key just brings the app forward, as the plain key does;
+  on an app that's already beside you, it maximizes it (like a third
+  Hyper+1–6 press).
 - The panel shows straight away; typing the letter from memory just flashes it.
 - `Escape`, any key not in the list, `Hyper+Space` again or 3 s of nothing
   closes it without doing anything. Its keys only work while it's open — an

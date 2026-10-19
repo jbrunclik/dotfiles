@@ -165,14 +165,19 @@ local function isTiled(win, unitRect)
     return true
 end
 
--- Hyper+Down's memory: each window's frame from just before Hammerspoon last
--- moved it. The one exception to deriving everything from live frames —
--- "where was it before" can't be read off the screen — and it's used only to
--- restore; nothing decides a layout from it. Keyed by window id, so a closed
--- window's entry is simply never asked for.
-local previousFrame = {}
+-- Hyper+Down's memory: the last action — every window one Hyper press moved
+-- (a layout moves two, a swap two, Hyper+A one), each with its frame from
+-- before. The one exception to deriving everything from live frames — "where
+-- was it before" can't be read off the screen — and it's used only to restore;
+-- nothing decides a layout from it. Keyed by window id, so a closed window is
+-- simply skipped. A move during the same press joins the group; the first
+-- move of a new press starts a new one.
+local lastMove = { press = -1, frames = {} }
 local function remember(win)
-    if win and win:id() then previousFrame[win:id()] = win:frame() end
+    if not (win and win:id()) then return end
+    if lastMove.press ~= hyperPresses then lastMove = { press = hyperPresses, frames = {} } end
+    -- The frame from before this action, not from between two of its moves
+    if not lastMove.frames[win:id()] then lastMove.frames[win:id()] = win:frame() end
 end
 -- Move to a unit rect, remembering where it was (not on settling passes,
 -- which only repeat a move the first pass already remembered)
@@ -184,6 +189,12 @@ end
 local function setWinFrame(win, frame)
     remember(win)
     win:setFrame(frame)
+end
+
+-- Two windows on opposite halves: what a "beside" press leaves
+local function besideEachOther(a, b)
+    return a and b and ((inPosition(a, left) and inPosition(b, right))
+        or (inPosition(a, right) and inPosition(b, left)))
 end
 
 -- The next standard window below `win` in z-order that isn't another window
@@ -352,7 +363,7 @@ bindHyper("tab", "Windows", "Focus the other half", function()
     end
     local targetSide = current:frame().x < mid and "right" or "left"
     local wins = hs.fnutils.filter(hs.window.orderedWindows(), function(w)
-        if not w:isStandard() then
+        if not w:isStandard() or w == current then
             return false
         elseif targetSide == "left" then
             return w:frame().x < mid
@@ -360,7 +371,11 @@ bindHyper("tab", "Windows", "Focus the other half", function()
             return w:frame().x >= mid
         end
     end)
-    if wins[1] then wins[1]:focus() end
+    -- The other half is empty: the next window down, as with nothing tiled
+    local target = wins[1] or hs.fnutils.find(hs.window.orderedWindows(), function(w)
+        return w ~= current and w:isStandard()
+    end)
+    if target then target:focus() end
 end)
 
 -- Hyper+Left/Right = focus window in that direction
@@ -431,12 +446,15 @@ bindHyper("up", "Windows", "Reading frame: centered ⅔ (MacBook: maximize)", fu
     end
 end)
 
--- Hyper+Down = put the window back where it was before Hammerspoon last
--- moved it (tiles, maximize, swap, the reading frame, floats). Again: back.
-bindHyper("down", "Windows", "Restore the previous position (again: undo)", function()
-    local win = hs.window.focusedWindow()
-    local frame = win and win:id() and previousFrame[win:id()]
-    if frame then setWinFrame(win, frame) end
+-- Hyper+Down = undo the last move: every window it moved goes back (both
+-- halves of a layout, swap or "beside"; tiles, maximize, the reading frame,
+-- floats). Recorded as a move itself, so again: redo.
+bindHyper("down", "Windows", "Undo the last move (again: redo)", function()
+    local undo = lastMove
+    for id, frame in pairs(undo.frames) do
+        local win = hs.window.get(id)
+        if win then setWinFrame(win, frame) end
+    end
 end)
 
 -- Hyper+G = every window in one fuzzy list, front to back (minimized ones
@@ -538,10 +556,7 @@ local function focusApp(name)
         -- side-by-side): maximize instead, so a mistaken second press is one
         -- more press from undone — and the next press goes beside again.
         local cameFrom = windowBelow(win)
-        local besideAlready = cameFrom
-            and ((inPosition(win, left) and inPosition(cameFrom, right))
-                or (inPosition(win, right) and inPosition(cameFrom, left)))
-        if cameFrom and not besideAlready then
+        if cameFrom and not besideEachOther(win, cameFrom) then
             placeBeside(name, cameFrom)
         else
             moveWin(win, hs.geometry.rect(0, 0, 1, 1))
@@ -1151,7 +1166,12 @@ for _, app in ipairs(launcherApps) do
         -- window below it instead
         local app = getApp(name)
         if anchor and app and anchor:application():pid() == app:pid() then anchor = windowBelow(anchor) end
-        if anchor and anchor:isStandard() then
+        local win = bestWindow(name)
+        if anchor and anchor:isStandard() and besideEachOther(win, anchor) then
+            -- Already beside it: maximize, as a third Hyper+1–6 press does
+            win:focus()
+            moveWin(win, hs.geometry.rect(0, 0, 1, 1))
+        elseif anchor and anchor:isStandard() then
             placeBeside(name, anchor)
         else
             launcherByCode[ansiKeys[key]]()
