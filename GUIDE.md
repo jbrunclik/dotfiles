@@ -500,11 +500,20 @@ helpers, the Python extension's) don't count.
 line, …) and installs the plugin set. `drift.sh` reports a base setting that
 has gone missing.
 
-- **LSP plugins** (`pyright-lsp`, `typescript-lsp`) give Claude diagnostics
-  after each edit, go-to-definition and references. They launch
-  `pyright-langserver` and `typescript-language-server` from PATH — both in
-  the Brewfile; without them the plugins silently do nothing. The TypeScript
-  one needs the project's own `typescript` in `node_modules`.
+- **Plugins, kept lean:** superpowers (the workflow: brainstorm, plan, TDD,
+  debugging, review), frontend-design, context7, claude-md-management,
+  security-guidance and three LSP plugins. Every skill Claude can trigger
+  costs context on each turn, and overlapping ones make it pick the wrong
+  one — so feature-dev and commit-commands, which duplicated superpowers, are
+  out. Matt Pocock's `mattpocock-skills` (official marketplace) is the leaner
+  alternative to superpowers; they overlap almost entirely, so one, not both.
+  Built in already: `/code-review`, `/simplify`, `/security-review`.
+- **LSP plugins** (`pyright-lsp`, `typescript-lsp`, `lua-lsp`) give Claude
+  diagnostics after each edit, go-to-definition and references. They launch
+  `pyright-langserver`, `typescript-language-server` and
+  `lua-language-server` from PATH — all in the Brewfile; without them the
+  plugins silently do nothing. The TypeScript one needs the project's own
+  `typescript` in `node_modules`; Lua reads each tree's `.luarc.json`.
 - **No Bash sandbox** (`sandbox.enabled`). It confines Claude's shell commands
   to writes in the project and `$TMPDIR`, and network to allowed hosts. Here
   it would break most of what Claude runs — git over SSH, `gh`/`glab`,

@@ -68,6 +68,7 @@ REQUIRED_BINS=(
     "shfmt|conform.nvim formatter for shell scripts"
     "pyright-langserver|Claude Code's pyright-lsp plugin"
     "typescript-language-server|Claude Code's typescript-lsp plugin"
+    "lua-language-server|Claude Code's lua-lsp plugin"
     "ruff|Python lint + format"
     "uv|Python packaging"
     "gitleaks|secret scanning in the global pre-commit hook"

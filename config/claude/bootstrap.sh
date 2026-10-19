@@ -44,15 +44,19 @@ claude plugin marketplace add anthropics/claude-plugins-community >/dev/null 2>&
     || echo "  … marketplace claude-community (already added)"
 
 # 3. Install the GENERIC personal plugin set (no work plugins).
+# Lean on purpose: every model-invocable skill costs context each turn, and
+# overlapping ones make Claude pick the wrong one. superpowers carries the
+# workflow (brainstorm, plan, TDD, debugging, review), so feature-dev and
+# commit-commands, which duplicated parts of it, are gone. The *-lsp plugins
+# launch their servers from PATH (Brewfile).
 PLUGINS=(
     superpowers
     frontend-design
     context7
-    commit-commands
-    feature-dev
     claude-md-management
     pyright-lsp
     typescript-lsp
+    lua-lsp
     security-guidance
 )
 for p in "${PLUGINS[@]}"; do
