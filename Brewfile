@@ -76,6 +76,8 @@ brew "ruff"
 # ENOENT on every TypeScript buffer.
 brew "prettier"
 brew "eslint_d"
+# Shell scripts on save (bashls also formats with it)
+brew "shfmt"
 
 # Modern CLI replacements
 brew "bat"

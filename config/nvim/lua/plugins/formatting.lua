@@ -1,7 +1,8 @@
 return {
-  -- Formatter: conform runs ruff (organize imports, then format) for Python
-  -- and prettier for the web/config types, on save. Other filetypes fall back
-  -- to the language server's formatting, if it has one.
+  -- Formatter: conform runs ruff (organize imports, then format) for Python,
+  -- prettier for the web/config types and shfmt for shell scripts, on save.
+  -- Other filetypes fall back to the language server's formatting, if it has
+  -- one (taplo for TOML).
   {
     "stevearc/conform.nvim",
     event = "BufWritePre",
@@ -18,6 +19,12 @@ return {
         yaml = { "prettier" },
         json = { "prettier" },
         markdown = { "prettier" },
+        sh = { "shfmt" },
+      },
+      -- shfmt takes its indent from 'shiftwidth'; -ci keeps case branches
+      -- indented, as the repo's scripts write them
+      formatters = {
+        shfmt = { prepend_args = { "-ci" } },
       },
       format_on_save = {
         timeout_ms = 3000,

@@ -287,13 +287,15 @@ select = ["E", "F", "I", "UP"]
 
 ## Editor (Neovim)
 
-Plugins: LSP (basedpyright, ruff, ts_ls, yamlls, lua_ls), blink.cmp,
-nvim-treesitter, fzf-lua, gitsigns, lualine, indent-blankline, which-key,
-conform.nvim, nvim-lint, mini.surround, mini.pairs, oil.nvim.
+Plugins: LSP (basedpyright, ruff, ts_ls, yamlls, lua_ls, bashls, jsonls,
+taplo, dockerls), blink.cmp, nvim-treesitter, fzf-lua, gitsigns, lualine,
+indent-blankline, which-key, conform.nvim, nvim-lint, mini.surround,
+mini.pairs, oil.nvim.
 
 Mason installs the LSP servers, but treesitter parsers are compiled by the
-`tree-sitter` CLI and conform/nvim-lint shell out to `prettier` and `eslint_d` —
-all three come from the `Brewfile`, and `drift.sh` verifies them.
+`tree-sitter` CLI and conform/nvim-lint shell out to `prettier`, `eslint_d`
+and `shfmt` — all of them come from the `Brewfile`, and `drift.sh` verifies
+them.
 
 Plugin versions are pinned in the tracked `config/nvim/lazy-lock.json`, and
 nothing checks for updates in the background. To update: `:Lazy update`, try
@@ -366,6 +368,8 @@ Run `:Mason` to see status. Configured servers:
 - **Python**: basedpyright (type checking) + ruff (linting/formatting)
 - **TypeScript**: ts_ls
 - **YAML**: yamlls
+- **Shell**: bashls (shellcheck's warnings inline)
+- **JSON**: jsonls; **TOML**: taplo; **Dockerfile**: dockerls
 - **Lua**: lua_ls. Each Lua tree says which Lua it is in a `.luarc.json`:
   `config/nvim` is LuaJIT with Neovim's runtime as a library (so `vim.*` has
   types), `config/hammerspoon` is Lua 5.4 with `hs` and `spoon` as globals.
@@ -417,6 +421,11 @@ Files are formatted on save:
 - **Python**: ruff (format + organize imports)
 - **TypeScript/JavaScript**: prettier
 - **YAML/JSON/Markdown**: prettier
+- **Shell scripts**: shfmt, 4-space indent with `case` branches indented
+  (`-ci`). It also splits `{ …; exit 1; }` one-liners and drops column
+  alignment, so the first save of an older script reformats more than the
+  lines touched — commit that separately if the diff matters.
+- **TOML**: taplo (through the language server)
 
 ## VS Code
 

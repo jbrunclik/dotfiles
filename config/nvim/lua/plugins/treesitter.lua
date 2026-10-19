@@ -13,7 +13,12 @@ local parsers = {
   "lua", "vim", "vimdoc",
   "markdown", "markdown_inline",
   "bash", "toml", "regex",
+  "diff", "gitcommit", "git_rebase", "dockerfile", "luadoc", "query",
 }
+
+-- Treesitter indent only where it's reliable; it's still experimental for
+-- Python and YAML, which keep Vim's own indent scripts
+local ts_indent = { lua = true, javascript = true, typescript = true, tsx = true, json = true, html = true, css = true, bash = true }
 
 return {
   "nvim-treesitter/nvim-treesitter",
@@ -33,7 +38,7 @@ return {
       ts.install(missing)
     end
 
-    -- Enable highlighting, plus treesitter indent where a parser exists.
+    -- Enable highlighting, plus treesitter indent for the languages above.
     -- pcall'd because a FileType can fire before its parser has finished
     -- installing on first launch.
     vim.api.nvim_create_autocmd("FileType", {
@@ -42,7 +47,9 @@ return {
         if not lang or not pcall(vim.treesitter.start, ev.buf, lang) then
           return
         end
-        vim.bo[ev.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+        if ts_indent[lang] then
+          vim.bo[ev.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+        end
       end,
     })
   end,

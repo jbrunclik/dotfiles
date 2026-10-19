@@ -1,4 +1,7 @@
-local servers = { "basedpyright", "ruff", "ts_ls", "yamlls", "lua_ls" }
+local servers = {
+  "basedpyright", "ruff", "ts_ls", "yamlls", "lua_ls",
+  "bashls", "jsonls", "taplo", "dockerls",
+}
 
 return {
   -- Mason: auto-install LSP servers. Neither loads at startup: they come in

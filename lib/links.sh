@@ -64,6 +64,7 @@ REQUIRED_BINS=(
     "tree-sitter|compiling nvim-treesitter parsers"
     "prettier|conform.nvim formatter for ts/js/json/yaml/markdown"
     "eslint_d|nvim-lint linter for ts/js"
+    "shfmt|conform.nvim formatter for shell scripts"
     "ruff|Python lint + format"
     "uv|Python packaging"
     "gitleaks|secret scanning in the global pre-commit hook"
