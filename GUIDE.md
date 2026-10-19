@@ -513,7 +513,11 @@ has gone missing.
   `pyright-langserver`, `typescript-language-server` and
   `lua-language-server` from PATH — all in the Brewfile; without them the
   plugins silently do nothing. The TypeScript one needs the project's own
-  `typescript` in `node_modules`; Lua reads each tree's `.luarc.json`.
+  `typescript` in `node_modules`; Lua reads each tree's `.luarc.json`. A
+  repo's `.luarc.json` can name a Lua `runtime.plugin` for the server to run:
+  through Claude Code's plugin it isn't loaded, and Neovim's lua_ls asks
+  first (both tested); only `lua-language-server --check` runs it unasked, so
+  don't use that on a repo you don't trust.
 - **No Bash sandbox** (`sandbox.enabled`). It confines Claude's shell commands
   to writes in the project and `$TMPDIR`, and network to allowed hosts. Here
   it would break most of what Claude runs — git over SSH, `gh`/`glab`,
