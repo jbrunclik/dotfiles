@@ -14,8 +14,10 @@ set -euo pipefail
 # picks the file matching each screen's size, so nothing is cropped.
 
 VARIANT_DEFAULT="lowpoly"
-# Pixel sizes: external 5K display, 14" MacBook Pro, iPhone 17 Pro
-SIZES=("5120x2880" "3024x1964" "1206x2622")
+# Pixel sizes: external 5K display, 14" MacBook Pro, iPhone 17 Pro, and the
+# 11" iPad Pro (2024, 2420x1668) as a square of its long side — iPadOS turns
+# the wallpaper with the device, so it has to cover portrait and landscape
+SIZES=("5120x2880" "3024x1964" "1206x2622" "2420x2420")
 OUT_DIR="$HOME/Pictures/Wallpapers"
 
 DOTFILES="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
@@ -39,12 +41,14 @@ for size in "${SIZES[@]}"; do
     echo "Wrote $OUT_DIR/$VARIANT-$size.png"
 done
 
-# A phone home-screen twin, if the variant has one (<variant>-home): calmer,
-# so icons read over it. Pair it with the lock screen's in iOS.
-PHONE="${SIZES[2]}"
-if "$TMP/generate" "$VARIANT-home" "${PHONE%x*}" "${PHONE#*x}" "$OUT_DIR/$VARIANT-home-$PHONE.png" 2>/dev/null; then
-    echo "Wrote $OUT_DIR/$VARIANT-home-$PHONE.png"
-fi
+# Home-screen twins for the iPhone and iPad, if the variant has one
+# (<variant>-home): calmer, so icons read over it. Pair each with its lock
+# screen in iOS / iPadOS.
+for size in "${SIZES[2]}" "${SIZES[3]}"; do
+    if "$TMP/generate" "$VARIANT-home" "${size%x*}" "${size#*x}" "$OUT_DIR/$VARIANT-home-$size.png" 2>/dev/null; then
+        echo "Wrote $OUT_DIR/$VARIANT-home-$size.png"
+    fi
+done
 
 # Set it on the Mac — the file matching the main screen's size, if there is one
 if command -v hs >/dev/null; then

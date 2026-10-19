@@ -616,6 +616,7 @@ richer toward the bottom — at each screen's exact pixel size, and sets the Mac
 | `lowpoly-3024x1964.png` | 14" MacBook Pro |
 | `lowpoly-1206x2622.png` | iPhone 17 Pro lock screen — save to Photos, then Settings → Wallpaper |
 | `lowpoly-home-1206x2622.png` | iPhone 17 Pro home screen — the same facets, lower and dimmer, so icons read clearly |
+| `lowpoly-2420x2420.png` / `lowpoly-home-2420x2420.png` | iPad Pro 11" (2024) lock / home screen. Square, the screen's long side (2420 × 1668): iPadOS turns the wallpaper with the device, so it has to fill portrait and landscape |
 
 In iOS, add the lock screen image, then choose **Customize Home Screen → Photos**
 and pick the home version, so the pair stays together. Leave both unzoomed and
