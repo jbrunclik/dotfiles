@@ -3,8 +3,9 @@
 
 [core]
     pager = delta
-    # Global secret-scanning pre-commit hook. Tilde-expanded by git; assumes
-    # the repo lives at ~/src/dotfiles as documented in the README.
+    # Global hooks for every repo: gitleaks on commit and push, git-lfs, then
+    # each repo's own .git/hooks (config/git/hooks/dispatch). Tilde-expanded
+    # by git; assumes the repo lives at ~/src/dotfiles as the README says.
     hooksPath = ~/src/dotfiles/config/git/hooks
 
 [interactive]

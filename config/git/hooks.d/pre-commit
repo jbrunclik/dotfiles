@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Global pre-commit, run by ../hooks/dispatch before the repo's own hook.
+#
+# Scan staged changes for secrets with gitleaks and block the commit if any
+# are found. This is the guardrail that would have stopped the Atlassian token
+# from nearly landing in this public repo.
+#
+# Caveat: repos that set their OWN core.hooksPath (Husky, lefthook, ...) shadow
+# this hook entirely — local git config wins over global — so gitleaks will not
+# run there. Add gitleaks to those repos' hook chains directly for coverage.
+set -euo pipefail
+
+if command -v gitleaks >/dev/null 2>&1; then
+    gitleaks git --staged --redact --no-banner
+fi

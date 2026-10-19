@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# core.hooksPath (gitconfig) points git at this directory for every repo, which
+# on its own disables each repo's .git/hooks. So every hook name here is a
+# symlink to this one script: it runs the global part of the hook from
+# ../hooks.d/<name>, if there is one, then the repo's own .git/hooks/<name>.
+# A repo's commit-msg, prepare-commit-msg, post-checkout, pre-commit
+# framework hooks… all run as if core.hooksPath weren't set.
+#
+# Not linked: reference-transaction and post-index-change, which fire on
+# nearly every git operation; a repo relying on them needs core.hooksPath
+# unset locally.
+set -uo pipefail
+
+name="${0##*/}"
+here="$(cd "$(dirname "$0")" && pwd -P)"
+global="$here/../hooks.d/$name"
+# Via the common git dir (so worktrees share it): `git rev-parse --git-path
+# hooks` honours core.hooksPath and would point back here
+repo_hook="$(git rev-parse --git-common-dir)/hooks/$name"
+
+# These read lines on stdin; both parts need to see them
+case "$name" in
+    pre-push | post-rewrite) input="$(cat)" ;;
+esac
+feed() {
+    if [ -n "${input+set}" ]; then
+        printf '%s' "${input}${input:+$'\n'}" | "$@"
+    else
+        "$@"
+    fi
+}
+
+if [ -x "$global" ]; then
+    feed "$global" "$@" || exit $?
+fi
+# A repo hook that is itself a link to this script would loop
+if [ -x "$repo_hook" ] && ! [ "$repo_hook" -ef "$here/dispatch" ]; then
+    feed "$repo_hook" "$@"
+    exit $?
+fi
+exit 0

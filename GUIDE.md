@@ -785,6 +785,24 @@ glab ci view                   # live pipeline view for the current branch
 glab ci trace                  # follow a job's log
 ```
 
+### Hooks
+
+Every repo runs the global hooks in `config/git/hooks` (`core.hooksPath`):
+gitleaks scans staged changes on commit and every outgoing commit on push,
+and git-lfs gets its hooks. Each hook name there links to one script,
+`dispatch`, which runs the global part (`config/git/hooks.d/<name>`) and then
+the repo's own `.git/hooks/<name>` — so a repo's `commit-msg`,
+`prepare-commit-msg`, `post-checkout` or pre-commit-framework hooks still run.
+A failing global or repo hook stops the commit or push as usual.
+
+- **The pre-commit framework** refuses to install while `core.hooksPath` is
+  set. Hide it for that one command, then the dispatcher runs the hook:
+  `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0= pre-commit install`
+  (`git -c` can't do it: `pre-commit` isn't a git subcommand).
+- **Not dispatched:** `reference-transaction` and `post-index-change`, which
+  fire on nearly every git operation. A repo that sets its own
+  `core.hooksPath` (Husky, lefthook) bypasses all of this, gitleaks included.
+
 ### Useful git config
 
 - **`git push`** on a new branch automatically sets upstream (no `-u origin` needed)
