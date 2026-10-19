@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # Interactive bash setup. Package installs and git config live in the
 # Brewfile and gitconfig — see install.sh.
 
@@ -32,6 +33,7 @@ elif [ -x /usr/local/bin/brew ]; then
 fi
 
 # Completions (installed via brew)
+# shellcheck source=/dev/null
 [[ -r "${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh" ]] && . "${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh"
 
 # Catppuccin Mocha FZF colors (matches Ghostty theme)
@@ -73,8 +75,10 @@ alias vim='nvim'
 # gm is GraphicsMagick. Pin it to the Homebrew binary so a `gm` alias or
 # function from elsewhere can't shadow it — oh-my-bash's git aliases made it `git merge`.
 unalias gm 2>/dev/null
+# shellcheck disable=SC2139  # expanding now is the point: a fixed path
 alias gm="${HOMEBREW_PREFIX}/bin/gm"
 
 # Machine-local env vars and secrets — never committed. API tokens,
 # per-machine PATH entries, and work-specific config belong here.
+# shellcheck source=/dev/null
 [[ -r "${HOME}/.bash_profile.local" ]] && . "${HOME}/.bash_profile.local"

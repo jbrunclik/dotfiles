@@ -15,10 +15,10 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install linters
-        run: sudo apt-get update && sudo apt-get install -y shellcheck lua5.4 jq python3-yaml
+        run: sudo apt-get update && sudo apt-get install -y shellcheck lua5.4 luajit jq python3-yaml
 
       - name: Shellcheck
-        run: shellcheck install.sh drift.sh gh-new-repo hyper-cheatsheet wallpaper lib/links.sh config/git/hooks/pre-commit config/git/hooks/pre-push .claude/hooks/check-config.sh
+        run: shellcheck install.sh drift.sh gh-new-repo hyper-cheatsheet wallpaper lib/links.sh bash_profile bashrc config/git/hooks/pre-commit config/git/hooks/pre-push config/claude/bootstrap.sh .claude/hooks/check-config.sh
 
       - name: Python syntax
         run: |
@@ -26,11 +26,18 @@ jobs:
               python3 -c "import ast, sys; ast.parse(open(sys.argv[1]).read())" "$f"
           done
 
+      # Hammerspoon embeds Lua 5.4, Neovim LuaJIT (5.1 plus extensions): each
+      # is parsed by the Lua that will run it. LuaJIT parses with loadfile, not
+      # `luajit -b`, which require()s jit.bcsave through a path that includes
+      # the checkout's ./?.lua.
       - name: Lua syntax
-        run: find config -name '*.lua' -print0 | xargs -0 -n1 luac5.4 -p
+        run: |
+          find config -name '*.lua' -not -path 'config/nvim/*' -print0 | xargs -0 -n1 luac5.4 -p
+          find config/nvim -name '*.lua' -print0 | xargs -0 -n1 sh -c 'LUA_FILE="$1" luajit -e "local ok, err = loadfile(os.getenv(\"LUA_FILE\")) if not ok then io.stderr:write(err, \"\\n\") os.exit(1) end"' _
 
+      # Every tracked JSON file except VS Code's, which is JSONC (comments)
       - name: JSON syntax
-        run: jq empty config/karabiner/karabiner.json
+        run: git ls-files -z '*.json' ':!config/vscode/*' | xargs -0 -r -n1 jq empty --
 
       - name: YAML syntax
         run: |

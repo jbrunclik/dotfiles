@@ -15,10 +15,10 @@ have() { command -v "$1" >/dev/null 2>&1; }
 fail() { echo "$rel: $1" >&2; echo "$2" >&2; exit 2; }
 
 case "$rel" in
-    install.sh|drift.sh|gh-new-repo|hyper-cheatsheet|wallpaper|lib/links.sh|config/git/hooks/pre-commit)
+    install.sh|drift.sh|gh-new-repo|hyper-cheatsheet|wallpaper|lib/links.sh|bash_profile|bashrc|config/git/hooks/pre-commit|config/git/hooks/pre-push)
         # Checked together, as in CI, so `source lib/links.sh` resolves
         have shellcheck || exit 0
-        out="$(shellcheck install.sh drift.sh gh-new-repo hyper-cheatsheet wallpaper lib/links.sh config/git/hooks/pre-commit 2>&1)" \
+        out="$(shellcheck install.sh drift.sh gh-new-repo hyper-cheatsheet wallpaper lib/links.sh bash_profile bashrc config/git/hooks/pre-commit config/git/hooks/pre-push 2>&1)" \
             || fail "shellcheck failed" "$out" ;;
     *.sh)
         have shellcheck || exit 0
@@ -37,6 +37,12 @@ case "$rel" in
         # VS Code settings are JSONC (comments), which jq rejects
         case "$rel" in config/vscode/*) exit 0 ;; esac
         out="$(jq empty "$rel" 2>&1)" || fail "invalid JSON" "$out" ;;
+    config/nvim/*.lua)
+        # Neovim runs LuaJIT, as in CI. Parse-only via loadfile: `luajit -b`
+        # require()s jit.bcsave, and ./?.lua is on the search path.
+        have luajit || exit 0
+        out="$(LUA_FILE="$rel" luajit -e 'local ok, err = loadfile(os.getenv("LUA_FILE")) if not ok then io.stderr:write(err, "\n") os.exit(1) end' 2>&1)" \
+            || fail "Lua syntax error" "$out" ;;
     *.lua)
         have luac || exit 0
         out="$(luac -p "$rel" 2>&1)" || fail "Lua syntax error" "$out" ;;
