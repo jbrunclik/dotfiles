@@ -1129,6 +1129,13 @@ O/P send Cmd+Left/Right rather than Home/End: in most Mac apps Home/End scroll t
 the top or bottom of the document instead of moving within the line. In
 Ghostty, Cmd+Left/Right and Option+Left/Right are already mapped to the shell's
 line-start/end and word motions, so the whole layer works in the terminal too.
+Two catches. **Inside Neovim** (in Ghostty) those same bytes are Neovim keys:
+Hyper+O arrives as `Ctrl-A`, which *increments the number under the cursor*,
+and Hyper+P as `Ctrl-E` (scroll one line) — use `0`/`^` and `$` there. And the
+**Model 100's** Hyper+H/J/K/L… are Karabiner's, not the keyboard's: on a Mac
+without Karabiner (or another computer) they're plain Hyper chords. The
+MacBook's keyboard is ANSI (`ioreg` reports StandardType 0, U.S.), matching
+Karabiner's `keyboard_type_v2`, so `` ` `` and `§` aren't swapped.
 Selecting needs a second Shift: Hyper already holds (left) Shift, so the
 select variants trigger on **right** Shift added to the chord — on the Model
 100 the right-thumb Shift, which stays a Shift on the Hyper layer. On the
