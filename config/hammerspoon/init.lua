@@ -1004,7 +1004,17 @@ for _, app in ipairs(launcherApps) do
         local running = getApp(name)
         if running and running:isFrontmost() then running:hide() else action() end
     end
-    launcherBeside[ansiKeys[key]] = function() placeBeside(name, hs.window.focusedWindow()) end
+    -- With no front window to go beside, Shift+key does what the key does.
+    -- Standard windows only: after a click on the desktop, the focused
+    -- "window" is Finder's desktop (an AXScrollArea), nothing to tile against.
+    launcherBeside[ansiKeys[key]] = function()
+        local anchor = hs.window.focusedWindow()
+        if anchor and anchor:isStandard() then
+            placeBeside(name, anchor)
+        else
+            launcherByCode[ansiKeys[key]]()
+        end
+    end
     local hyperKey = appHyperKeys[name]
     table.insert(launcherEntries, {
         key = key:upper(),
@@ -1250,8 +1260,7 @@ local function bandWallpaper(screen)
         local sibling = stem and string.format("%s-%dx%d.%s", stem, math.floor(full.w * scale), math.floor(full.h * scale), ext)
         if sibling and hs.fs.attributes(sibling) then source = sibling end
     end
-    local image = source and hs.image.imageFromPath(source)
-    if not image then return end
+    if not source or not hs.fs.attributes(source) then return end
 
     local band = screen:frame().y - full.y  -- the menu bar's height on this screen
     if band <= 0 then return end            -- menu bar hidden: nothing to cover
@@ -1269,6 +1278,9 @@ local function bandWallpaper(screen)
     if current == target and hs.fs.attributes(target) then return end
 
     if not hs.fs.attributes(target) then
+        -- Decoded only now: on wake and display changes the copy usually exists
+        local image = hs.image.imageFromPath(source)
+        if not image then return end
         hs.fs.mkdir(BAND_DIR)
         -- Fill: scale the image to cover the screen, centered, cropping overflow
         local size = image:size()

@@ -1281,7 +1281,8 @@ alphabetically, System Settings last.
   press of Hyper+1–6: `Hyper+Space Shift+C` is "this + Claude". Same rules —
   a tiled window keeps its half, anything else takes the left — and a hidden
   or not-yet-running app is unhidden or launched first. Shift+T tiles Messages
-  as a half instead of floating it.
+  as a half instead of floating it. With no window in front (the desktop
+  focused), Shift+key just brings the app forward, as the plain key does.
 - The panel shows straight away; typing the letter from memory just flashes it.
 - `Escape`, any key not in the list, `Hyper+Space` again or 3 s of nothing
   closes it without doing anything. Its keys only work while it's open — an
