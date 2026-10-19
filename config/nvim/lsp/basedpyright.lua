@@ -4,7 +4,9 @@ return {
       analysis = {
         autoSearchPaths = true,
         useLibraryCodeForTypes = true,
-        diagnosticMode = "workspace",
+        -- Open files only, like Pylance's default: "workspace" analysed
+        -- every file in the project, slow on big repos
+        diagnosticMode = "openFilesOnly",
         typeCheckingMode = "basic",
       },
     },

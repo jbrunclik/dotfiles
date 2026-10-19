@@ -365,7 +365,8 @@ them — and `gi` is Vim's "go back to where you last typed".
 
 Language servers install automatically via Mason on first use.
 Run `:Mason` to see status. Configured servers:
-- **Python**: basedpyright (type checking) + ruff (linting/formatting)
+- **Python**: basedpyright (type checking, open files only — like Pylance's
+  default) + ruff (linting/formatting)
 - **TypeScript**: ts_ls
 - **YAML**: yamlls
 - **Shell**: bashls (shellcheck's warnings inline)
@@ -418,7 +419,8 @@ isn't mapped: macOS takes Ctrl+←/→ to switch Spaces before Neovim sees them.
 ### Auto-formatting
 
 Files are formatted on save:
-- **Python**: ruff (format + organize imports)
+- **Python**: ruff — safe fixes (e.g. unused imports removed), organize
+  imports, format; the same as VS Code's on-save actions
 - **TypeScript/JavaScript**: prettier
 - **YAML/JSON/Markdown**: prettier
 - **Shell scripts**: shfmt, 4-space indent with `case` branches indented

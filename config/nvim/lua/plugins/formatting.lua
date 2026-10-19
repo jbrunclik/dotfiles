@@ -1,5 +1,6 @@
 return {
-  -- Formatter: conform runs ruff (organize imports, then format) for Python,
+  -- Formatter: conform runs ruff (safe fixes, organize imports, format — what
+  -- VS Code's fixAll + organizeImports on save does) for Python,
   -- prettier for the web/config types and shfmt for shell scripts, on save.
   -- Other filetypes fall back to the language server's formatting, if it has
   -- one (taplo for TOML).
@@ -11,7 +12,7 @@ return {
     },
     opts = {
       formatters_by_ft = {
-        python = { "ruff_organize_imports", "ruff_format" },
+        python = { "ruff_fix", "ruff_organize_imports", "ruff_format" },
         typescript = { "prettier" },
         typescriptreact = { "prettier" },
         javascript = { "prettier" },
