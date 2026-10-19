@@ -155,8 +155,9 @@ scripts keep it in the repo (quit Chrysalis first — it holds the port):
 ## Keeping it honest
 
 - `./drift.sh` — symlinks, packages (missing is drift, merely outdated is a
-  note), required binaries, local files, macOS settings, Neovim parsers,
-  VS Code extensions, Touch ID for `sudo`. Non-zero exit on drift.
+  note), required binaries, local files, macOS settings, mise runtimes, Claude
+  Code settings, Neovim parsers, VS Code extensions, Touch ID for `sudo`.
+  Non-zero exit on drift.
 - CI lints every push: shellcheck, Python/Lua/JSON/YAML syntax, and that every
   binary a config shells out to has a Brewfile entry.
 - Global git hooks run [gitleaks](https://github.com/gitleaks/gitleaks) in every

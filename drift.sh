@@ -173,6 +173,47 @@ for entry in "${REQUIRED_BINS[@]}"; do
 done
 [ "$MISSING_BINS" -eq 0 ] && echo -e "  ${GREEN}All required binaries on PATH.${RESET}"
 
+# mise runtimes: config/mise/config.toml is linked, but nothing installs what
+# it asks for until `mise install` runs
+echo ""
+header "mise tools:"
+if command -v mise &>/dev/null; then
+    MISSING_MISE="$(mise ls --missing --global 2>/dev/null | awk '{print $1 " " $2}')"
+    if [ -n "$MISSING_MISE" ]; then
+        while IFS= read -r t; do echo -e "  ${RED}MISSING${RESET}  $t (run 'mise install')"; done <<< "$MISSING_MISE"
+        DRIFTED=1
+    else
+        echo -e "  ${GREEN}All global tools installed.${RESET}"
+    fi
+else
+    echo -e "  ${YELLOW}SKIPPED${RESET} ('mise' not in PATH)"
+fi
+
+# Claude Code settings: bootstrap.sh merges settings.base.json into the live
+# settings.json, which Claude Code owns and rewrites — so check every value
+# the base sets is still there
+echo ""
+header "Claude Code settings:"
+CLAUDE_SETTINGS="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
+if [ -f "$CLAUDE_SETTINGS" ]; then
+    CHANGED_KEYS="$(jq -rn --slurpfile base "$DOTFILES/config/claude/settings.base.json" \
+        --slurpfile live "$CLAUDE_SETTINGS" '
+        $base[0] | paths(scalars) as $p
+        | select(($live[0] | getpath($p)) != ($base[0] | getpath($p)))
+        | "\($p | map(tostring) | join(".")) = \($live[0] | getpath($p) | tojson) (expected \($base[0] | getpath($p) | tojson))"
+    ' 2>/dev/null)" || CHANGED_KEYS="could not parse $CLAUDE_SETTINGS"
+    if [ -n "$CHANGED_KEYS" ]; then
+        while IFS= read -r k; do echo -e "  ${YELLOW}CHANGED${RESET}  $k"; done <<< "$CHANGED_KEYS"
+        echo -e "           run 'bash config/claude/bootstrap.sh'"
+        DRIFTED=1
+    else
+        echo -e "  ${GREEN}OK${RESET}       every settings.base.json value present"
+    fi
+else
+    echo -e "  ${RED}MISSING${RESET}  $CLAUDE_SETTINGS (run 'bash config/claude/bootstrap.sh')"
+    DRIFTED=1
+fi
+
 # Check Neovim treesitter parsers actually got installed
 echo ""
 header "Neovim treesitter parsers:"
