@@ -141,7 +141,8 @@ func rows(of body: [String]) -> [Row] {
                   body[i + 1].range(of: #"^\|[-| :]+\|$"#, options: .regularExpression) != nil {
             // Table: the Shortcut/Keys/Command column is the key, the other the text
             let header = cells(line).map { $0.lowercased() }
-            let keyCol = header.firstIndex(where: { ["shortcut", "keys", "command"].contains($0) }) ?? 1
+            // No such header: the first column is what you press ("Gesture | Result")
+            let keyCol = header.firstIndex(where: { ["shortcut", "keys", "command"].contains($0) }) ?? 0
             let descCol = keyCol == 0 ? 1 : 0
             i += 2
             while i < body.count && body[i].hasPrefix("|") {
@@ -218,7 +219,7 @@ func pageHTML(title: String, subtitle: String, body: String, source: String, key
           size -= 0.25;
           root.style.fontSize = size + 'px';
         }
-        return size;
+        return { size: size, overflowing: overflowing() };
       }
     </script>
     """
@@ -273,7 +274,17 @@ final class Renderer: NSObject, WKNavigationDelegate {
         // Fit only once fonts are in, or it measures the fallback font
         webView.callAsyncJavaScript("await document.fonts.ready; return fit();",
                                     arguments: [:], in: nil, in: .page) { fitted in
-            if case .failure(let error) = fitted { fail("fitting page \(self.index + 1) failed: \(error)") }
+            switch fitted {
+            case .failure(let error):
+                fail("fitting page \(self.index + 1) failed: \(error)")
+            case .success(let value):
+                // At the 6 px floor and still too long: say so rather than
+                // print a page with its last section cut off
+                if let fit = value as? [String: Any], fit["overflowing"] as? Bool == true {
+                    fail("page \(self.index + 1) doesn't fit even at 6 px — shorten its GUIDE sections"
+                         + " or move one to another page (`pages` in cheatsheet-pdf.swift)")
+                }
+            }
             let config = WKPDFConfiguration()
             config.rect = CGRect(origin: .zero, size: page)
             webView.createPDF(configuration: config) { pdf in
@@ -304,10 +315,23 @@ final class Renderer: NSObject, WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
         fail("HTML load failed: \(error)")
     }
+
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!,
+                 withError error: Error) {
+        fail("HTML load failed before it started: \(error)")
+    }
+
+    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+        fail("WebKit's content process quit while rendering page \(index + 1)")
+    }
 }
 
 _ = NSApplication.shared
 NSApp.setActivationPolicy(.prohibited)
 let renderer = Renderer(webView: WKWebView(frame: NSRect(origin: .zero, size: page)))
 renderer.start()
+// Nothing above can wait forever unnoticed: a stuck WebKit gets 30 s
+DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
+    fail("timed out after 30 s rendering page \(renderer.index + 1)")
+}
 RunLoop.main.run()

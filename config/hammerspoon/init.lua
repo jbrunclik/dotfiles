@@ -734,14 +734,25 @@ end):start()
 -- hand.
 local keyLabels = { tab = "Tab", left = "←", right = "→", space = "Space", ["return"] = "Return" }
 
-local function karabinerEntries()
+-- The selected Karabiner profile's rules ({} if the file or any level is
+-- missing), so a second profile or a hand-edit can't break the overlay or PDF
+local function karabinerRules()
     local config = hs.json.read(configDir .. "/../karabiner/karabiner.json")
+    local profiles = config and config.profiles or {}
+    local profile = profiles[1]
+    for _, p in ipairs(profiles) do
+        if p.selected then profile = p end
+    end
+    return profile and profile.complex_modifications and profile.complex_modifications.rules or {}
+end
+
+local function karabinerEntries()
     local entries = {}
-    if not config then return entries end
-    for _, rule in ipairs(config.profiles[1].complex_modifications.rules) do
-        local app, keys, action = rule.description:match("^(.-)Hyper%+(%S+) → (.-)%s*%b()$")
+    for _, rule in ipairs(karabinerRules()) do
+        local description = rule.description or ""
+        local app, keys, action = description:match("^(.-)Hyper%+(%S+) → (.-)%s*%b()$")
         if not keys then
-            app, keys, action = rule.description:match("^(.-)Hyper%+(%S+) → (.+)$")
+            app, keys, action = description:match("^(.-)Hyper%+(%S+) → (.+)$")
         end
         if keys then
             app = app:gsub(":%s*$", "")
@@ -781,10 +792,9 @@ end
 -- Used by the hyper-cheatsheet script: writes the sections, plus the CapsLock
 -- rule's description, as JSON to `path`. Global so `hs -c` can call it.
 function hyperCheatsheetExport(path)
-    local config = hs.json.read(configDir .. "/../karabiner/karabiner.json")
     local caps
-    for _, rule in ipairs(config and config.profiles[1].complex_modifications.rules or {}) do
-        if rule.description:match("^CapsLock") then caps = rule.description end
+    for _, rule in ipairs(karabinerRules()) do
+        if (rule.description or ""):match("^CapsLock") then caps = rule.description end
     end
     return hs.json.write({ sections = cheatsheetSections(), caps = caps }, path, false, true)
 end
