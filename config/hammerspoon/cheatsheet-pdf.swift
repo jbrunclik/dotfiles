@@ -229,7 +229,15 @@ var documents: [String] = []
 
 let hyperBody = hyper.sections.map { s in
     sectionHTML(s.name, note: s.note, rows: s.entries.map { Row(key: esc($0.key), desc: esc($0.desc)) })
-}.joined()
+}.joined() + {
+    // The keyboard-specific keys (thumb arrows, palm keys), from the GUIDE,
+    // next to the bindings they reach
+    let name = "Model 100 at a glance"
+    guard let lines = guideSection(name), !rows(of: lines).isEmpty else {
+        fail("GUIDE.md has no table under \"\(name)\" — the Hyper page shows it")
+    }
+    return sectionHTML("Model 100", note: nil, rows: rows(of: lines))
+}()
 documents.append(pageHTML(
     title: "Hyper",
     subtitle: "Hold Caps Lock (or the Keyboardio Hyper key) = Cmd+Opt+Ctrl+Shift, then press a key."

@@ -1014,7 +1014,7 @@ here, layer 0:
 
 | Key | Sends | Does |
 |---|---|---|
-| Right thumb-cluster Fn | Holds the **Hyper layer**, where every key sends Hyper + itself | Hyper, held — and the keys light up by what they do |
+| Right palm key (Fn) | Holds the **Hyper layer**, where every key sends Hyper + itself | Hyper, held — and the keys light up by what they do |
 | Butterfly | `Cmd+Shift+4` | Shottr area capture (its hotkey; macOS's own `Cmd+Shift+4` is off) |
 | Any | `F18` (custom code 109) | Zoom mute (Hammerspoon binds F18) |
 | Prog | `F19` (custom code 110) | Messages show / hide (Hammerspoon binds F19) |
@@ -1086,6 +1086,23 @@ uses (read-only — it skips reset/erase/trigger) and writes Chrysalis's own
 backup format, so restoring is Chrysalis's restore-from-backup option. Chrysalis
 only backs up by itself before a firmware update, which is why its last one
 predated the Hyper and butterfly keys.
+
+### Model 100 at a glance
+
+What's different on the Model 100, at a glance (the printed cheatsheet's
+Hyper page carries this table):
+
+| Keys | Does |
+|---|---|
+| R palm | Hold: Hyper (the Hyper layer, every key sends Hyper + itself) |
+| L thumb | With Hyper: Ctrl ↑ reading frame · ⌫ ↓ undo · Cmd ← · Shift → focus a half |
+| R Shift | With Hyper + a nav key: select while moving |
+| Fn+⌫ | Forward delete — Fn is the left palm key (Hyper+⌫ is ↓ here) |
+| Butterfly | Shottr area capture |
+| Num | Numpad layer on / off |
+
+Any (Zoom mute) and Prog (Messages) are on the Hyper page already, with
+their sections.
 
 ### Cheatsheet
 
