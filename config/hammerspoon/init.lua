@@ -799,7 +799,7 @@ local function overlayText(sections, footer)
         end
     end
     local function pad(str, width) return str .. string.rep(" ", width - utf8.len(str)) end
-    for _, section in ipairs(sections) do
+    for i, section in ipairs(sections) do
         add(section.name, mocha.section)
         add((section.note and "  · " .. section.note or "") .. "\n", mocha.dim)
         for _, e in ipairs(section.entries) do
@@ -812,33 +812,75 @@ local function overlayText(sections, footer)
                 add(row.desc .. "\n", mocha.text)
             end
         end
-        add("\n", mocha.text)
+        if footer ~= "" or i < #sections then add("\n", mocha.text) end
     end
     add(footer, mocha.dim)
     return out
 end
 
--- An overlay of `text`, centered on the main screen; not shown yet
-local function overlayCanvas(text)
-    local size = hs.drawing.getTextDrawingSize(text)
-    local pad = 28
-    local w, h = size.w + 2 * pad, size.h + 2 * pad
+-- An overlay of `texts` side by side, one column each, centered on the main
+-- screen; not shown yet
+local function overlayCanvas(texts)
+    local pad, gap = 28, 48
+    local sizes, w, h = {}, 2 * pad - gap, 0
+    for i, text in ipairs(texts) do
+        sizes[i] = hs.drawing.getTextDrawingSize(text)
+        w, h = w + sizes[i].w + gap, math.max(h, sizes[i].h)
+    end
+    h = h + 2 * pad
     local f = hs.screen.mainScreen():frame()
     local canvas = hs.canvas.new({ x = f.x + (f.w - w) / 2, y = f.y + (f.h - h) / 2, w = w, h = h })
-    canvas:appendElements(
-        {
-            type = "rectangle", action = "strokeAndFill",
-            fillColor = { hex = "#1e1e2e", alpha = 0.97 },
-            strokeColor = { hex = "#cba6f7" }, strokeWidth = 2,
-            roundedRectRadii = { xRadius = 12, yRadius = 12 },
-        },
-        { type = "text", text = text, frame = { x = pad, y = pad, w = size.w + 4, h = size.h } }
-    )
+    canvas:appendElements({
+        type = "rectangle", action = "strokeAndFill",
+        fillColor = { hex = "#1e1e2e", alpha = 0.97 },
+        strokeColor = { hex = "#cba6f7" }, strokeWidth = 2,
+        roundedRectRadii = { xRadius = 12, yRadius = 12 },
+    })
+    local x = pad
+    for i, text in ipairs(texts) do
+        canvas:appendElements({ type = "text", text = text, frame = { x = x, y = pad, w = sizes[i].w + 4, h = sizes[i].h } })
+        x = x + sizes[i].w + gap
+    end
     return canvas
 end
 
+-- The cheatsheet in as few columns as fit the main screen's height (one on
+-- the 5K, more on the MacBook). Sections stay whole and in order; each column
+-- takes sections until it reaches the line budget, raised until the sections
+-- fit in that many columns, so the columns come out about even.
+local function cheatsheetColumns(sections, footer)
+    local maxH = hs.screen.mainScreen():frame().h - 2 * 28 - 40
+    local lines, total = {}, 0
+    for i, section in ipairs(sections) do
+        lines[i] = #section.entries + 2
+        total = total + lines[i]
+    end
+    local columns
+    for n = 1, #sections do
+        local limit = math.ceil(total / n)
+        repeat
+            columns = { {} }
+            local used = 0
+            for i, section in ipairs(sections) do
+                if used > 0 and used + lines[i] > limit then
+                    table.insert(columns, {}); used = 0
+                end
+                table.insert(columns[#columns], section)
+                used = used + lines[i]
+            end
+            limit = limit + 1
+        until #columns <= n
+        local texts, fits = {}, true
+        for i, column in ipairs(columns) do
+            texts[i] = overlayText(column, i == #columns and footer or "")
+            fits = fits and hs.drawing.getTextDrawingSize(texts[i]).h <= maxH
+        end
+        if fits or n == #sections then return texts end
+    end
+end
+
 local function cheatsheetCanvas()
-    return overlayCanvas(overlayText(cheatsheetSections(), "Release Hyper to close"))
+    return overlayCanvas(cheatsheetColumns(cheatsheetSections(), "Release Hyper to close"))
 end
 
 -- Used by `hyper-cheatsheet --readme`: renders the overlay to a PNG for the
@@ -959,8 +1001,8 @@ end)
 
 bindHyper("space", "Launcher", "App launcher: then one key (panel lists them)", function()
     if launcherPanel then closeLauncher(); return end
-    launcherPanel = overlayCanvas(overlayText(
-        { { name = "Launcher", entries = launcherEntries } }, "Shift+key: beside this window · Esc or any other key to close"))
+    launcherPanel = overlayCanvas({ overlayText(
+        { { name = "Launcher", entries = launcherEntries } }, "Shift+key: beside this window · Esc or any other key to close") })
     launcherPanel:level(hs.canvas.windowLevels.overlay):show()
     launcherTap:start()
     launcherTimer = hs.timer.doAfter(3, closeLauncher)

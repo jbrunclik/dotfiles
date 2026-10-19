@@ -34,7 +34,7 @@ same on a MacBook and a Keyboardio Model 100. Catppuccin Mocha everywhere.
 
 | On screen: hold Hyper | On the desk: `hyper-cheatsheet` |
 |---|---|
-| <img src="docs/hyper-cheatsheet-overlay.png" alt="On-screen Hyper cheatsheet listing every binding by section" width="300"> | <img src="docs/hyper-cheatsheet-print.png" alt="Printable A4 cheatsheet, Hyper page" width="520"> |
+| <img src="docs/hyper-cheatsheet-overlay.png" alt="On-screen Hyper cheatsheet listing every binding by section" width="520"> | <img src="docs/hyper-cheatsheet-print.png" alt="Printable A4 cheatsheet, Hyper page" width="400"> |
 
 See **[GUIDE.md](GUIDE.md)** for every shortcut, the reasoning behind it, and
 what to watch out for.

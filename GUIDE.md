@@ -909,6 +909,12 @@ Every Hammerspoon popup (this one and the Hyper+Space launcher) is drawn in
 three columns sized to the widest entry: key, description, and a dimmed
 trailing `(…)` note or hint.
 
+The cheatsheet uses as few side-by-side panels as fit the screen's height —
+one on the 5K, two on the MacBook. Sections are never split: each panel takes
+whole sections in order, balanced by line count. `hyper-cheatsheet --readme`
+renders on the current display, so the README image shows that display's
+layout.
+
 ### Printable cheatsheet
 
 `hyper-cheatsheet` writes an A4 landscape PDF to `~/Desktop/hyper-cheatsheet.pdf`
