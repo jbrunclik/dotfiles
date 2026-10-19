@@ -1278,9 +1278,12 @@ no window). The second puts it **beside the window you came from**, so
 - The window you came from keeps its half if it's tiled; if it was maximized
   or floating, it takes the left half. The app gets the other half and the
   focus. Whatever was on that half stays underneath — Hyper+` reaches it.
-- "The window you came from" is the next window down in the stacking order,
-  so nothing is remembered between presses. With no other window it
-  maximizes instead. Hyper+S is the maximize key now.
+- "The window you came from" is the next window down in the stacking order
+  (skipping the app's own other windows), so nothing is remembered between
+  presses. With no other window it maximizes instead.
+- **A third press maximizes** — the undo for a second press made by mistake;
+  a fourth goes beside again. "Third" is read off the screen too: already
+  side by side with the window you came from means the next press maximizes.
 
 For Zoom that's the **call** window during a meeting, never the meetings list
 ("Zoom Workplace"); the Zoom layouts (Hyper+X/C/V) pick the same way.

@@ -527,15 +527,25 @@ local appKeys = {
 -- never its meetings list ("Zoom Workplace"), and every app gets its real
 -- window rather than whichever one macOS last activated.
 -- The second press puts the app beside the window you came from: the next
--- standard window below it in z-order, so nothing is remembered. With nothing
+-- standard window below it in z-order, so nothing is remembered. A third
+-- (already beside it) maximizes, the fourth goes beside again. With nothing
 -- to pair with it maximizes, as Hyper+S does.
 local function focusApp(name)
     local win = bestWindow(name)
     if win and win == hs.window.focusedWindow() then
         -- Another window of the same app (a second Chrome) isn't "where you
-        -- came from"
+        -- came from". Already beside it (the second press's result, or any
+        -- side-by-side): maximize instead, so a mistaken second press is one
+        -- more press from undone — and the next press goes beside again.
         local cameFrom = windowBelow(win)
-        if cameFrom then placeBeside(name, cameFrom) else moveWin(win, hs.geometry.rect(0, 0, 1, 1)) end
+        local besideAlready = cameFrom
+            and ((inPosition(win, left) and inPosition(cameFrom, right))
+                or (inPosition(win, right) and inPosition(cameFrom, left)))
+        if cameFrom and not besideAlready then
+            placeBeside(name, cameFrom)
+        else
+            moveWin(win, hs.geometry.rect(0, 0, 1, 1))
+        end
     elseif win then
         win:focus()
     else
