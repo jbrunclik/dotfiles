@@ -14,9 +14,10 @@ map("n", "<C-j>", "<C-w>j", { desc = "Window down" })
 map("n", "<C-k>", "<C-w>k", { desc = "Window up" })
 map("n", "<C-l>", "<C-w>l", { desc = "Window right" })
 
--- Move lines up/down in visual mode
-map("v", "J", ":m '>+1<cr>gv=gv", { silent = true, desc = "Move lines down" })
-map("v", "K", ":m '<-2<cr>gv=gv", { silent = true, desc = "Move lines up" })
+-- Move lines up/down in visual mode. "x", not "v": "v" also covers Select
+-- mode, where typing J or K over a snippet placeholder must insert the letter
+map("x", "J", ":m '>+1<cr>gv=gv", { silent = true, desc = "Move lines down" })
+map("x", "K", ":m '<-2<cr>gv=gv", { silent = true, desc = "Move lines up" })
 
 -- Keep cursor centered when scrolling
 map("n", "<C-d>", "<C-d>zz", { desc = "Scroll down (centered)" })
