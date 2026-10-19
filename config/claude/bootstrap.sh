@@ -13,7 +13,6 @@ DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 SETTINGS="$CLAUDE_DIR/settings.json"
 BASE="$DOTFILES/config/claude/settings.base.json"
-HOOK="$DOTFILES/config/claude/hooks/idle-notify.sh"
 
 if ! command -v claude &>/dev/null; then
     echo "  claude not on PATH — skipping Claude Code bootstrap"
@@ -26,19 +25,18 @@ fi
 
 mkdir -p "$CLAUDE_DIR"
 
-# 1. Merge generic prefs + the idle-notify hook (with this machine's absolute path)
-#    into the live, Claude-Code-managed settings.json. Deep merge, base wins on its
-#    keys; enabledPlugins / extraKnownMarketplaces / apiKeyHelper are left untouched.
-hooks_json="$(jq -n --arg cmd "$HOOK" \
-    '{hooks: {Notification: [{matcher: "idle_prompt", hooks: [{type: "command", command: $cmd}]}]}}')"
+# 1. Merge generic prefs into the live, Claude-Code-managed settings.json. Deep
+#    merge, base wins on its keys; enabledPlugins / extraKnownMarketplaces /
+#    apiKeyHelper are left untouched. No notification hook: in Ghostty, Claude
+#    Code's own "auto" channel already posts through Ghostty.
 tmp="$(mktemp)"
 if [ -f "$SETTINGS" ]; then
-    jq -s '.[0] * .[1] * .[2]' "$SETTINGS" "$BASE" <(printf '%s' "$hooks_json") > "$tmp"
+    jq -s '.[0] * .[1]' "$SETTINGS" "$BASE" > "$tmp"
 else
-    jq -s '.[0] * .[1]' "$BASE" <(printf '%s' "$hooks_json") > "$tmp"
+    cp "$BASE" "$tmp"
 fi
 mv "$tmp" "$SETTINGS"
-echo "  ✓ merged generic prefs + idle-notify hook into $SETTINGS"
+echo "  ✓ merged generic prefs into $SETTINGS"
 
 # 2. Register generic marketplaces (idempotent).
 claude plugin marketplace add anthropics/claude-plugins-community >/dev/null 2>&1 \
@@ -53,7 +51,6 @@ PLUGINS=(
     commit-commands
     feature-dev
     claude-md-management
-    clangd-lsp
     pyright-lsp
     typescript-lsp
     security-guidance
