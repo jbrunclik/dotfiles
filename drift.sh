@@ -262,6 +262,22 @@ else
     echo -e "  ${YELLOW}SKIP${RESET}     no ~/.config/url-router/work.local — every link goes to Dia"
 fi
 
+# Thaw menu bar layout (config/thaw/layout). On the MacBook's own display
+# thaw-layout doesn't judge — that display has its own Thaw profile.
+echo ""
+header "Menu bar layout (Thaw):"
+if pgrep -x Thaw > /dev/null && pgrep -x Hammerspoon > /dev/null; then
+    if THAW_OUT="$("$DOTFILES/thaw-layout" 2>&1)"; then
+        echo -e "  ${GREEN}OK${RESET}       $(head -1 <<< "$THAW_OUT")"
+    else
+        echo -e "  ${YELLOW}CHANGED${RESET}  run ./thaw-layout for details:"
+        while IFS= read -r line; do echo "           $line"; done <<< "$THAW_OUT"
+        DRIFTED=1
+    fi
+else
+    echo -e "  ${YELLOW}SKIPPED${RESET} (Thaw or Hammerspoon not running)"
+fi
+
 # Check VS Code extensions
 echo ""
 header "VS Code extensions:"

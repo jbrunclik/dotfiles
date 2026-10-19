@@ -17,10 +17,10 @@ cc.ffitch.shottr:Item-0                                        # Shottr
 org.p0deje.Maccy:Item-0                                        # Maccy
 
 [hidden]
-info.marcel-dierkes.KeepingYouAwake:Item-0                     # KeepingYouAwake
 io.tailscale.ipn.macsys:Item-0                                 # Tailscale
 
 [visible]
+info.marcel-dierkes.KeepingYouAwake:Item-0                     # KeepingYouAwake
 com.apple.controlcenter:WiFi                                   # WiFi
 com.apple.controlcenter:Sound                                  # Sound
 com.apple.weather.menu:Item-0                                  # Weather

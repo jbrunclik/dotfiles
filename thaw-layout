@@ -14,10 +14,16 @@ move an icon *into* Visible while that icon sits in a collapsed section
 ("skipping the visible-bound move … parked offscreen" in its log) — drag
 those once in Thaw's settings. Moves into the hidden sections work.
 
+The file is the default (Dell) layout. Thaw's per-display profiles override
+it, and the MacBook's built-in display has its own, so on the built-in
+display the compare doesn't judge and --apply refuses: it would overwrite
+that profile until the next display switch.
+
 Usage:
-    thaw-layout              # compare the file with Thaw (what's live, what's saved)
+    thaw-layout              # compare the file with Thaw; exit 1 if they differ
     thaw-layout --capture    # write Thaw's current layout into the file(s)
     thaw-layout --apply      # write the file into Thaw: quits and relaunches it
+    thaw-layout --apply --force   # … even on the built-in display
 """
 
 import os
@@ -164,6 +170,14 @@ def report(order, quiet=False):
     return ok
 
 
+def on_builtin_display():
+    """True when the main screen is the MacBook's own (its Thaw profile rules)."""
+    out = subprocess.run(["perl", "-e", "alarm 10; exec @ARGV", "hs", "-c",
+                          "return hs.screen.mainScreen():name()"],
+                         stdin=subprocess.DEVNULL, capture_output=True, text=True, check=False).stdout
+    return out.strip().startswith("Built-in")
+
+
 def quit_thaw():
     subprocess.run(["osascript", "-e", 'quit app "Thaw"'], capture_output=True, check=False)
     for _ in range(50):
@@ -197,7 +211,10 @@ if args == ["--capture"]:
         write_layout(LOCAL, local, names, "# Work-only Thaw icons, merged into config/thaw/layout"
                      " (left end of each section). Untracked.\n")
     print(f"Wrote {os.path.relpath(TRACKED, REPO)}" + (f" and {LOCAL}" if any(local.values()) else ""))
-elif args == ["--apply"]:
+elif args in (["--apply"], ["--apply", "--force"]):
+    if on_builtin_display() and "--force" not in args:
+        sys.exit("On the built-in display: --apply would overwrite the MacBook's Thaw profile\n"
+                 "until the next display switch. Run it on the Dell, or add --force.")
     order = wanted_order()
     quit_thaw()
     p = prefs()
@@ -211,7 +228,8 @@ elif args == ["--apply"]:
         subprocess.run(["defaults", "import", DOMAIN, path], check=True)
     finally:
         os.unlink(path)
-    subprocess.run(["open", "-a", "Thaw"], check=True)
+        # Relaunch even if the import failed: a quit Thaw shows every icon
+        subprocess.run(["open", "-a", "Thaw"], check=False)
     print("Written; waiting for Thaw to move the icons…")
     for _ in range(10):  # Thaw settles within a few seconds; give it up to ~20
         time.sleep(2)
@@ -226,12 +244,19 @@ elif args == ["--apply"]:
         sys.exit("Some icons didn't move — see the note on Visible in `thaw-layout --help`.")
 elif not args:
     order = wanted_order()
+    if on_builtin_display():
+        print("On the built-in display, Thaw shows the MacBook's own profile; the file is the"
+              " Dell layout — compare there.")
+        sys.exit(0)
     saved = prefs()["MenuBarItemManager.savedSectionOrder"]
-    same = all(set(saved.get(key, [])) == set(ids) for key, ids in order.items())
-    print("Thaw's saved layout " + ("has the same icons in each section as the file."
+    # Order counts too: the file lists each section left to right
+    same = all(saved.get(key, []) == ids for key, ids in order.items())
+    print("Thaw's saved layout " + ("matches the file, in order."
                                     if same else "differs from the file — `--apply` writes the file."))
-    if report(order):
+    on_screen = report(order)
+    if on_screen:
         print("Every icon on screen is where the file says.")
+    sys.exit(0 if same and on_screen else 1)
 else:
     print(__doc__.strip())
     sys.exit(0 if args in (["-h"], ["--help"]) else 2)

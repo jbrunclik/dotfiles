@@ -657,8 +657,8 @@ format, so they stay out of this public repo.
 
 | Command | Does |
 |---|---|
-| `thaw-layout` | Compares the file with Thaw: its saved layout, and where each icon actually is |
-| `thaw-layout --apply` | Writes the file into Thaw — quits and relaunches it — then checks every icon landed |
+| `thaw-layout` | Compares the file with Thaw: its saved layout (order included), and where each icon actually is. Exits 1 on any difference; `drift.sh` runs it |
+| `thaw-layout --apply` | Writes the file into Thaw — quits and relaunches it — then checks every icon landed. Refuses on the built-in display unless `--force` |
 | `thaw-layout --capture` | The other way: after dragging icons in Thaw, writes its layout into the files (local icons stay local; it names anything new so you can move work-only ones) |
 
 How it works: Thaw stores the layout in its preferences
@@ -681,9 +681,12 @@ Weather to Always-Hidden, so more icons fit beside the notch.
   changes nothing.
 - A profile only knows displays Thaw has seen, so set one up while on that
   screen: arrange, set the spacing (Displays), then Profiles → Update.
-- `config/thaw/layout` is the default (Dell) layout. On the MacBook,
-  `thaw-layout` reports Weather as differing — that's the profile — and
-  `--apply` there would overwrite it until the next display switch.
+- `config/thaw/layout` is the default (Dell) layout. On the MacBook's own
+  display `thaw-layout` doesn't compare (the MacBook profile differs on
+  purpose, Weather included), and `--apply` refuses: it would overwrite that
+  profile until the next display switch.
+- KeepingYouAwake is Visible: its cup shows at a glance whether the Mac is
+  being kept awake (Hyper+0 toggles it).
 - **Before macOS 27:** the menu bar changes there broke this whole class of
   tool; Thaw's 27 support is in its 3.0 betas (`thaw@beta`). Check the black
   band still works afterwards too.
@@ -1350,8 +1353,8 @@ Focus (System Settings → Focus → People).
 |---|---|
 | Hyper + 0 | Toggle KeepingYouAwake — the Mac and display stay awake while on |
 
-It goes through KeepingYouAwake's URL scheme, so its menu bar icon can stay
-hidden in Thaw. The state is read, never assumed: while on, KeepingYouAwake runs
+It goes through KeepingYouAwake's URL scheme, no click on its menu bar cup
+(which stays visible, as the at-a-glance state). The state is read, never assumed: while on, KeepingYouAwake runs
 a `caffeinate` child process. Hyper+0 checks it, asks for the opposite
 (`keepingyouawake:///activate` or `///deactivate` — not the blind `///toggle`),
 waits up to 2 s for the process to follow and shows what it found. So clicking
