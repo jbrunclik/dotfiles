@@ -360,7 +360,10 @@ Run `:Mason` to see status. Configured servers:
 - **Python**: basedpyright (type checking) + ruff (linting/formatting)
 - **TypeScript**: ts_ls
 - **YAML**: yamlls
-- **Lua**: lua_ls
+- **Lua**: lua_ls. Each Lua tree says which Lua it is in a `.luarc.json`:
+  `config/nvim` is LuaJIT with Neovim's runtime as a library (so `vim.*` has
+  types), `config/hammerspoon` is Lua 5.4 with `hs` and `spoon` as globals.
+  Without them lua_ls flagged every `hs` and `vim` as undefined.
 
 ### Git (gitsigns)
 
