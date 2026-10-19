@@ -111,6 +111,24 @@ The Option-based keys work because Ghostty sends Option as Alt
 - **Case-insensitive** — `cd doc` Tab → `cd Documents/`
 - **Hyphen-underscore equivalent** — `my-proj` matches `my_proj`
 
+### Startup
+
+A new tab's shell starts in ~70 ms (it was ~185; measure with
+`hyperfine -N 'bash -lic exit'`). Three things keep it there:
+
+- **Completions load on the first Tab**, not at startup. Homebrew puts each
+  tool's completion in `etc/bash_completion.d`, which bash-completion would
+  source in full (~50 files, ~70 ms). `bash_profile` points it elsewhere and
+  sources a command's file the first time you complete it; files named
+  differently from their command (`aws_bash_completer`, …) are mapped in
+  `_brew_completion_load`. A new tool's completion needs nothing.
+- **Tool init scripts are cached** in `~/.cache/bash-init` for fzf, starship
+  and zoxide, and rebuilt when Homebrew installs a new version of the tool.
+  If a prompt or key binding looks stale after changing one of these tools'
+  setup, delete that file. mise isn't cached: its script embeds the PATH it
+  was made with.
+- **`brew shellenv` is written out** rather than run.
+
 ### Fuzzy finder (fzf)
 
 | Action | Shortcut |
