@@ -189,7 +189,7 @@ Most are aliased over the defaults. Use them as you normally would:
 ```bash
 cat file.py        # syntax-highlighted output (bat)
 ls                 # icons + git status + grouped dirs (eza)
-ll                 # detailed listing
+ll                 # detailed listing, with a git status column
 lt                 # tree view (2 levels)
 fd .json           # find files matching pattern — not aliased over find (different arguments)
 rg "TODO"          # search file contents (ripgrep) — not aliased, use rg directly
@@ -198,7 +198,7 @@ top                # process monitor (btop)
 diff a.txt b.txt   # syntax-highlighted diff (delta)
 glow README.md     # render markdown in terminal
 tldr tar           # the handful of invocations you actually need (tlrc)
-batman rsync       # man page with bat highlighting
+man rsync          # man pages are highlighted by bat (MANPAGER)
 batgrep "TODO" src # rg results shown with bat, with context
 batdiff            # git diff of the working tree, rendered by bat
 just               # run a recipe from the project's justfile (lists them with `just --list`)

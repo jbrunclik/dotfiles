@@ -7,6 +7,11 @@ export CLICOLOR=1
 export LANG="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
 export EDITOR="nvim"
+# man pages through bat: Catppuccin highlighting for headings, flags and
+# options. col strips man's backspace overstrikes, which bat would show raw;
+# MANROFFOPT=-c keeps groff from emitting colors of its own.
+export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+export MANROFFOPT="-c"
 export PATH="${HOME}/.local/bin:${PATH}"
 
 # History
@@ -139,7 +144,8 @@ _cached_init zoxide init bash --cmd=cd
 # so `find . -name '*.py'` would misbehave rather than fail loudly. Use `fd`.
 alias cat='bat --paging=never'
 alias ls='eza --icons --group-directories-first'
-alias ll='eza --icons --group-directories-first -la'
+# ll adds a git column: -- unchanged, -M modified, -N new, -I ignored
+alias ll='eza --icons --group-directories-first -la --git'
 alias lt='eza --icons --group-directories-first --tree --level=2'
 alias du='dust'
 alias top='btop'
