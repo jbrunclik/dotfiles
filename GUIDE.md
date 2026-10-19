@@ -803,6 +803,21 @@ A failing global or repo hook stops the commit or push as usual.
   fire on nearly every git operation. A repo that sets its own
   `core.hooksPath` (Husky, lefthook) bypasses all of this, gitleaks included.
 
+### Background maintenance
+
+`git maintenance` keeps the repos you work in fresh from launchd: an hourly
+prefetch (so `git pull` has little left to download) and commit-graph and
+repack upkeep. Register a repo with
+
+```bash
+git -C <repo> maintenance register --config-file ~/.gitconfig.local
+```
+
+`--config-file` matters: without it, `register` and `start` write the repo's
+absolute path into `--global` — the tracked `gitconfig`. List what's
+registered with `git config --get-all maintenance.repo`. The launchd agents
+(`git maintenance start`, once per machine) are already installed here.
+
 ### Useful git config
 
 - **`git push`** on a new branch automatically sets upstream (no `-u origin` needed)
