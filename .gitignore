@@ -1,7 +1,7 @@
-# Lock files. Neither is tracked, so a fresh machine gets current versions
-# rather than pinned ones — remove these lines if you'd rather pin.
+# Homebrew's lock file isn't tracked: a fresh machine gets current versions.
+# (Neovim's lazy-lock.json is tracked, so a bad plugin update can be rolled
+# back with :Lazy restore.)
 Brewfile.lock.json
-config/nvim/lazy-lock.json
 
 # Backups created by install.sh when it replaces a real file with a symlink
 *.bak

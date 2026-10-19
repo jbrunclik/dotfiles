@@ -13,7 +13,10 @@ if not vim.uv.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- lazy-lock.json is tracked, so updates are deliberate (:Lazy update, then
+-- commit the lock) and a bad one rolls back with :Lazy restore. No update
+-- checker: with notify off it fetched every plugin on each start and told no one.
 require("lazy").setup("plugins", {
   install = { colorscheme = { "catppuccin" } },
-  checker = { enabled = true, notify = false },
+  checker = { enabled = false },
 })

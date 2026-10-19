@@ -295,6 +295,12 @@ Mason installs the LSP servers, but treesitter parsers are compiled by the
 `tree-sitter` CLI and conform/nvim-lint shell out to `prettier` and `eslint_d` —
 all three come from the `Brewfile`, and `drift.sh` verifies them.
 
+Plugin versions are pinned in the tracked `config/nvim/lazy-lock.json`, and
+nothing checks for updates in the background. To update: `:Lazy update`, try
+it, commit the lock. If an update breaks something, `:Lazy restore` goes
+back to the locked versions (after `git checkout` of the lock, to an older
+one).
+
 ### Getting around
 
 | Action | Keys |
