@@ -510,25 +510,46 @@ end
 -- options…". Status is "In 8 min", "Now" or a date. Pull out status and times,
 -- drop meetings that ended (unless that leaves nothing), keep the nearest.
 local function chooseMeetings(found, nowMin)
+    -- Minutes since midnight from "15:30" or "3:30 PM"; nil if it doesn't parse
+    local function minutes(h, m, ampm)
+        h, m = tonumber(h), tonumber(m)
+        ampm = (ampm or ""):upper()
+        if ampm == "PM" and h < 12 then h = h + 12 elseif ampm == "AM" and h == 12 then h = 0 end
+        return h * 60 + m
+    end
     local all, open = {}, {}
     for _, c in ipairs(found) do
         local rest = c.detail:sub(#c.name + 2)
-        local sh, sm, eh, em = rest:match("(%d%d?):(%d%d) %- (%d%d?):(%d%d)")
+        local sh, sm, sap, eh, em, eap =
+            rest:match("(%d%d?):(%d%d)%s*([AaPp]?[Mm]?)%s*[-–]%s*(%d%d?):(%d%d)%s*([AaPp]?[Mm]?)")
         c.status = rest:match("^(.-) Repeating event") or rest:match("^(.-) %d%d?:%d%d") or ""
-        c.time = sh and string.format("%s:%s – %s:%s", sh, sm, eh, em) or ""
-        c.start = sh and tonumber(sh) * 60 + tonumber(sm) or math.huge
-        local ending = eh and tonumber(eh) * 60 + tonumber(em)
+        c.start = sh and minutes(sh, sm, sap ~= "" and sap or eap)
+        local ending = eh and minutes(eh, em, eap)
+        c.time = c.start and string.format("%02d:%02d – %02d:%02d", c.start // 60, c.start % 60, ending // 60, ending % 60) or ""
         table.insert(all, c)
-        -- An end before the start is past midnight: not over yet
-        if not ending or ending < c.start or ending > nowMin then table.insert(open, c) end
+        -- Over = ended earlier today. Not over: an end before the start (it
+        -- runs past midnight), or a start in the next 12 hours counting across
+        -- midnight (at 23:58, 00:05–00:30 is tonight's, not this morning's)
+        local upcoming = c.start and (c.start - nowMin) % 1440 < 720
+        if not ending or ending < c.start or ending > nowMin or upcoming then table.insert(open, c) end
     end
     local cards = #open > 0 and open or all
-    for _, c in ipairs(cards) do c.distance = math.abs(c.start - nowMin) end
-    table.sort(cards, function(a, b) return a.distance < b.distance end)
+    local timed = {}
+    for _, c in ipairs(cards) do
+        if c.start then
+            -- Around the clock: at 23:58 a 00:05 start is 7 minutes away
+            local d = math.abs(c.start - nowMin)
+            c.distance = math.min(d, 1440 - d)
+            table.insert(timed, c)
+        end
+    end
+    -- No card's time parsed: offer them all rather than nothing
+    if #timed == 0 then return cards end
+    table.sort(timed, function(a, b) return a.distance < b.distance end)
     -- Keep the nearest, plus any about as near (genuinely simultaneous starts)
     local picked = {}
-    for _, c in ipairs(cards) do
-        if c.distance - cards[1].distance < 5 then table.insert(picked, c) end
+    for _, c in ipairs(timed) do
+        if c.distance - timed[1].distance < 5 then table.insert(picked, c) end
     end
     table.sort(picked, function(a, b) return a.start < b.start end)
     return picked

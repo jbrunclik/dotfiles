@@ -1315,6 +1315,9 @@ knows, not only Zoom's: Join on a Teams meeting opens it in the browser.
   16:30 meeting beats the one running since 16:00 (you're presumably in it).
   Only starts within 5 minutes of each other ask — a picker, soonest first
   (⌘1–9 pick a row). None → "No Zoom meeting starting soon".
+- Times read in either clock — `15:30` or `3:30 PM` — and nearness wraps
+  midnight (at 23:58, a 00:05 start is 7 minutes away). A card whose time
+  can't be read at all is still offered, in the picker, rather than dropped.
 - To see what it would do: `hs -c 'return zoomJoinableMeetings()'`.
 
 - Zoom only has to be running: hidden is fine (it's unhidden first, since a
