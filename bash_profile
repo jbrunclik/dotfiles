@@ -53,29 +53,35 @@ fi
 
 # Completions, on demand. bash-completion sources every file in Homebrew's
 # etc/bash_completion.d at startup (~50 files, ~70 ms); pointed at nothing, it
-# doesn't, and _brew_completion_load sources a command's file on its first
-# Tab instead. Files are named after their command, bar the few mapped here.
-# Must come before fzf, which wraps whatever `complete -D` handler it finds.
+# doesn't. Instead _comp_load — what bash-completion and fzf both call to find
+# a command's completion on its first Tab — is wrapped to look there first.
+# Files are named after their command, bar the few mapped here. git's comes
+# with the Command Line Tools (Apple's git), plus git-lfs's for `git lfs`.
 export BASH_COMPLETION_COMPAT_DIR=/nonexistent
 # shellcheck source=/dev/null
 [[ -r "${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh" ]] && . "${HOMEBREW_PREFIX}/etc/profile.d/bash_completion.sh"
-_brew_completion_load() {
-    local cmd="${1##*/}" file
-    case "$cmd" in
-        aws) file=aws_bash_completer ;;
-        kctx) file=kubectx ;;
-        kns) file=kubens ;;
-        http | https) file=httpie ;;
-        *) file="$cmd" ;;
-    esac
-    file="$HOMEBREW_PREFIX/etc/bash_completion.d/$file"
-    # shellcheck source=/dev/null
-    if [[ -r "$file" ]] && . "$file" && complete -p "$cmd" &> /dev/null; then
-        return 124 # tells bash to retry with the completion just defined
-    fi
-    declare -F _comp_complete_load > /dev/null && _comp_complete_load "$@"
-}
-complete -D -F _brew_completion_load
+if declare -F _comp_load > /dev/null; then
+    eval "_bash_completion_comp_load() $(declare -f _comp_load | tail -n +2)"
+    _comp_load() {
+        local args=("$@") dir="$HOMEBREW_PREFIX/etc/bash_completion.d" files=() file
+        while [[ ${args[0]-} == -D || ${args[0]-} == -- ]]; do args=("${args[@]:1}"); done
+        local cmd="${args[0]##*/}"
+        case "$cmd" in
+            git) files=(/Library/Developer/CommandLineTools/usr/share/git-core/git-completion.bash "$dir/git-lfs") ;;
+            aws) files=("$dir/aws_bash_completer") ;;
+            kctx) files=("$dir/kubectx") ;;
+            kns) files=("$dir/kubens") ;;
+            http | https) files=("$dir/httpie") ;;
+            *) files=("$dir/$cmd") ;;
+        esac
+        for file in "${files[@]}"; do
+            # shellcheck source=/dev/null
+            [[ -r "$file" ]] && . "$file"
+        done
+        complete -p "$cmd" &> /dev/null && [[ ${#files[@]} -gt 0 && -r ${files[0]} ]] && return 0
+        _bash_completion_comp_load "$@"
+    }
+fi
 
 # `eval "$(tool init)"` cost 5-25 ms per tool per shell. For fzf, starship and
 # zoxide the script only changes when the tool does (checked: same output in

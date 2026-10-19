@@ -113,6 +113,9 @@ The Option-based keys work because Ghostty sends Option as Alt
 - **Single tab** shows all completions (no need to double-tap)
 - **Case-insensitive** — `cd doc` Tab → `cd Documents/`
 - **Hyphen-underscore equivalent** — `my-proj` matches `my_proj`
+- **git** completes subcommands, branches, remotes and options (`git che` Tab,
+  `git switch ma` Tab), plus `git lfs` subcommands. It's the completion that
+  ships with the Command Line Tools for Apple's git, loaded on first use.
 
 ### Startup
 
@@ -122,9 +125,10 @@ A new tab's shell starts in ~70 ms (it was ~185; measure with
 - **Completions load on the first Tab**, not at startup. Homebrew puts each
   tool's completion in `etc/bash_completion.d`, which bash-completion would
   source in full (~50 files, ~70 ms). `bash_profile` points it elsewhere and
-  sources a command's file the first time you complete it; files named
-  differently from their command (`aws_bash_completer`, …) are mapped in
-  `_brew_completion_load`. A new tool's completion needs nothing.
+  wraps `_comp_load` — what bash-completion and fzf both call on a command's
+  first Tab — to source that command's file then; files named differently
+  from their command (`aws_bash_completer`, …) are mapped there. A new
+  tool's completion needs nothing.
 - **Tool init scripts are cached** in `~/.cache/bash-init` for fzf, starship
   and zoxide, and rebuilt when Homebrew installs a new version of the tool.
   If a prompt or key binding looks stale after changing one of these tools'
