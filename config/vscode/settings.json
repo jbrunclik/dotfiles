@@ -11,16 +11,13 @@
 
     // === Editor ===
     "editor.rulers": [88],
-    "editor.bracketPairColorization.enabled": true,
     "editor.guides.bracketPairs": true,
     "editor.stickyScroll.enabled": true,
     "editor.minimap.enabled": false,
     "editor.renderWhitespace": "trailing",
     "editor.cursorBlinking": "solid",
-    "editor.cursorStyle": "line",
     "editor.linkedEditing": true,
     "editor.wordBasedSuggestions": "off",
-    "editor.inlineSuggest.enabled": true,
 
     // === Files ===
     "files.trimTrailingWhitespace": true,
@@ -36,18 +33,27 @@
         "**/*.egg-info": true,
         "**/.DS_Store": true
     },
+    // node_modules is already excluded from both by default
+    "files.watcherExclude": {
+        "**/.venv/**": true
+    },
+    "search.exclude": {
+        "**/.venv": true
+    },
 
     // === Python — Pylance for type checking + IntelliSense ===
     "python.languageServer": "Pylance",
     "python.analysis.typeCheckingMode": "basic",
     "python.analysis.autoImportCompletions": true,
+    // pytest finds tests from each project's own config; a global ["tests"]
+    // broke projects laid out differently
     "python.testing.pytestEnabled": true,
-    "python.testing.pytestArgs": ["tests"],
 
     // === Python — Ruff for linting + formatting (replaces black, isort, flake8) ===
-    "ruff.enable": true,
+    // mypy (ms-python.mypy-type-checker) runs each project's own mypy config
+    // too: the projects run it in their Makefile and CI, and Pylance's checker
+    // doesn't report the same errors
     "ruff.importStrategy": "fromEnvironment",
-    "ruff.organizeImports": true,
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.formatOnSave": true,
@@ -70,7 +76,16 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true
     },
+    "[javascriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
     "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+    // This file and other JSON with comments; Prettier keeps the comments
+    "[jsonc]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true
     },
@@ -80,6 +95,21 @@
     },
     "[markdown]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
+
+    // === Shell and TOML — the same formatters as Neovim ===
+    // 4-space indent and indented case branches, as Neovim formats them: the
+    // extension doesn't pass the editor's indent, and shfmt's default is tabs.
+    // ShellCheck (timonwong.shellcheck) lints as you type.
+    "shfmt.executableArgs": ["-i", "4", "-ci"],
+    "[shellscript]": {
+        "editor.defaultFormatter": "mkhl.shfmt",
+        "editor.formatOnSave": true
+    },
+    // Taplo, as in Neovim; the repo's TOML files are already in its format
+    "[toml]": {
+        "editor.defaultFormatter": "tamasfe.even-better-toml",
         "editor.formatOnSave": true
     },
 
@@ -95,7 +125,9 @@
     // === Workbench ===
     "workbench.startupEditor": "none",
     "workbench.editor.labelFormat": "short",
-    "breadcrumbs.enabled": true,
+
+    // === Privacy ===
+    "telemetry.telemetryLevel": "off",
 
     // === Claude Code ===
     "claudeCode.preferredLocation": "panel"

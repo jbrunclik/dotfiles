@@ -322,8 +322,10 @@ select = ["E", "F", "I", "UP"]
 
 - **VS Code**: Pylance (built-in Pyright) — set to "basic" mode
 - **Neovim**: basedpyright — open-source fork with Pylance features
-- **mypy**: Not needed for most projects. Only relevant for Django/SQLAlchemy
-  (mypy has ORM plugins that Pyright lacks)
+- **mypy**: where a project runs it (`[tool.mypy]`, a `make` target, CI), the
+  VS Code mypy extension shows the same errors live, from the project's own
+  config — Pylance's checker doesn't report the same ones. Neovim leaves
+  mypy to `make`.
 
 ## Editor (Neovim)
 
@@ -474,13 +476,22 @@ Settings are symlinked from the dotfiles repo. Key features:
 
 - **Catppuccin Mocha** theme + icons (matches terminal)
 - **Maple Mono NF** font with ligatures
-- **Python**: Pylance (type checking) + Ruff (lint/format on save)
-- **TypeScript/JS/YAML/JSON/Markdown**: Prettier (format on save)
+- **Python**: Pylance (type checking) + Ruff (lint, fixes, imports, format on
+  save) + mypy where the project uses it
+- **TypeScript/JS/YAML/JSON/Markdown**: Prettier (format on save); YAML also
+  validated against its schema (GitHub Actions, compose, Kubernetes)
+- **Shell**: ShellCheck as you type, shfmt on save (4 spaces, `-ci`, as in
+  Neovim); **TOML**: Taplo (even-better-toml) on save
+- **Makefiles**, **SQLite** files and **containers** (Container Tools,
+  Dev Containers) have their extensions; telemetry is off
 - **Auto-save** on focus change
 - **Claude Code** in panel mode
 
 Extensions are managed via `config/vscode/extensions.txt` and installed
-by `./install.sh`.
+by `./install.sh`. `./drift.sh` reports both missing and extra ones — an
+extension installed from a recommendation prompt shows up as extra until
+it's listed or uninstalled. Dependencies of listed extensions (Jupyter's
+helpers, the Python extension's) don't count.
 
 ## Text editing everywhere (macOS)
 
