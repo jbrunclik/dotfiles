@@ -1,17 +1,19 @@
 local servers = { "basedpyright", "ruff", "ts_ls", "yamlls", "lua_ls" }
 
 return {
-  -- Mason: auto-install LSP servers
+  -- Mason: auto-install LSP servers. Neither loads at startup: they come in
+  -- with nvim-lspconfig when the first file opens (Mason's setup puts the
+  -- servers on PATH before they're started), or with :Mason. Loading them
+  -- eagerly pulled in lspconfig and blink.cmp before there was any file.
   {
     "mason-org/mason.nvim",
+    cmd = "Mason",
     opts = {},
   },
   {
     "mason-org/mason-lspconfig.nvim",
-    dependencies = {
-      "mason-org/mason.nvim",
-      "neovim/nvim-lspconfig",
-    },
+    lazy = true,
+    dependencies = { "mason-org/mason.nvim" },
     opts = {
       ensure_installed = servers,
       -- Enabled below, once, with the shared capabilities
@@ -23,7 +25,11 @@ return {
   {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
-    dependencies = { "saghen/blink.cmp" },
+    dependencies = {
+      "mason-org/mason.nvim",
+      "mason-org/mason-lspconfig.nvim",
+      "saghen/blink.cmp",
+    },
     config = function()
       -- Pass blink.cmp capabilities to all servers
       vim.lsp.config("*", {
@@ -44,10 +50,12 @@ return {
     end,
   },
 
-  -- Autocompletion
+  -- Autocompletion: with lspconfig for files, on InsertEnter for a buffer
+  -- with no file (bare `nvim`)
   {
     "saghen/blink.cmp",
     version = "1.*",
+    event = "InsertEnter",
     dependencies = { "rafamadriz/friendly-snippets" },
     opts = {
       keymap = {
