@@ -1168,9 +1168,13 @@ Focus (System Settings → Focus → People).
 |---|---|
 | Hyper + 0 | Toggle KeepingYouAwake — the Mac and display stay awake while on |
 
-It goes through KeepingYouAwake's `keepingyouawake:///toggle` URL, so its menu
-bar icon can stay hidden in Thaw. The alert says which way it went: while on,
-KeepingYouAwake runs a `caffeinate` process, which is what's checked.
+It goes through KeepingYouAwake's URL scheme, so its menu bar icon can stay
+hidden in Thaw. The state is read, never assumed: while on, KeepingYouAwake runs
+a `caffeinate` child process. Hyper+0 checks it, asks for the opposite
+(`keepingyouawake:///activate` or `///deactivate` — not the blind `///toggle`),
+waits up to 2 s for the process to follow and shows what it found. So clicking
+the cup by hand in between never puts the alert out of step; "(didn't change)"
+means KeepingYouAwake ignored the request.
 
 ### Reloading
 

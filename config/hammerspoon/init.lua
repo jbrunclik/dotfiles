@@ -589,15 +589,28 @@ end
 bindHyper("return", "Zoom", "Start / join the meeting about to begin", joinNextMeeting)
 
 -- Hyper+0 = toggle KeepingYouAwake through its URL scheme, no menu bar click.
--- Its state isn't visible otherwise, so the alert says which way it went:
--- while active it runs a `caffeinate` child process, which is what's checked.
+-- Its state isn't visible otherwise, so the alert says which way it went.
+-- The state is read, never assumed: while active it runs a `caffeinate` child
+-- process. Hyper+0 asks for the opposite of what's running now (activate or
+-- deactivate, not its blind `toggle`), then waits up to 2 s for the process to
+-- match and reports what it finds — so a manual click on the icon in between
+-- can't put the alert out of step.
+local function awakeOn()
+    local app = getApp("KeepingYouAwake")
+    return app ~= nil and hs.execute("/usr/bin/pgrep -P " .. app:pid() .. " caffeinate"):match("%d") ~= nil
+end
+
 local function toggleAwake()
-    hs.urlevent.openURL("keepingyouawake:///toggle")
-    hs.timer.doAfter(0.7, function()
-        local app = getApp("KeepingYouAwake")
-        local on = app and hs.execute("/usr/bin/pgrep -P " .. app:pid() .. " caffeinate"):match("%d")
-        hs.alert.show(on and "\u{2615} Awake: on" or "\u{1F634} Awake: off")
-    end)
+    local want = not awakeOn()
+    hs.urlevent.openURL("keepingyouawake:///" .. (want and "activate" or "deactivate"))
+    local deadline = hs.timer.secondsSinceEpoch() + 2
+    hs.timer.waitUntil(function()
+        return awakeOn() == want or hs.timer.secondsSinceEpoch() > deadline
+    end, function()
+        local on = awakeOn()
+        hs.alert.show((on and "\u{2615} Awake: on" or "\u{1F634} Awake: off")
+            .. (on ~= want and " (didn't change)" or ""))
+    end, 0.1)
 end
 bindHyper("0", "Utilities", "Keep the Mac awake (KeepingYouAwake on / off)", toggleAwake)
 
