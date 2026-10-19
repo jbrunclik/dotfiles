@@ -15,10 +15,10 @@ have() { command -v "$1" >/dev/null 2>&1; }
 fail() { echo "$rel: $1" >&2; echo "$2" >&2; exit 2; }
 
 case "$rel" in
-    install.sh|drift.sh|gh-new-repo|hyper-cheatsheet|wallpaper|lib/links.sh|bash_profile|bashrc|config/git/hooks/dispatch|config/git/hooks.d/*)
+    install.sh|drift.sh|gh-new-repo|hyper-cheatsheet|wallpaper|lib/links.sh|bash_profile|bashrc|brew-autoupdate|dotfiles-update|config/git/hooks/dispatch|config/git/hooks.d/*)
         # Checked together, as in CI, so `source lib/links.sh` resolves
         have shellcheck || exit 0
-        out="$(shellcheck install.sh drift.sh gh-new-repo hyper-cheatsheet wallpaper lib/links.sh bash_profile bashrc config/git/hooks/dispatch config/git/hooks.d/* 2>&1)" \
+        out="$(shellcheck install.sh drift.sh gh-new-repo hyper-cheatsheet wallpaper lib/links.sh bash_profile bashrc brew-autoupdate dotfiles-update config/git/hooks/dispatch config/git/hooks.d/* 2>&1)" \
             || fail "shellcheck failed" "$out" ;;
     *.sh)
         have shellcheck || exit 0
@@ -46,6 +46,8 @@ case "$rel" in
     *.lua)
         have luac || exit 0
         out="$(luac -p "$rel" 2>&1)" || fail "Lua syntax error" "$out" ;;
+    config/launchd/*.plist)
+        out="$(plutil -lint "$rel" 2>&1)" || fail "invalid plist" "$out" ;;
     config/ghostty/config)
         ghostty=/Applications/Ghostty.app/Contents/MacOS/ghostty
         [ -x "$ghostty" ] || exit 0

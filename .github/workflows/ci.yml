@@ -18,7 +18,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y shellcheck lua5.4 luajit jq python3-yaml
 
       - name: Shellcheck
-        run: shellcheck install.sh drift.sh gh-new-repo hyper-cheatsheet wallpaper lib/links.sh bash_profile bashrc config/git/hooks/dispatch config/git/hooks.d/* config/claude/bootstrap.sh .claude/hooks/check-config.sh
+        run: shellcheck install.sh drift.sh gh-new-repo hyper-cheatsheet wallpaper lib/links.sh bash_profile bashrc brew-autoupdate dotfiles-update config/git/hooks/dispatch config/git/hooks.d/* config/claude/bootstrap.sh .claude/hooks/check-config.sh
 
       - name: Python syntax
         run: |
@@ -132,6 +132,9 @@ jobs:
           done
           echo "linked ${#LINKS[@]} entries into $HOME"
           exit $status
+
+      - name: launchd plists are valid
+        run: plutil -lint config/launchd/*.plist
 
       - name: Ghostty config is valid
         run: |

@@ -140,6 +140,17 @@ else
     warn "'code' CLI not found — install VS Code and run 'Shell Command: Install code in PATH'"
 fi
 
+# Weekly Homebrew upkeep (brew-autoupdate): the plist is linked above; load it
+# once. bootout first so a changed plist is re-read.
+header "Scheduling weekly Homebrew updates"
+AGENT="$HOME/Library/LaunchAgents/dotfiles.brew-autoupdate.plist"
+launchctl bootout "gui/$(id -u)/dotfiles.brew-autoupdate" 2>/dev/null || true
+if launchctl bootstrap "gui/$(id -u)" "$AGENT"; then
+    echo -e "  ${GREEN}✓${RESET} brew-autoupdate, Mondays 9:30 (log: ~/Library/Logs/brew-autoupdate.log)"
+else
+    warn "couldn't load $AGENT"
+fi
+
 header "Checking required binaries"
 for entry in "${REQUIRED_BINS[@]}"; do
     bin="${entry%%|*}"

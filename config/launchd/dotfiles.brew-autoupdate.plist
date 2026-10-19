@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Weekly Homebrew upkeep (brew-autoupdate): Mondays at 9:30. A run missed
+  while the Mac was asleep or off happens at the next wake. Linked into
+  ~/Library/LaunchAgents by install.sh; the shell expands $HOME, so the path
+  works for any user with the repo at ~/src/dotfiles.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>dotfiles.brew-autoupdate</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/sh</string>
+        <string>-c</string>
+        <string>exec "$HOME/src/dotfiles/brew-autoupdate"</string>
+    </array>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>9</integer>
+        <key>Minute</key>
+        <integer>30</integer>
+    </dict>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>LowPriorityIO</key>
+    <true/>
+</dict>
+</plist>

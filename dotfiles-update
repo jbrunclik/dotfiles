@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+# The updates that want someone watching, run every couple of weeks
+# (drift.sh reminds after 14 days):
+#   1. Homebrew: brew-autoupdate (formulae + the automatic casks), then the
+#      other outdated casks, asked one by one — some need sudo or quit the app.
+#   2. mise runtimes (`mise upgrade`; config/mise asks for latest).
+#   3. App Store apps (`mas upgrade`).
+#   4. Neovim: plugins (:Lazy sync), treesitter parsers, Mason's servers —
+#      then a check: no startup errors, lua_ls and basedpyright attach,
+#      treesitter highlights. Pass: the lazy-lock.json diff is left to review
+#      and commit. Fail: the lock is put back and :Lazy restore returns every
+#      plugin to it.
+#
+# Usage: dotfiles-update [--no-casks]
+
+DOTFILES="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+LOCK="$DOTFILES/config/nvim/lazy-lock.json"
+STAMP_DIR="$HOME/.cache/dotfiles"
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+if [[ -t 1 ]]; then BOLD='\033[1m' BLUE='\033[0;34m' RED='\033[0;31m' GREEN='\033[0;32m' RESET='\033[0m'
+else BOLD='' BLUE='' RED='' GREEN='' RESET=''; fi
+header() { echo -e "\n${BOLD}${BLUE}==> $1${RESET}"; }
+failed=()
+
+header "Homebrew"
+"$DOTFILES/brew-autoupdate" --here || failed+=("Homebrew")
+if [ "${1:-}" != "--no-casks" ]; then
+    # Outdated casks that don't update themselves (brew skips those unless --greedy)
+    mapfile -t casks < <(brew outdated --cask --quiet 2> /dev/null)
+    for cask in "${casks[@]}"; do
+        read -r -p "  Upgrade cask $cask? [y/N] " answer < /dev/tty
+        [[ "$answer" == [yY]* ]] && { brew upgrade --cask "$cask" || failed+=("cask $cask"); }
+    done
+fi
+
+header "mise runtimes"
+if command -v mise > /dev/null; then mise upgrade --yes || failed+=("mise"); fi
+
+header "App Store"
+if command -v mas > /dev/null; then mas upgrade || failed+=("App Store"); fi
+
+header "Neovim"
+cp "$LOCK" "$TMP/lazy-lock.before.json"
+nvim --headless "+Lazy! sync" +qa 2>&1 | tail -3
+nvim --headless -c 'lua require("nvim-treesitter").update():wait(300000)' -c qa 2>&1 | tail -2
+cat > "$TMP/mason.lua" <<'LUA'
+local registry = require("mason-registry")
+local done = false
+registry.refresh(function()
+  local pending = {}
+  for _, pkg in ipairs(registry.get_installed_packages()) do
+    local have, latest = pkg:get_installed_version(), pkg:get_latest_version()
+    if have and latest and have ~= latest then
+      io.write("  mason: ", pkg.name, " ", have, " -> ", latest, "\n")
+      table.insert(pending, pkg)
+      pkg:install({}, function() end)
+    end
+  end
+  vim.wait(300000, function()
+    for _, pkg in ipairs(pending) do if pkg:is_installing() then return false end end
+    return true
+  end, 500)
+  done = true
+end)
+vim.wait(600000, function() return done end, 500)
+LUA
+nvim --headless -c "lua require('lazy').load({ plugins = { 'mason.nvim' } })" -c "luafile $TMP/mason.lua" -c qa 2>&1 | grep -v '^$'
+
+# The checks: what a broken update shows first
+cat > "$TMP/check.lua" <<'LUA'
+local problems = {}
+local messages = vim.fn.execute("messages")
+if messages:find("E%d+:") or messages:find("[Ee]rror") then
+  table.insert(problems, "startup messages: " .. messages:gsub("\n", " "):sub(1, 300))
+end
+local files = { lua = "DOTFILES/config/hammerspoon/init.lua", python = "DOTFILES/keyboardio-layers" }
+local servers = { lua = "lua_ls", python = "basedpyright" }
+for ft, path in pairs(files) do
+  vim.cmd("edit " .. path)
+  local buf = vim.api.nvim_get_current_buf()
+  local ok = vim.wait(20000, function() return #vim.lsp.get_clients({ bufnr = buf, name = servers[ft] }) > 0 end, 200)
+  if not ok then table.insert(problems, servers[ft] .. " didn't attach to " .. ft) end
+  if not vim.treesitter.highlighter.active[buf] then table.insert(problems, "no treesitter highlighting for " .. ft) end
+end
+io.write(#problems == 0 and "CHECK OK\n" or ("CHECK FAILED\n  " .. table.concat(problems, "\n  ") .. "\n"))
+vim.cmd("qa!")
+LUA
+sed -i '' "s|DOTFILES/|$DOTFILES/|g" "$TMP/check.lua"
+result="$(nvim --headless -c "luafile $TMP/check.lua" 2>&1)"
+echo "$result" | grep -v '^$'
+if [[ "$result" == *"CHECK OK"* ]]; then
+    if git -C "$DOTFILES" diff --quiet -- "$LOCK"; then
+        echo -e "  ${GREEN}Plugins already current.${RESET}"
+    else
+        echo -e "  ${GREEN}Updated and checked.${RESET} Review, then commit:"
+        git -C "$DOTFILES" --no-pager diff --stat -- "$LOCK"
+        echo "  git -C $DOTFILES commit -m 'Neovim: plugin updates' -- config/nvim/lazy-lock.json"
+    fi
+else
+    echo -e "  ${RED}Check failed — rolling the plugins back to the previous lock.${RESET}"
+    cp "$TMP/lazy-lock.before.json" "$LOCK"
+    nvim --headless "+Lazy! restore" +qa 2>&1 | tail -2
+    failed+=("Neovim (rolled back)")
+fi
+
+mkdir -p "$STAMP_DIR"
+date +%s > "$STAMP_DIR/dotfiles-update.last"
+if [ "${#failed[@]}" -gt 0 ]; then
+    echo -e "\n${BOLD}${RED}Done, with problems:${RESET} ${failed[*]}"
+    exit 1
+fi
+echo -e "\n${BOLD}${GREEN}All up to date.${RESET}"

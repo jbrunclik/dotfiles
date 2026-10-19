@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+# Homebrew upkeep that needs no one: `brew update`, every outdated formula,
+# and the casks listed in AUTO_CASKS. Run weekly by launchd
+# (config/launchd/dotfiles.brew-autoupdate.plist), and by dotfiles-update.
+#
+# Usage:
+#   brew-autoupdate            # as launchd runs it: output to the log
+#   brew-autoupdate --here     # the same, output to the terminal
+#
+# Casks stay out by default: most update themselves (Sparkle), and some need
+# sudo or quit the app (Docker Desktop) — not something to do unattended.
+# dotfiles-update offers the rest. Hold a formula back with `brew pin`.
+# The log is ~/Library/Logs/brew-autoupdate.log; a failed run also posts a
+# notification, a clean one stays quiet.
+
+AUTO_CASKS=(claude-code@latest)
+LOG="$HOME/Library/Logs/brew-autoupdate.log"
+STAMP_DIR="$HOME/.cache/dotfiles"
+
+if [ "${1:-}" != "--here" ]; then
+    mkdir -p "${LOG%/*}"
+    # Keep the log to its last ~2000 lines
+    [ -f "$LOG" ] && tail -n 2000 "$LOG" > "$LOG.tmp" && mv "$LOG.tmp" "$LOG"
+    exec >> "$LOG" 2>&1
+fi
+echo "=== $(date '+%F %T') brew-autoupdate"
+
+# launchd starts with a bare PATH: find brew the way bash_profile does
+for prefix in /opt/homebrew /usr/local; do
+    [ -x "$prefix/bin/brew" ] && eval "$("$prefix/bin/brew" shellenv)" && break
+done
+command -v brew > /dev/null || { echo "brew not found"; exit 1; }
+export HOMEBREW_NO_ENV_HINTS=1 NONINTERACTIVE=1
+
+status=0
+brew update || status=1
+brew upgrade --formula || status=1
+for cask in "${AUTO_CASKS[@]}"; do
+    if brew list --cask "$cask" > /dev/null 2>&1; then
+        brew upgrade --cask "$cask" || status=1
+    fi
+done
+
+if [ "$status" -eq 0 ]; then
+    mkdir -p "$STAMP_DIR"
+    date +%s > "$STAMP_DIR/brew-autoupdate.ok"
+    echo "=== done"
+else
+    echo "=== FAILED (see above)"
+    osascript -e 'display notification "Something failed — see ~/Library/Logs/brew-autoupdate.log" with title "Homebrew update"' 2> /dev/null
+fi
+exit "$status"

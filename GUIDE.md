@@ -754,6 +754,34 @@ Deliberately left on: smart quotes and dashes. Mail and other prose apps get
 real typography; terminals and editors ignore the setting. Just don't draft
 shell commands in Notes or Mail — `--force` turns into `—force` there.
 
+## Updates
+
+Two halves: what can run unattended does, weekly; the rest is one command,
+with a reminder.
+
+| What | How | When |
+|---|---|---|
+| Homebrew formulae, and claude-code | `brew-autoupdate`, a launchd agent | Mondays 9:30 (missed: at the next wake) |
+| Neovim plugins, parsers, Mason servers · mise runtimes · App Store · other casks | `dotfiles-update` | when `drift.sh` says it's due (14 days) |
+
+- **Unattended:** `brew update`, every outdated formula, and the casks in
+  `AUTO_CASKS` (claude-code). The log is `~/Library/Logs/brew-autoupdate.log`;
+  only a failure posts a notification. Most casks update themselves (Sparkle),
+  and the rest can need sudo or quit the app, so they wait for
+  `dotfiles-update`, which asks per cask. `brew pin <formula>` holds one back.
+- **`dotfiles-update`** runs the Homebrew step too, then `mise upgrade`,
+  `mas upgrade` and the Neovim updates, and checks Neovim afterwards: no
+  startup errors, lua_ls and basedpyright attach, treesitter highlights. If
+  that passes, the `lazy-lock.json` change is left to review and commit; if
+  not, the lock is put back and `:Lazy restore` returns every plugin to it.
+  `--no-casks` skips the cask questions.
+- **`drift.sh`** reports the agent missing, or no successful run in 10 days
+  (it failing every week, say), and says when `dotfiles-update` is due.
+- A formula that builds from source can fail where bottles don't: proxmark3's
+  tap detects Python 3.15 but declares 3.14, so its upgrade fails until the
+  tap is fixed — and with it the weekly run's success, which `drift.sh` will
+  flag.
+
 ## Git
 
 ### Delta pager

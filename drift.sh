@@ -262,6 +262,35 @@ else
     echo -e "  ${YELLOW}SKIP${RESET}     no ~/.config/url-router/work.local — every link goes to Dia"
 fi
 
+# Updates: the weekly Homebrew agent must be loaded and have succeeded within
+# ~10 days (a missed Monday runs at the next wake); dotfiles-update (Neovim
+# plugins, casks, mise, App Store) is only a reminder after 14 days
+echo ""
+header "Updates:"
+now=$(date +%s)
+if launchctl print "gui/$(id -u)/dotfiles.brew-autoupdate" > /dev/null 2>&1; then
+    ok_at=$(cat "$HOME/.cache/dotfiles/brew-autoupdate.ok" 2>/dev/null || echo 0)
+    days=$(( (now - ok_at) / 86400 ))
+    if [ "$ok_at" -eq 0 ]; then
+        echo -e "  ${YELLOW}NOTE${RESET}     brew-autoupdate hasn't completed yet (first run: next Monday 9:30)"
+    elif [ "$days" -gt 10 ]; then
+        echo -e "  ${YELLOW}CHANGED${RESET}  brew-autoupdate last succeeded ${days} days ago — see ~/Library/Logs/brew-autoupdate.log"
+        DRIFTED=1
+    else
+        echo -e "  ${GREEN}OK${RESET}       brew-autoupdate (last success ${days} days ago)"
+    fi
+else
+    echo -e "  ${RED}MISSING${RESET}  the brew-autoupdate agent isn't loaded (run install.sh)"
+    DRIFTED=1
+fi
+last=$(cat "$HOME/.cache/dotfiles/dotfiles-update.last" 2>/dev/null || echo 0)
+days=$(( (now - last) / 86400 ))
+if [ "$last" -eq 0 ] || [ "$days" -gt 14 ]; then
+    echo -e "  ${YELLOW}DUE${RESET}      dotfiles-update$([ "$last" -gt 0 ] && echo " (last run ${days} days ago)") — Neovim plugins, casks, mise, App Store"
+else
+    echo -e "  ${GREEN}OK${RESET}       dotfiles-update (last run ${days} days ago)"
+fi
+
 # Thaw menu bar layout (config/thaw/layout). On the MacBook's own display
 # thaw-layout doesn't judge — that display has its own Thaw profile.
 echo ""

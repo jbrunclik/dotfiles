@@ -13,6 +13,8 @@ hostnames, or employer-specific detail in tracked files.
   It takes no arguments: `install.sh --help` runs a full install.
 - `thaw-layout` — the menu bar layout in `config/thaw/layout`, compared with
   and applied to Thaw.
+- `brew-autoupdate` (weekly, launchd: `config/launchd/`) and `dotfiles-update`
+  (on demand: Neovim plugins with rollback, mise, App Store, casks).
 - `config/<tool>/` — per-tool config; most files are symlinked into place, so
   editing the repo file changes the live config.
 - `GUIDE.md` — user-facing reference for every shortcut and workaround.

@@ -43,6 +43,8 @@ LINKS=(
     "keyboardio-layers|$HOME/.local/bin/keyboardio-layers"
     "thaw-layout|$HOME/.local/bin/thaw-layout"
     "wallpaper|$HOME/.local/bin/wallpaper"
+    "dotfiles-update|$HOME/.local/bin/dotfiles-update"
+    "config/launchd/dotfiles.brew-autoupdate.plist|$HOME/Library/LaunchAgents/dotfiles.brew-autoupdate.plist"
 )
 
 # Binaries the configs reference but that nothing else verifies. Neovim's

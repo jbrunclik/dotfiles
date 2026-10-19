@@ -166,6 +166,10 @@ scripts keep it in the repo (quit Chrysalis first — it holds the port):
   note), required binaries, local files, macOS settings, mise runtimes, Claude
   Code settings, Neovim parsers, VS Code extensions, Touch ID for `sudo`.
   Non-zero exit on drift.
+- Updates: a launchd agent upgrades Homebrew formulae (and Claude Code)
+  every Monday; `dotfiles-update` does the rest — Neovim plugins with a
+  check and automatic rollback, mise, App Store, casks — and `drift.sh` says
+  when it's due.
 - CI lints every push: shellcheck, Python/Lua/JSON/YAML syntax, and that every
   binary a config shells out to has a Brewfile entry. A macOS job checks every
   Brewfile formula and cask still exists (and isn't disabled or deprecated),
