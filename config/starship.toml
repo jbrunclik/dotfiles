@@ -12,15 +12,18 @@ $directory\
 [](bg:sapphire fg:blue)\
 $git_branch\
 $git_status\
+$git_state\
 [](fg:sapphire bg:surface2)\
 $rust\
 $golang\
 $nodejs\
 $python\
 $docker_context\
+$kubernetes\
 $battery\
 [](fg:surface2)\
 $cmd_duration\
+$jobs\
 $line_break\
 $character"""
 
@@ -62,6 +65,11 @@ format = '[[ $symbol $branch ](fg:crust bg:sapphire)]($style)'
 style = "bg:sapphire"
 format = '[[($all_status$ahead_behind )](fg:crust bg:sapphire)]($style)'
 
+# Mid-rebase / merge / cherry-pick / bisect, with progress (REBASING 2/5)
+[git_state]
+style = "bg:sapphire"
+format = '[[ $state( $progress_current/$progress_total) ](bold fg:crust bg:sapphire)]($style)'
+
 [nodejs]
 symbol = ""
 style = "bg:surface2"
@@ -87,9 +95,27 @@ symbol = ""
 style = "bg:surface2"
 format = '[[ $symbol( $context) ](fg:sky bg:surface2)]($style)'
 
+# Only in a directory with Kubernetes files (charts, kustomize, k8s/), where
+# the current context is what the next command hits. Not on every prompt: a
+# kubeconfig existing says nothing about whether you're about to use it.
+# (detect_env_vars = ["KUBECONFIG"] can't be added: in starship 1.26 it's
+# ignored once file detection is set, rather than either one triggering.)
+[kubernetes]
+disabled = false
+symbol = "󱃾"
+style = "bg:surface2"
+format = '[[ $symbol $context( \($namespace\)) ](fg:blue bg:surface2)]($style)'
+detect_files = ["kustomization.yaml", "Chart.yaml", "helmfile.yaml", "skaffold.yaml", "Tiltfile"]
+detect_folders = ["k8s", "kubernetes", "charts", "helm"]
+
 [cmd_duration]
 min_time = 3_000
 format = " in $duration "
+
+# Background jobs (Ctrl+Z, `cmd &`): a ✦, with the count from 2
+[jobs]
+format = "[$symbol$number ]($style)"
+style = "bold fg:blue"
 
 [battery]
 # Shares the surface2 segment with the language modules (usually empty here),

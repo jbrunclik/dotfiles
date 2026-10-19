@@ -132,6 +132,21 @@ A new tab's shell starts in ~70 ms (it was ~185; measure with
   was made with.
 - **`brew shellenv` is written out** rather than run.
 
+### Prompt (Starship)
+
+Left to right: user and host, directory, git branch and status, language and
+tool versions, battery, then the last command's time if it took over 3 s.
+Segments that only appear when they matter:
+
+- **`REBASING 2/5`** (also MERGING, CHERRY-PICKING, BISECTING) after the git
+  status, while one is in progress — so a half-finished rebase isn't
+  forgotten.
+- **`✦`** after the duration when a job is in the background (`Ctrl+Z`,
+  `cmd &`), with a count from two — so a suspended `nvim` isn't left behind.
+- **`󱃾 <context> (<namespace>)`** in a directory with Kubernetes files
+  (`Chart.yaml`, `kustomization.yaml`, `helmfile.yaml`, a `k8s/` or `charts/`
+  folder, …): the cluster the next `kubectl`/`helm` will hit.
+
 ### Fuzzy finder (fzf)
 
 | Action | Shortcut |
