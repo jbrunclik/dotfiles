@@ -38,3 +38,15 @@ opt.scrolloff = 8
 -- Whitespace display
 opt.list = true
 opt.listchars = { tab = "» ", trail = "·", nbsp = "␣" }
+
+-- Floats (hover, signature help, diagnostics) get an edge; with Catppuccin
+-- they otherwise blend into the buffer
+opt.winborder = "rounded"
+
+-- Diagnostics: 0.11 turned inline messages off by default, leaving only the
+-- sign column. Show the message at the end of the cursor's line only, so the
+-- rest of the buffer stays readable; errors sort ahead of warnings.
+vim.diagnostic.config({
+  virtual_text = { current_line = true },
+  severity_sort = true,
+})

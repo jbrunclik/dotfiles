@@ -347,6 +347,10 @@ most of what gets edited here.
 | Next / previous diagnostic | `]d` / `[d` |
 | Show diagnostic under cursor | `Ctrl+W d` |
 
+The diagnostic message for the cursor's line shows at its end; other lines
+only have the sign in the gutter, so a file full of warnings stays readable.
+Floats (hover, signature help, `Ctrl+W d`) have rounded borders.
+
 All but `gd` are Neovim's own defaults (0.11+), so they work the same in any
 Neovim. The config only adds `gd`: mapping `gr` or `gi` itself used to shadow
 them — and `gi` is Vim's "go back to where you last typed".
