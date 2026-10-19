@@ -16,9 +16,38 @@ header() { echo -e "${BOLD}${BLUE}==> $1${RESET}"; }
 warn()   { echo -e "  ${YELLOW}WARNING${RESET}: $1"; }
 err()    { echo -e "${RED}Error${RESET}: $1"; }
 
-if ! command -v brew &>/dev/null; then
-    err "Homebrew is required. Install it from https://brew.sh"
+# A fresh Mac: the Command Line Tools bring git, swiftc and the compilers
+# Homebrew needs. The installer is a GUI dialog, so start it and stop here.
+if ! xcode-select -p &>/dev/null; then
+    xcode-select --install 2>/dev/null || true
+    err "Xcode Command Line Tools are needed — finish the installer that just opened, then rerun ./install.sh"
     exit 1
+fi
+
+find_brew() {
+    command -v brew &>/dev/null && return
+    for prefix in /opt/homebrew /usr/local; do
+        [ -x "$prefix/bin/brew" ] && eval "$("$prefix/bin/brew" shellenv)" && return
+    done
+    return 1
+}
+# Homebrew's signed release .pkg rather than its curl | bash script from a
+# moving branch: it only runs if Apple notarized it and it's signed by
+# Homebrew's Developer ID team. A new signer stops the install with a
+# message rather than running something unexpected.
+HOMEBREW_TEAM_ID=927JGANW46
+if ! find_brew; then
+    header "Installing Homebrew (signed .pkg from its latest GitHub release; asks for your password)"
+    pkg="$(mktemp -d)/Homebrew.pkg"
+    curl -fsSL -o "$pkg" https://github.com/Homebrew/brew/releases/latest/download/Homebrew.pkg
+    sig="$(pkgutil --check-signature "$pkg" 2>&1 || true)"
+    if ! grep -q "Notarization: trusted" <<< "$sig" || ! grep -q "($HOMEBREW_TEAM_ID)" <<< "$sig"; then
+        err "Homebrew.pkg isn't notarized and signed by team $HOMEBREW_TEAM_ID — not installing it:"
+        echo "$sig"
+        exit 1
+    fi
+    sudo installer -pkg "$pkg" -target /
+    find_brew || { err "Homebrew installed but brew isn't in /opt/homebrew or /usr/local"; exit 1; }
 fi
 
 header "Installing Homebrew packages"
@@ -34,8 +63,11 @@ link() {
     local src="$1" dst="$2"
     mkdir -p "$(dirname "$dst")"
     if [ -e "$dst" ] && [ ! -L "$dst" ]; then
-        echo -e "  ${YELLOW}Backing up${RESET} $dst -> ${dst}.bak"
-        mv "$dst" "${dst}.bak"
+        # Never overwrite an earlier backup: the first .bak is the original
+        local bak="${dst}.bak"
+        [ -e "$bak" ] && bak="${dst}.bak.$(date +%Y%m%d-%H%M%S)"
+        echo -e "  ${YELLOW}Backing up${RESET} $dst -> $bak"
+        mv "$dst" "$bak"
     fi
     ln -sfn "$src" "$dst"
     echo -e "  ${GREEN}✓${RESET} $dst -> $src"
@@ -90,8 +122,13 @@ else
     warn "swiftc not found — skipping Finder default apps (install Xcode Command Line Tools)"
 fi
 
+# Guarded: under set -e, a bat that failed to install would abort everything after
 header "Building bat theme cache"
-bat cache --build
+if command -v bat &>/dev/null; then
+    bat cache --build || warn "bat cache --build failed — the Catppuccin theme won't load"
+else
+    warn "bat not installed — skipping its theme cache"
+fi
 
 # Merges generic prefs into ~/.claude/settings.json (leaving Claude-Code-managed
 # keys and secrets alone) and installs the generic plugin set. See config/claude/.

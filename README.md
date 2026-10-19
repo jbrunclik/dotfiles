@@ -85,17 +85,25 @@ monospace with Nerd Font icons.
 ## Install
 
 ```bash
-git clone git@github.com:jbrunclik/dotfiles.git ~/src/dotfiles
+xcode-select --install    # git, swiftc; skip if already installed
+git clone https://github.com/jbrunclik/dotfiles.git ~/src/dotfiles
 cd ~/src/dotfiles
-./install.sh
+./install.sh              # installs Homebrew first if it's missing
 ```
+
+The clone is over https because a new Mac has no SSH key yet. Once the key is
+set up (and added to GitHub), switch the remote:
+`git remote set-url origin git@github.com:jbrunclik/dotfiles.git`.
 
 The install script:
 
-1. Installs Homebrew packages from `Brewfile` (plus `~/Brewfile.local`, if
-   present) and App Store apps via `mas` — sign in to the App Store first. A
-   package that fails is reported, not fatal.
-2. Symlinks every config file (existing files are backed up to `*.bak`).
+1. Stops with the installer open if the Xcode Command Line Tools are missing,
+   and installs Homebrew if it's missing. Then installs packages from
+   `Brewfile` (plus `~/Brewfile.local`, if present) and App Store apps via
+   `mas` — sign in to the App Store first. A package that fails is reported,
+   not fatal.
+2. Symlinks every config file. An existing file is moved to `*.bak`, or
+   `*.bak.<timestamp>` if a backup is already there.
 3. Sets macOS defaults — accent color, key repeat, Dock and Spaces, Finder
    extensions, Touch ID for `sudo` — and a few app preferences (see
    [GUIDE.md](GUIDE.md#macos-settings)).
