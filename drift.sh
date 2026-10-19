@@ -282,6 +282,27 @@ if command -v code &>/dev/null; then
     else
         echo -e "  ${GREEN}All extensions installed.${RESET}"
     fi
+    # Extras: installed but neither listed nor pulled in by a listed one (an
+    # extensionDependencies / extensionPack entry, followed recursively).
+    # Extensions arrive by recommendation prompts too, so list or uninstall.
+    EXPECTED_EXTS="$(cat "$HOME"/.vscode/extensions/*/package.json 2>/dev/null | jq -rn \
+        --rawfile list "$DOTFILES/config/vscode/extensions.txt" '
+        ([inputs | {key: ("\(.publisher).\(.name)" | ascii_downcase),
+                    value: [(.extensionDependencies // [])[], (.extensionPack // [])[]] | map(ascii_downcase)}]
+         | from_entries) as $deps
+        | def closure: . as $s | ($s + [$s[] | $deps[.] // [] | .[]] | unique) as $n
+                       | if $n == $s then $s else $n | closure end;
+        $list | split("\n") | map(ascii_downcase | select(length > 0 and (startswith("#") | not)))
+        | closure | .[]' 2>/dev/null)"
+    EXTRA_EXTS=""
+    while IFS= read -r ext; do
+        [ -z "$ext" ] && continue
+        grep -qxFi "$ext" <<< "$EXPECTED_EXTS" || EXTRA_EXTS="$EXTRA_EXTS $ext"
+    done <<< "$INSTALLED_EXTS"
+    if [ -n "$EXTRA_EXTS" ]; then
+        echo -e "  ${YELLOW}EXTRA${RESET}   not in extensions.txt:$EXTRA_EXTS (list them or 'code --uninstall-extension')"
+        DRIFTED=1
+    fi
 else
     echo -e "  ${YELLOW}SKIPPED${RESET} ('code' CLI not in PATH)"
 fi
