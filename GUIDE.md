@@ -552,13 +552,24 @@ macOS text fields also understand the emacs keys from the shell: `Ctrl+A`/`E`
 
 | Action | Shortcut |
 |---|---|
-| Cycle windows of the current app | ``Cmd+` `` |
+| Switch to any window, with previews (AltTab) | `Cmd+Tab` (keep Cmd held: Tab / Shift+Tab to move, release to pick) |
+| Switch between the current app's windows (AltTab) | ``Cmd+` `` |
 | Show / hide dotfiles in Finder and open/save dialogs | `Cmd+Shift+.` |
 | Type a path in Finder or any open/save dialog | `Cmd+Shift+G` |
 | Move a file (cut + paste) in Finder | `Cmd+C`, then `Cmd+Option+V` |
 | Emoji and symbol picker | `Cmd+Ctrl+Space` |
 | Lock the screen | `Cmd+Ctrl+Q` |
-| Keep the Mac awake (no sleep, screen stays on) | Click the cup in the menubar (KeepingYouAwake) |
+| Keep the Mac awake (no sleep, screen stays on) | Click the cup in the menubar (KeepingYouAwake), or Hyper+0 |
+
+**AltTab** replaces both of macOS's switchers. macOS's Cmd+Tab picks an
+*app* and brings all its windows; AltTab picks a *window* — every window of
+every app, minimized and other-Space ones included, with a thumbnail. Cmd+`
+does the same for the front app's windows only. Its two shortcuts live in
+`DEFAULTS` (`lib/links.sh`) as AltTab's own archived shortcut values; the
+second one needs AltTab Pro (licensed here). Change them in AltTab's settings,
+then copy them back with `defaults export com.lwouis.alt-tab-macos -`.
+Hammerspoon's `hs.window.switcher` would be the in-repo alternative, but it's
+slow with many windows and has no live previews.
 
 ## Finder default apps
 

@@ -84,7 +84,9 @@ LOCAL_FILES=(
 
 # macOS settings: install.sh writes them, drift.sh checks them (an OS update
 # can reset any of them silently). Format: "<domain>|<key>|<type>|<value>",
-# type as for `defaults write` without the dash (int, float, bool, string).
+# type as for `defaults write` without the dash (int, float, bool, string),
+# or `shortcut`: a ShortcutRecorder dict (archived SRShortcut + its display
+# string) given as a plist fragment, checked by that display string.
 # Most take effect at next logout or app launch; install.sh restarts the Dock.
 DEFAULTS=(
     # Accent and highlight color: Catppuccin Mocha mauve #cba6f7
@@ -135,6 +137,13 @@ DEFAULTS=(
     # Scroll Reverser: reverse the mouse (KensingtonWorks), not the trackpad
     "com.pilotmoon.scroll-reverser|InvertScrollingOn|bool|true"
     "com.pilotmoon.scroll-reverser|ReverseTrackpad|bool|false"
+    # AltTab takes over macOS's switchers: hold ⌘ + Tab for every window
+    # (shortcut 1), ⌘ + ` for the front app's windows (shortcut 2 — AltTab
+    # Pro). Write these with AltTab quit: it keeps its settings in memory.
+    # Single-quoted: the ` in the second one would start a command substitution.
+    'com.lwouis.alt-tab-macos|holdShortcut|shortcut|<dict><key>secureData</key><data>YnBsaXN0MDDUAQIDBAUGHB9ZJGFyY2hpdmVyWCRvYmplY3RzVCR0b3BYJHZlcnNpb25fEA9OU0tleWVkQXJjaGl2ZXKlBwgUFRZVJG51bGzWCQoLDA0ODxAQERITViRjbGFzc1pjaGFyYWN0ZXJzXxAbY2hhcmFjdGVyc0lnbm9yaW5nTW9kaWZpZXJzV2tleUNvZGVdbW9kaWZpZXJGbGFnc1d2ZXJzaW9ugASAAIACgAOAABH//xIAEAAA0hcYGRpYJGNsYXNzZXNaJGNsYXNzbmFtZaIaG1pTUlNob3J0Y3V0WE5TT2JqZWN00R0eVHJvb3SAARIAAYagCBEbJCkyREpQXWRvjZWjq62vsbO1uL3Cy9bZ5O3w9fcAAAAAAAABAQAAAAAAAAAgAAAAAAAAAAAAAAAAAAAA/A==</data><key>string</key><string>⌘</string></dict>'
+    'com.lwouis.alt-tab-macos|holdShortcut2|shortcut|<dict><key>secureData</key><data>YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGlCwwZGhtVJG51bGzWDQ4PEBESExQVFBcUXW1vZGlmaWVyRmxhZ3NfEBtjaGFyYWN0ZXJzSWdub3JpbmdNb2RpZmllcnNWJGNsYXNzWmNoYXJhY3RlcnNXa2V5Q29kZVd2ZXJzaW9ugAOAAIAEgACAAoAAEf//EgAQAADSHB0eH1okY2xhc3NuYW1lWCRjbGFzc2VzWlNSU2hvcnRjdXSiHiBYTlNPYmplY3QIERokKTI3SUxRU1lfbHqYn6qyury+wMLExsnO097n8vUAAAAAAAABAQAAAAAAAAAhAAAAAAAAAAAAAAAAAAAA/g==</data><key>string</key><string>⌘</string></dict>'
+    'com.lwouis.alt-tab-macos|nextWindowShortcut2|shortcut|<dict><key>secureData</key><data>YnBsaXN0MDDUAQIDBAUGHiFZJGFyY2hpdmVyWCRvYmplY3RzVCR0b3BYJHZlcnNpb25fEA9OU0tleWVkQXJjaGl2ZXKmBwgVFhcdVSRudWxs1gkKCwwNDg8QERITFFYkY2xhc3NaY2hhcmFjdGVyc18QG2NoYXJhY3RlcnNJZ25vcmluZ01vZGlmaWVyc1drZXlDb2RlXW1vZGlmaWVyRmxhZ3NXdmVyc2lvboAEgAWABYACgAOAABAyEADSGBkaG1gkY2xhc3Nlc1okY2xhc3NuYW1lohscWlNSU2hvcnRjdXRYTlNPYmplY3RRYNEfIFRyb290gAESAAGGoAgRGyQpMkRLUV5lcI6WpKyusLK0tri6vMHK1djj7O7x9vgAAAAAAAABAQAAAAAAAAAiAAAAAAAAAAAAAAAAAAAA/Q==</data><key>string</key><string>`</string></dict>'
 )
 
 # True when a DEFAULTS entry's domain/key holds its value. `defaults read`
@@ -143,6 +152,10 @@ DEFAULTS=(
 default_matches() {
     local domain="$1" key="$2" type="$3" want="$4" have
     have="$(defaults read "$domain" "$key" 2>/dev/null)" || { echo unset; return 1; }
+    if [ "$type" = shortcut ]; then
+        have="$(defaults export "$domain" - | plutil -extract "$key.string" raw -o - - 2>/dev/null)"
+        want="$(sed -E 's|.*<key>string</key><string>([^<]*)</string>.*|\1|' <<< "$want")"
+    fi
     echo "$have"
     case "$type" in
         bool)  [ "$have" = "$([ "$want" = true ] && echo 1 || echo 0)" ] ;;

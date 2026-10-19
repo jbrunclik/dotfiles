@@ -28,6 +28,7 @@ cask "hammerspoon"
 cask "maccy"
 
 # macOS utilities
+# Window switcher on Cmd+Tab and Cmd+` (shortcuts in DEFAULTS, lib/links.sh)
 cask "alt-tab"
 cask "aldente"
 cask "scroll-reverser"

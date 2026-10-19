@@ -77,7 +77,11 @@ echo -e "  ${GREEN}✓${RESET} $HOME/.hammerspoon/init.lua -> dofile loader"
 header "Setting macOS defaults (lib/links.sh)"
 for entry in "${DEFAULTS[@]}"; do
     IFS='|' read -r domain key type value <<< "$entry"
-    defaults write "$domain" "$key" "-$type" "$value"
+    if [ "$type" = shortcut ]; then
+        defaults write "$domain" "$key" "$value"   # a plist fragment
+    else
+        defaults write "$domain" "$key" "-$type" "$value"
+    fi
 done
 echo -e "  ${GREEN}✓${RESET} ${#DEFAULTS[@]} settings"
 killall Dock 2>/dev/null || true  # no Dock running, e.g. over SSH
