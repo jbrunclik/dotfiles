@@ -1333,6 +1333,13 @@ app — Slack, Notion, Zoom, Mail, the terminal: hosts on your work list open in
 **Chrome's Work profile**, everything else in **Dia**. Links clicked inside a
 browser stay in that browser.
 
+- **Zoom meeting links** (`…zoom.us/j/<id>`, webinars `/w/<id>`) open the
+  Zoom app straight into the meeting, as a `zoommtg://` join link with the
+  password — no browser tab left on Zoom's "launching" page. Other Zoom pages
+  stay in the browser.
+- **Hold Option while clicking** to send a link to the other browser — for a
+  host both accounts use, without editing the list.
+
 The list is `~/.config/url-router/work.local` — machine-local and untracked,
 so no employer detail lands in this repo; without it every link goes to Dia.
 One rule per line: with a dot it matches that domain and its subdomains

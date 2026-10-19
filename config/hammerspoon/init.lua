@@ -1146,9 +1146,36 @@ local function isWorkHost(host)
     return false
 end
 
+-- A Zoom meeting link (…zoom.us/j/<id>, webinars /w/<id>) as the zoommtg://
+-- link the Zoom app joins from directly: no browser tab left behind on its
+-- "launching meeting" page. The host stays, so a company's SSO domain still
+-- applies. Other Zoom pages (settings, recordings) stay in the browser.
+local function zoomJoinURL(url)
+    local parts = hs.http.urlParts(url)
+    local host = (parts.host or ""):lower()
+    if not (host == "zoom.us" or host:sub(-8) == ".zoom.us") then return nil end
+    local id = (parts.path or ""):match("^/[jw]/(%d+)")
+    if not id then return nil end
+    local pwd = (parts.query or ""):match("pwd=([^&]+)")
+    return "zoommtg://" .. host .. "/join?action=join&confno=" .. id .. (pwd and "&pwd=" .. pwd or "")
+end
+
+-- Where a link goes: Zoom meetings to Zoom, the work list to Chrome's Work
+-- profile, the rest to Dia. Holding Option while clicking swaps the two
+-- browsers — for a host both accounts use, without editing the list.
+local function routeURL(url, host, option)
+    local zoom = zoomJoinURL(url)
+    if zoom then return "zoom", zoom end
+    local work = isWorkHost(host)
+    if option then work = not work end
+    return work and "chrome" or "dia", url
+end
+
 -- Global so `hs -c` can check where a URL would go without opening it
-function urlRouterTarget(url)
-    return isWorkHost(hs.http.urlParts(url).host) and "Chrome (Work)" or "Dia"
+function urlRouterTarget(url, option)
+    local target, rewritten = routeURL(url, hs.http.urlParts(url).host, option)
+    local names = { zoom = "Zoom", chrome = "Chrome (Work)", dia = "Dia" }
+    return names[target] .. (rewritten ~= url and " " .. rewritten or "")
 end
 
 local function openInChromeWork(url)
@@ -1163,10 +1190,13 @@ local function openInChromeWork(url)
 end
 
 hs.urlevent.httpCallback = function(_, host, _, url)
-    if isWorkHost(host) then
-        openInChromeWork(url)
+    local target, link = routeURL(url, host, hs.eventtap.checkKeyboardModifiers().alt)
+    if target == "zoom" then
+        hs.urlevent.openURLWithBundle(link, BUNDLE_IDS["zoom.us"])
+    elseif target == "chrome" then
+        openInChromeWork(link)
     else
-        hs.urlevent.openURLWithBundle(url, BUNDLE_IDS["Dia"])
+        hs.urlevent.openURLWithBundle(link, BUNDLE_IDS["Dia"])
     end
 end
 
