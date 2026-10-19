@@ -77,6 +77,75 @@ LOCAL_FILES=(
     "$HOME/.ssh/config.local"
 )
 
+# macOS settings: install.sh writes them, drift.sh checks them (an OS update
+# can reset any of them silently). Format: "<domain>|<key>|<type>|<value>",
+# type as for `defaults write` without the dash (int, float, bool, string).
+# Most take effect at next logout or app launch; install.sh restarts the Dock.
+DEFAULTS=(
+    # Accent and highlight color: Catppuccin Mocha mauve #cba6f7
+    "NSGlobalDomain|AppleAccentColor|int|5"
+    "NSGlobalDomain|AppleHighlightColor|string|0.796078 0.650980 0.968627 Purple"
+    # Dark mode, dark-style app icons (macOS 26), and windows tinted by the
+    # wallpaper — with the generated blue-teal wallpaper that gives Finder and
+    # System Settings a faint blue cast, closer to Catppuccin's base than grey
+    "NSGlobalDomain|AppleInterfaceStyle|string|Dark"
+    "NSGlobalDomain|AppleIconAppearanceTheme|string|RegularDark"
+    "NSGlobalDomain|AppleReduceDesktopTinting|bool|false"
+    # Fastest repeat the System Settings sliders allow (30 ms, 225 ms initial
+    # delay), and hold-to-repeat instead of the accent popup — Hyper+HJKL
+    # arrows and CapsLock tap-then-hold Backspace both rely on repeat
+    "NSGlobalDomain|KeyRepeat|int|2"
+    "NSGlobalDomain|InitialKeyRepeat|int|15"
+    "NSGlobalDomain|ApplePressAndHoldEnabled|bool|false"
+    # Picked up the next time Finder starts
+    "NSGlobalDomain|AppleShowAllExtensions|bool|true"
+    # Dock on the right and hidden: a bottom Dock pops up over Zoom's toolbar
+    # (and every app's bottom controls) on overshoot. A short delay stays,
+    # because right-tiled apps do have controls near the right edge (Slack's
+    # thread close button). Apps are launched by Hyper keys, so the Dock is
+    # mostly a running-apps indicator.
+    "com.apple.dock|orientation|string|right"
+    "com.apple.dock|autohide|bool|true"
+    "com.apple.dock|autohide-delay|float|0.2"
+    "com.apple.dock|autohide-time-modifier|float|0.15"
+    "com.apple.dock|magnification|bool|false"
+    "com.apple.dock|minimize-to-application|bool|true"
+    # Keep Spaces in a fixed order instead of reordering by recent use
+    "com.apple.dock|mru-spaces|bool|false"
+    # Clicking the wallpaper no longer hides every window
+    "com.apple.WindowManager|EnableStandardClickToShowDesktop|bool|false"
+    # App preferences worth keeping — only the settings that were actually
+    # changed. (AlDente's plist also holds the license email, so never export
+    # the whole domain.) AlDente: hold the battery at 80 % (macOS 26's native
+    # limit, whose floor is 80), sailing mode 5 %, discharge down to the
+    # limit, and heat protection — heat wears a battery faster than charge
+    # level, and this Mac lives plugged in
+    "com.apphousekitchen.aldente-pro|chargeVal|float|80"
+    "com.apphousekitchen.aldente-pro|sailingMode|bool|true"
+    "com.apphousekitchen.aldente-pro|sailingLevel|float|5"
+    "com.apphousekitchen.aldente-pro|automaticDischarge|bool|true"
+    "com.apphousekitchen.aldente-pro|useTahoeNativeLimit|bool|true"
+    "com.apphousekitchen.aldente-pro|heatProtectMode|bool|true"
+    "com.apphousekitchen.aldente-pro|showPercentage|bool|true"
+    # Scroll Reverser: reverse the mouse (KensingtonWorks), not the trackpad
+    "com.pilotmoon.scroll-reverser|InvertScrollingOn|bool|true"
+    "com.pilotmoon.scroll-reverser|ReverseTrackpad|bool|false"
+)
+
+# True when a DEFAULTS entry's domain/key holds its value. `defaults read`
+# prints bools as 1/0 and floats in its own format, so those are normalized
+# before comparing; prints the current value (or "unset") on stdout.
+default_matches() {
+    local domain="$1" key="$2" type="$3" want="$4" have
+    have="$(defaults read "$domain" "$key" 2>/dev/null)" || { echo unset; return 1; }
+    echo "$have"
+    case "$type" in
+        bool)  [ "$have" = "$([ "$want" = true ] && echo 1 || echo 0)" ] ;;
+        float) awk -v a="$have" -v b="$want" 'BEGIN { exit !(a + 0 == b + 0) }' ;;
+        *)     [ "$have" = "$want" ] ;;
+    esac
+}
+
 # Compiles config/finder/set-default-apps.swift into a temp dir and runs it
 # against config/finder/default-apps. Pass --check to report drift only.
 set_default_apps() {

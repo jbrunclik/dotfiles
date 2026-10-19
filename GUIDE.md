@@ -580,7 +580,9 @@ Weather to Always-Hidden, so more icons fit beside the notch.
 
 ## macOS settings
 
-`./install.sh` writes these with `defaults write`:
+`./install.sh` writes these with `defaults write`, from the `DEFAULTS` list in
+`lib/links.sh`; `./drift.sh` reports any that changed — macOS updates reset
+settings without saying so. (Touch ID for `sudo` is a file, checked separately.)
 
 | Setting | Value | Why |
 |---|---|---|

@@ -73,6 +73,20 @@ else
     DRIFTED=1
 fi
 
+# Check macOS settings (install.sh writes them; an OS update can reset them)
+echo ""
+header "macOS settings:"
+BAD_DEFAULTS=0
+for entry in "${DEFAULTS[@]}"; do
+    IFS='|' read -r domain key type value <<< "$entry"
+    if ! have="$(default_matches "$domain" "$key" "$type" "$value")"; then
+        echo -e "  ${YELLOW}CHANGED${RESET}  $domain $key = $have (expected $value)"
+        BAD_DEFAULTS=1
+        DRIFTED=1
+    fi
+done
+[ "$BAD_DEFAULTS" -eq 0 ] && echo -e "  ${GREEN}All ${#DEFAULTS[@]} settings match.${RESET}"
+
 # Check Hammerspoon loader file
 echo ""
 header "Hammerspoon:"

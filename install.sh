@@ -56,23 +56,13 @@ mkdir -p "$HOME/.hammerspoon"
 echo "dofile(\"$DOTFILES/config/hammerspoon/init.lua\")" > "$HOME/.hammerspoon/init.lua"
 echo -e "  ${GREEN}✓${RESET} $HOME/.hammerspoon/init.lua -> dofile loader"
 
-header "Setting macOS accent color (Catppuccin Mocha mauve #cba6f7)"
-defaults write -globalDomain AppleAccentColor -int 5
-defaults write -globalDomain AppleHighlightColor -string "0.796078 0.650980 0.968627 Purple"
-# Dark mode, dark-style app icons (macOS 26), and windows tinted by the
-# wallpaper — with the generated blue-teal wallpaper that gives Finder and
-# System Settings a faint blue cast, closer to Catppuccin's base than grey
-defaults write -globalDomain AppleInterfaceStyle -string Dark
-defaults write -globalDomain AppleIconAppearanceTheme -string RegularDark
-defaults write -globalDomain AppleReduceDesktopTinting -bool false
-
-# Fastest repeat the System Settings sliders allow (30 ms, 225 ms initial delay),
-# and hold-to-repeat instead of the accent popup — Hyper+HJKL arrows and
-# CapsLock tap-then-hold Backspace both rely on repeat. Takes effect after logout.
-header "Setting key repeat"
-defaults write -globalDomain KeyRepeat -int 2
-defaults write -globalDomain InitialKeyRepeat -int 15
-defaults write -globalDomain ApplePressAndHoldEnabled -bool false
+header "Setting macOS defaults (lib/links.sh)"
+for entry in "${DEFAULTS[@]}"; do
+    IFS='|' read -r domain key type value <<< "$entry"
+    defaults write "$domain" "$key" "-$type" "$value"
+done
+echo -e "  ${GREEN}✓${RESET} ${#DEFAULTS[@]} settings"
+killall Dock 2>/dev/null || true  # no Dock running, e.g. over SSH
 
 # Touch ID for sudo. /etc/pam.d/sudo_local survives macOS updates (unlike
 # /etc/pam.d/sudo) and ships as a template with the pam_tid line commented out.
@@ -88,47 +78,6 @@ elif grep -qs '^#auth.*pam_tid.so' /etc/pam.d/sudo_local.template; then
 else
     warn "No sudo_local template with a pam_tid line (needs macOS 14+) — skipping"
 fi
-
-# Dock on the right and hidden: a bottom Dock pops up over Zoom's toolbar (and
-# every app's bottom controls) on overshoot. A short delay stays, because
-# right-tiled apps do have controls near the right edge (Slack's thread close
-# button). Apps are launched by Hyper keys, so the Dock is mostly a
-# running-apps indicator.
-header "Setting Dock and Spaces"
-defaults write com.apple.dock orientation -string right
-defaults write com.apple.dock autohide -bool true
-defaults write com.apple.dock autohide-delay -float 0.2
-defaults write com.apple.dock autohide-time-modifier -float 0.15
-defaults write com.apple.dock magnification -bool false
-defaults write com.apple.dock minimize-to-application -bool true
-# Keep Spaces in a fixed order instead of reordering by recent use
-defaults write com.apple.dock mru-spaces -bool false
-# Clicking the wallpaper no longer hides every window
-defaults write com.apple.WindowManager EnableStandardClickToShowDesktop -bool false
-killall Dock 2>/dev/null || true  # no Dock running, e.g. over SSH
-
-# App preferences worth keeping — only the settings that were actually changed.
-# Written while the apps aren't running yet on a fresh machine; on this one
-# they're already set. (AlDente's plist also holds the license email, so never
-# export the whole domain.)
-header "Setting app preferences"
-# AlDente: hold the battery at 80 % (macOS 26's native limit, whose floor is
-# 80), sailing mode 5 %, discharge down to the limit, and heat protection —
-# heat wears a battery faster than charge level, and this Mac lives plugged in
-defaults write com.apphousekitchen.aldente-pro chargeVal -float 80
-defaults write com.apphousekitchen.aldente-pro sailingMode -bool true
-defaults write com.apphousekitchen.aldente-pro sailingLevel -float 5
-defaults write com.apphousekitchen.aldente-pro automaticDischarge -bool true
-defaults write com.apphousekitchen.aldente-pro useTahoeNativeLimit -bool true
-defaults write com.apphousekitchen.aldente-pro heatProtectMode -bool true
-defaults write com.apphousekitchen.aldente-pro showPercentage -bool true
-# Scroll Reverser: reverse the mouse (KensingtonWorks), not the trackpad
-defaults write com.pilotmoon.scroll-reverser InvertScrollingOn -bool true
-defaults write com.pilotmoon.scroll-reverser ReverseTrackpad -bool false
-
-# Picked up the next time Finder starts (logout, or `killall Finder`)
-header "Showing all file extensions in Finder"
-defaults write -globalDomain AppleShowAllExtensions -bool true
 
 # Finder "open with" defaults. Each type that actually changes gets a macOS
 # consent dialog (no API avoids it); already-correct types are skipped, so this

@@ -5,8 +5,9 @@ hostnames, or employer-specific detail in tracked files.
 
 ## Layout
 
-- `lib/links.sh` — the symlink manifest (`LINKS`) plus `REQUIRED_BINS` and
-  `LOCAL_FILES`. `install.sh` and `drift.sh` both source it.
+- `lib/links.sh` — the symlink manifest (`LINKS`) plus `REQUIRED_BINS`,
+  `LOCAL_FILES` and the macOS settings (`DEFAULTS`). `install.sh` and
+  `drift.sh` both source it.
 - `install.sh` — Brewfile, symlinks, macOS `defaults`, Finder default apps,
   Claude Code bootstrap, VS Code extensions. `drift.sh` reports divergence.
   It takes no arguments: `install.sh --help` runs a full install.
@@ -49,15 +50,17 @@ commit. Go through what applies:
 - **A new tool**: the public `Brewfile`, or `~/Brewfile.local` for work or
   machine-only tools (never MDM-installed apps); `REQUIRED_BINS` too if a config
   shells out to it.
-- **A macOS setting**: `install.sh`, and apply it on this machine.
+- **A macOS setting**: `DEFAULTS` in `lib/links.sh`, and apply it on this
+  machine.
 - **Last**: `./drift.sh` is clean.
 
 ## Conventions
 
 - A tool that a config shells out to goes in both `Brewfile` and
   `REQUIRED_BINS` in `lib/links.sh`. CI asserts they agree.
-- macOS settings worth keeping go in `install.sh` as `defaults write`, next to
-  the existing ones — and get applied on this machine too.
+- macOS settings worth keeping go in `DEFAULTS` in `lib/links.sh`, next to
+  the existing ones: `install.sh` writes them, `drift.sh` checks them. Apply
+  them on this machine too.
 - `~/.gitconfig` is a symlink to the tracked `gitconfig`, so
   `git config --global` and `git maintenance start` write into the repo.
   Machine-local git config goes in `~/.gitconfig.local`; check `gitconfig`
