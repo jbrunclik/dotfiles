@@ -19,4 +19,6 @@ vim.opt.rtp:prepend(lazypath)
 require("lazy").setup("plugins", {
   install = { colorscheme = { "catppuccin" } },
   checker = { enabled = false },
+  -- No plugin here needs luarocks; off, lazy stops checking for it
+  rocks = { enabled = false },
 })

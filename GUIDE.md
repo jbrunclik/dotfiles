@@ -412,9 +412,8 @@ isn't mapped: macOS takes Ctrl+←/→ to switch Spaces before Neovim sees them.
 | Action | Keys |
 |---|---|
 | Navigate popup | `Ctrl+N` / `Ctrl+P` |
-| Accept selection | `Enter` |
+| Accept selection | `Enter` (or `Ctrl+Y`) |
 | Dismiss popup | `Ctrl+E` |
-| Confirm selection | `Ctrl+Y` |
 
 ### Auto-formatting
 

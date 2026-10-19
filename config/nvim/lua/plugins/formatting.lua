@@ -48,7 +48,11 @@ return {
         javascript = { "eslint_d" },
         javascriptreact = { "eslint_d" },
       }
+      -- Only the files a linter is set for; the group keeps a re-source
+      -- from stacking a second copy of the autocmd
       vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost" }, {
+        group = vim.api.nvim_create_augroup("lint", { clear = true }),
+        pattern = { "*.js", "*.jsx", "*.mjs", "*.cjs", "*.ts", "*.tsx", "*.mts", "*.cts" },
         callback = function()
           lint.try_lint()
         end,
