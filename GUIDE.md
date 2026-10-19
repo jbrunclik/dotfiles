@@ -79,7 +79,10 @@ Examples:
 - Type `docker` then press Up → cycles through docker commands
 
 History keeps 100,000 lines with timestamps (`history | tail` shows when each
-command ran), shared across tabs as you type. `~/.bashrc` only sources
+command ran). Every command is written to the file as it runs, and **Ctrl+R
+searches every tab's commands**: it reads in what other tabs have run first.
+Up-arrow sticks to this tab's own commands (until Ctrl+R pulls the others
+in), so it doesn't jump between tabs. `~/.bashrc` only sources
 `~/.bash_profile`: a non-login shell (typing `bash`, some editor terminals)
 reads only `.bashrc`, and without it ran on bash's defaults — and on exit
 trimmed the shared history file to 500 lines.

@@ -16,7 +16,8 @@ HISTCONTROL=ignoreboth:erasedups
 # Timestamps: `history` shows when each command ran (stored as #epoch lines)
 HISTTIMEFORMAT='%F %T  '
 shopt -s histappend
-# Flush each command to the history file immediately so parallel tabs share it
+# Flush each command to the history file as it runs; Ctrl+R (below) reads
+# the other tabs' commands back in before searching
 PROMPT_COMMAND='history -a'
 
 # Shell options
@@ -108,6 +109,19 @@ export FZF_ALT_C_OPTS="--preview 'eza --tree --level=2 --icons --color=always {}
 _fzf_compgen_path() { fd --hidden --exclude .git . "$1"; }
 _fzf_compgen_dir() { fd --type d --hidden --exclude .git . "$1"; }
 _cached_init fzf --bash
+# fzf's Ctrl+R searches this shell's in-memory history, so commands run in
+# other tabs since this one opened were missing. `history -n` reads in what
+# they've appended first. Only here, not at every prompt: Up-arrow keeps
+# cycling this tab's own commands until Ctrl+R is used.
+__fzf_history_all_tabs__() {
+    builtin history -n
+    __fzf_history__
+}
+if [[ ${BASH_VERSINFO[0]} -ge 4 ]] && declare -F __fzf_history__ > /dev/null; then
+    bind -m emacs-standard -x '"\C-r": __fzf_history_all_tabs__'
+    bind -m vi-command -x '"\C-r": __fzf_history_all_tabs__'
+    bind -m vi-insert -x '"\C-r": __fzf_history_all_tabs__'
+fi
 
 # Tools
 # Not cached: its output embeds the PATH it was generated with
