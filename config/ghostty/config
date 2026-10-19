@@ -49,17 +49,22 @@ quick-terminal-animation-duration = 0.15
 # Alt+H/J/K/L moves between Ghostty splits, Ctrl+H/J/K/L between Neovim
 # windows (keymaps.lua), so both stay on the home row without colliding. Ctrl
 # can't do both: the shell and Claude Code need Ctrl+L and Ctrl+K. Physical
-# key codes, so the Czech layout doesn't move them. The only thing given up
-# is readline's Alt+L (downcase-word).
-keybind = alt+key_h=goto_split:left
-keybind = alt+key_j=goto_split:down
-keybind = alt+key_k=goto_split:up
-keybind = alt+key_l=goto_split:right
+# key codes, so the Czech layout doesn't move them. performable: means a key
+# is only taken when there's a split that way; otherwise it reaches the
+# program, so readline's Alt+L (downcase-word) still works in a single pane
+# or the rightmost split (tested). Performable keys don't show in the menu.
+keybind = performable:alt+key_h=goto_split:left
+keybind = performable:alt+key_j=goto_split:down
+keybind = performable:alt+key_k=goto_split:up
+keybind = performable:alt+key_l=goto_split:right
 keybind = alt+shift+key_h=resize_split:left,40
 keybind = alt+shift+key_j=resize_split:down,40
 keybind = alt+shift+key_k=resize_split:up,40
 keybind = alt+shift+key_l=resize_split:right,40
 keybind = alt+key_z=toggle_split_zoom
+# Moving out of a zoomed split zooms the one you land on instead of
+# unzooming, so on the MacBook Alt+H/J/K/L flips between full-size panes
+split-preserve-zoom = navigation
 keybind = alt+equal=equalize_splits
 
 # --- Moving tabs ---

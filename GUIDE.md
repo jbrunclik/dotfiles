@@ -12,7 +12,7 @@ everything at once.
 | Split right / down | `Cmd+D` / `Cmd+Shift+D` |
 | Move between splits | `Alt+H/J/K/L` (also `Cmd+Option+Arrow`) |
 | Resize a split | `Alt+Shift+H/J/K/L` |
-| Zoom a split (toggle) | `Alt+Z` (also `Cmd+Shift+Enter`) |
+| Zoom a split (toggle) | `Alt+Z` (also `Cmd+Shift+Enter`); `Alt+H/J/K/L` while zoomed zooms the next split |
 | Equalize splits | `Alt+=` |
 | Fullscreen | `Cmd+Enter` |
 | Jump to previous / next prompt | `Cmd+Up` / `Cmd+Down` |
@@ -37,8 +37,11 @@ a long build log or a Claude Code session.
 Ghostty splits, `Ctrl+H/J/K/L` between Neovim windows. Ctrl can't do both —
 the shell and Claude Code need `Ctrl+L` (clear) and `Ctrl+K` (kill to end of
 line) — so the modifier says which layer you're moving in. They're bound to
-physical keys, so the Czech layout doesn't move them. The one casualty is
-readline's `Alt+L` (lowercase the next word).
+physical keys, so the Czech layout doesn't move them. Each `Alt` key is only
+taken when there's a split in that direction; otherwise it goes through to the
+program, so readline's `Alt+L` (lowercase the next word) still works in a
+single pane or the rightmost split. The catch: these keys no longer show in
+Ghostty's menu.
 
 **Tabs move on the same keys they switch on:** `Hyper+,/.` switches tabs,
 `Ctrl+,/.` moves the current one (wrapping at the ends). Nothing is given up:
