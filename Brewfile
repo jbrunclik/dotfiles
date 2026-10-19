@@ -78,6 +78,11 @@ brew "prettier"
 brew "eslint_d"
 # Shell scripts on save (bashls also formats with it)
 brew "shfmt"
+# Language servers for Claude Code's pyright-lsp and typescript-lsp plugins,
+# which launch these from PATH (Neovim's come from Mason, outside PATH). The
+# TypeScript one uses each project's node_modules/typescript.
+brew "pyright"
+brew "typescript-language-server"
 
 # Modern CLI replacements
 brew "bat"

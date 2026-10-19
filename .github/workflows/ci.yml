@@ -63,6 +63,7 @@ jobs:
             difft)       formula=difftastic ;;
                   tree-sitter) formula=tree-sitter-cli ;;
                   gm)          formula=graphicsmagick ;;
+                  pyright-langserver) formula=pyright ;;
                   *)      formula="$bin" ;;
               esac
               if ! grep -qE "^brew \"$formula\"" Brewfile; then

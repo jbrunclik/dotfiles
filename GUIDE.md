@@ -493,6 +493,29 @@ extension installed from a recommendation prompt shows up as extra until
 it's listed or uninstalled. Dependencies of listed extensions (Jupyter's
 helpers, the Python extension's) don't count.
 
+## Claude Code
+
+`install.sh` runs `config/claude/bootstrap.sh`: it merges
+`settings.base.json` into `~/.claude/settings.json` (auto mode, the status
+line, …) and installs the plugin set. `drift.sh` reports a base setting that
+has gone missing.
+
+- **LSP plugins** (`pyright-lsp`, `typescript-lsp`) give Claude diagnostics
+  after each edit, go-to-definition and references. They launch
+  `pyright-langserver` and `typescript-language-server` from PATH — both in
+  the Brewfile; without them the plugins silently do nothing. The TypeScript
+  one needs the project's own `typescript` in `node_modules`.
+- **No Bash sandbox** (`sandbox.enabled`). It confines Claude's shell commands
+  to writes in the project and `$TMPDIR`, and network to allowed hosts. Here
+  it would break most of what Claude runs — git over SSH, `gh`/`glab`,
+  `brew`, `docker`, `open`/`osascript`, `hs`, anything writing to `~/.cache`
+  or `~/Library` — and by default a blocked command is simply retried outside
+  it (auto mode's classifier approves that), so it adds little. Reads stay
+  open either way (`~/.ssh` included). Worth it per project when Claude will
+  run code you don't trust: `/sandbox` there (saves to that repo's
+  `.claude/settings.local.json`), with `allowUnsandboxedCommands: false` and
+  `failIfUnavailable: true` to make it binding.
+
 ## Text editing everywhere (macOS)
 
 These work in any native text field — Mail, Notes, Slack, browsers, VS Code —

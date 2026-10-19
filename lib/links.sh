@@ -66,6 +66,8 @@ REQUIRED_BINS=(
     "prettier|conform.nvim formatter for ts/js/json/yaml/markdown"
     "eslint_d|nvim-lint linter for ts/js"
     "shfmt|conform.nvim formatter for shell scripts"
+    "pyright-langserver|Claude Code's pyright-lsp plugin"
+    "typescript-language-server|Claude Code's typescript-lsp plugin"
     "ruff|Python lint + format"
     "uv|Python packaging"
     "gitleaks|secret scanning in the global pre-commit hook"
