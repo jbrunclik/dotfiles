@@ -159,7 +159,6 @@ brew "sd"
 
 # Fonts
 cask "font-maple-mono-nf"
-cask "font-cascadia-code-nf"
 
 # Machine-local additions — work tools, this-machine-only apps. Untracked;
 # drift.sh checks it too. A Brewfile is Ruby, so this just evaluates the file.
