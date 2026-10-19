@@ -84,7 +84,7 @@ PALETTE = [
     (0, 190, 255),    # 9  sky       arrows
     (255, 30, 150),   # 10 pink      F-keys, forward delete, Slack
     (140, 80, 190),   # 11 dim mauve base layer gradient, columns 0–3 (far left)
-    (230, 230, 240),  # 12 white     layer keys (incl. the way out of a layer), Notion, Ghostty tabs
+    (230, 230, 240),  # 12 white     layer keys (incl. the way out of a layer), Notion, the tab keys
     (70, 100, 190),   # 13 dim blue  base layer gradient, columns 4–7
     (50, 150, 140),   # 14 dim teal  base layer gradient, columns 8–11
     (70, 150, 80),    # 15 dim green base layer gradient, columns 12–15 (far right)

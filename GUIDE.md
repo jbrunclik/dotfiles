@@ -976,12 +976,16 @@ On MacBook, CapsLock is three keys in one:
 |---|---|
 | Hold + another key | Hyper |
 | Tap (release within 250 ms) | Backspace |
-| Tap, then press again within 250 ms and hold | Repeating Backspace |
+| Tap (any number of times), then press again within 300 ms and hold | Repeating Backspace |
 
 Holding CapsLock and letting go without pressing anything sends nothing once
 250 ms have passed, so an abandoned Hyper chord doesn't delete a character.
-The catch: a Hyper chord started within 250 ms of a Backspace tap becomes
-Backspace instead.
+The catch: a Hyper chord started within 300 ms of a Backspace tap becomes
+Backspace instead (typing any other key in between resets it). Each tap stores
+an expiry time (`caps_lock_tap_until`, compared with `system.now.milliseconds`)
+rather than starting a timer: Karabiner's delayed actions run from the
+*press* and an earlier tap's timer outlived a later tap, so the old rule gave a
+~150 ms window and lost the repeat after two quick taps.
 
 ### Keyboardio Model 100
 
@@ -1012,7 +1016,7 @@ brightness 200/255):
   | B W, O P — word / line jumps | orange |
   | U I — page up / down | lavender |
   | Backspace — forward delete | pink |
-  | `,` `.` — Ghostty tabs | white |
+  | `,` `.` — previous / next tab | white |
   | 1–6 — apps, each in its own color | Ghostty mauve (its Catppuccin accent), Dia yellow, Chrome green, Slack pink, Notion white, Zoom blue |
   | Z X C V — layouts · ` Tab Q A S D F, left thumb Cmd Shift — windows | mauve · blue |
   | T Messages · M Return — Zoom mute, join | teal · red |
@@ -1031,7 +1035,7 @@ own color (off here), so the color map can't light them. Layer 1 is left empty.
 Only **16 colors** are usable: the color map stores 4 bits per key, even though
 the palette holds 24. `keyboardio-layers` refuses to go past index 15. That's
 why some keys share a color where they never sit side by side (Slack and
-forward delete, Zoom and the window keys, Ghostty tabs and the Hyper key).
+forward delete, Zoom and the window keys, the tab keys and the Hyper key).
 
 The color map is indexed by LED, not by key — the LEDs are wired in a different
 order (the table is in `keyboardio-layers`, the same one Chrysalis uses).
@@ -1114,6 +1118,7 @@ Hammerspoon running and the Xcode Command Line Tools (`swiftc`).
 | Hyper + O / P | Line start / end (Cmd+Left/Right) |
 | Hyper + B / W | Word back / forward (Option+Left/Right) |
 | Hyper + Backspace | Forward delete |
+| Hyper + **right Shift** + any of the above but Backspace | The same, selecting (Shift+arrow, Shift+Cmd+←, …) |
 
 Works system-wide: Slack, Notion, Chrome, Ghostty, etc.
 
@@ -1121,22 +1126,26 @@ O/P send Cmd+Left/Right rather than Home/End: in most Mac apps Home/End scroll t
 the top or bottom of the document instead of moving within the line. In
 Ghostty, Cmd+Left/Right and Option+Left/Right are already mapped to the shell's
 line-start/end and word motions, so the whole layer works in the terminal too.
-There's no Shift+ variant for selecting: Hyper already includes Shift.
+Selecting needs a second Shift: Hyper already holds (left) Shift, so the
+select variants trigger on **right** Shift added to the chord — on the Model
+100 the right-thumb Shift, which stays a Shift on the Hyper layer. On the
+MacBook, right ⌘ works too (right Shift is a stretch with Caps Lock held).
 
-### Ghostty tabs (Karabiner)
+### Tabs (Karabiner)
 
 | Shortcut | Action |
 |---|---|
 | Hyper + , | Previous tab |
 | Hyper + . | Next tab |
 
-Only while Ghostty is frontmost. These have to live in Karabiner rather than
-Ghostty's config: macOS reserves `Hyper+,`, `Hyper+.` and `Hyper+/` for
-sysdiagnose and swallows them before any app sees them. Karabiner runs first and
-rewrites them to Ghostty's `Ctrl+Shift+Tab` / `Ctrl+Tab` — not `Cmd+Shift+[` / `]`,
-because on the Czech layout that physical key types `ú` and Ghostty's binding
-no longer matches. Outside Ghostty they still start
-a sysdiagnose (a ~400 MB archive in `/private/var/tmp`).
+In every app: Ghostty, Chrome, Dia, Safari, Finder, VS Code (where Ctrl+Tab
+cycles recent editors). These have to live in Karabiner: macOS reserves
+`Hyper+,`, `Hyper+.` and `Hyper+/` for sysdiagnose (a ~400 MB archive in
+`/private/var/tmp`) and swallows them before any app sees them. Karabiner runs
+first and rewrites them to `Ctrl+Shift+Tab` / `Ctrl+Tab` — not `Cmd+Shift+[` /
+`]`, because on the Czech layout that physical key types `ú` and the shortcut
+no longer matches. `Hyper+/` is swallowed, so a stray press no longer starts a
+sysdiagnose.
 
 ### Window management (Hammerspoon)
 
@@ -1435,7 +1444,7 @@ bindHyper("g", "Layouts", "Figma | Chrome", function() tilePair("Figma", "Google
 
 Pick a key that isn't already bound — hold Hyper for the cheatsheet, or look
 at the lit Hyper layer on the Model 100 (dark keys are free). `,`/`.`/`/` are
-reserved by macOS (see Ghostty tabs above). Saving the file reloads
+reserved by macOS (see Tabs above). Saving the file reloads
 Hammerspoon.
 
 ## Learning path
