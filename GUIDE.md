@@ -837,6 +837,9 @@ registered with `git config --get-all maintenance.repo`. The launchd agents
   when the remote has commits you fetched but never integrated; a background
   fetch (lazygit, VS Code) otherwise quietly updates the lease
 - **`tag.sort = version:refname`** — `git tag` lists `v1.9` before `v1.10`
+- **Global ignore** (`config/git/ignore`, linked to `~/.config/git/ignore`):
+  only what no repo should ever track — `.DS_Store`, Claude Code's personal
+  `.claude/settings.local.json`. Project patterns belong in each `.gitignore`.
 - **`diff.mnemonicPrefix`** — paths in raw diffs say what's compared: `i/`
   index, `w/` working tree, `c/` commit, instead of `a/` and `b/` (delta's
   file headers strip them either way)

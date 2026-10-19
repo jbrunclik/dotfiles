@@ -20,6 +20,7 @@ LINKS=(
     "bashrc|$HOME/.bashrc"
     "inputrc|$HOME/.inputrc"
     "gitconfig|$HOME/.gitconfig"
+    "config/git/ignore|$HOME/.config/git/ignore"
     "ssh_config|$HOME/.ssh/config"
     "config/ghostty/config|$HOME/.config/ghostty/config"
     "config/nvim|$HOME/.config/nvim"

@@ -1,0 +1,8 @@
+# Global gitignore (core.excludesFile unset, so git reads ~/.config/git/ignore).
+# Only what no repo should ever track; project patterns belong in .gitignore.
+
+# Claude Code personal overrides (shared .claude/settings.json is tracked)
+**/.claude/settings.local.json
+
+# Finder metadata
+.DS_Store
