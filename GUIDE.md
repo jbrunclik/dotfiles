@@ -146,23 +146,23 @@ sends Option as Alt (`macos-option-as-alt`).
 
 ### Smart cd (zoxide)
 
-Zoxide learns which directories you visit frequently. After using `cd`
-normally for a while, you can jump directly:
+**`cd <fragment>` from anywhere** — no `cd ~/src/...` first:
 
 ```bash
-cd projects        # first few times, use full paths as normal
-cd ~/src/dotfiles  # zoxide is learning...
-
-# later, from anywhere:
-cd dot             # jumps to ~/src/dotfiles
-cd proj            # jumps to ~/projects
-
-zi                 # interactive fuzzy directory picker
+cd dotfiles        # a directory in ~/src (or ~) by name, from anywhere
+cd dot             # zoxide: the best-ranked directory matching "dot"
+cd src dot         # several fragments, matched in order along the path
+zi                 # interactive fuzzy picker over everything zoxide knows
+cd -               # back to where you were
 ```
 
-The more you visit a directory, the higher it ranks. Zoxide's `z`
-command (aliased to `cd`) falls back to regular `cd` if it can't
-find a match.
+`cd` is zoxide's: it first tries a plain `cd`, which also looks in `~` and
+`~/src` (`CDPATH`), so any project under `~/src` works by its full name even
+before zoxide has seen it — it prints where it went. Otherwise zoxide picks,
+among directories you've been to, the one you visit most and most recently
+that matches the fragments. A
+directory in the current one always wins, and `CDPATH` isn't exported, so
+scripts' `cd` is unaffected.
 
 ### Modern CLI tools
 

@@ -24,6 +24,12 @@ shopt -s cdspell 2>/dev/null
 shopt -s dirspell 2>/dev/null
 shopt -s globstar 2>/dev/null
 shopt -s checkwinsize
+# `cd <project>` from anywhere: zoxide's cd tries a plain `cd` first, which
+# looks through these — so a repo under ~/src works even before zoxide has
+# learned it. The empty first entry is the current directory, so a local
+# directory still wins — and unlike ".", it doesn't make cd print the path.
+# Not exported: scripts that cd would start searching it too.
+CDPATH=:~:~/src
 
 # Homebrew (ARM: /opt/homebrew, Intel: /usr/local). What `brew shellenv`
 # prints, written out: running it cost ~20 ms per shell.
