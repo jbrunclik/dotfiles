@@ -20,6 +20,7 @@ everything at once.
 | Open a URL | `Cmd`+click |
 | Quick terminal (global) | `` Ctrl+` `` |
 | Find in scrollback | `Cmd+F` |
+| Command palette (every action, searchable) | `Cmd+Shift+P` |
 | Edit config | `Cmd+,` |
 | Reload config | `Cmd+Shift+,` |
 | Previous / next tab | `Hyper+,` / `Hyper+.` (Karabiner), `Ctrl+Shift+Tab` / `Ctrl+Tab`, or `Cmd+Shift+[` / `]` (U.S. layout only) |
@@ -44,8 +45,14 @@ readline's `Alt+L` (lowercase the next word).
 a terminal has no control character for `,` or `.`, so programs in it never
 receive these chords, and Ghostty's own `,` shortcuts are on Cmd.
 
-Two things to know:
+Things to know:
 
+- **A long command finishing in the background rings and notifies.** A
+  command that ran 10 s or more and ends while Ghostty isn't focused bounces
+  the dock icon, puts 🔔 in its tab title (no sound) and posts a banner. The
+  banner needs Ghostty allowed in System Settings → Notifications; if it's
+  off, Ghostty logs `Error while requesting notification authorization` and
+  only the bell shows.
 - **Config changes need a reload before a new tab.** Ghostty doesn't watch its
   config file; new tabs use the config that was loaded last. Press
   `Cmd+Shift+,` first. Shell-integration changes then only reach new tabs.
@@ -450,8 +457,14 @@ camera RAW go to Preview instead of GIMP; audio and video go to IINA (QuickTime
 cannot play `.mkv` or `.webm`, and Music imports a double-clicked `.mp3` into the
 library); `.rar` and `.7z` go to The Unarchiver.
 
-Two things to know:
+Things to know:
 
+- **A long command finishing in the background rings and notifies.** A
+  command that ran 10 s or more and ends while Ghostty isn't focused bounces
+  the dock icon, puts 🔔 in its tab title (no sound) and posts a banner. The
+  banner needs Ghostty allowed in System Settings → Notifications; if it's
+  off, Ghostty logs `Error while requesting notification authorization` and
+  only the bell shows.
 - macOS shows a "Do you want all documents with the extension … to open with …?"
   dialog for every type that actually changes. No supported API avoids it. Types
   already set correctly are skipped, so it only happens on first run or after
