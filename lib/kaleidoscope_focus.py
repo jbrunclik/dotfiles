@@ -108,6 +108,31 @@ class Keyboard:
             except BlockingIOError:
                 pass
 
+    def resync(self):
+        """Get the keyboard listening for commands again after a failed request.
+
+        A write cut short (a timeout, a line ending in a space) leaves the
+        firmware still parsing numbers: it skips whitespace, newlines
+        included, and fills each missing value with 0 after a 1 s wait — up to
+        512 s for a keymap — and meanwhile reads our next command as more of
+        the old one. Filler numbers finish that parse at once; the leftovers
+        are answered as unknown commands and drained here. The interrupted
+        setting holds garbage afterwards, so rewrite it.
+        """
+        termios.tcflush(self.fd, termios.TCIFLUSH)
+        filler = ("0 " * 1024 + "\n").encode()
+        deadline = time.time() + 10
+        for i in range(0, len(filler), 32):
+            self._write_all(filler[i:i + 32], "resync", deadline)
+            time.sleep(0.01)
+        quiet = time.time()
+        while time.time() - quiet < 1.5:  # drain until the keyboard goes silent
+            if select.select([self.fd], [], [], 0.2)[0]:
+                os.read(self.fd, 65536)
+                quiet = time.time()
+        if "keymap.custom" not in self.commands():
+            sys.exit("the keyboard doesn't answer 'help' cleanly after resync")
+
     def commands(self):
         return [c for c in self.request("help").split("\n") if c]
 

@@ -1092,7 +1092,14 @@ from the base layer, its colors from the live cheatsheet data — so **after
 adding or moving a Hyper binding, run `keyboardio-layers --apply`, then
 `keyboardio-backup`** and commit. Without `--apply` it only prints what would
 change. It writes over the same protocol Chrysalis uses and reads every value
-back; if something looks wrong, restore the committed backup with Chrysalis.
+back. Before writing it snapshots everything it is about to change, so a
+timeout halfway through or a value that doesn't read back puts the keyboard
+back as it was rather than half-written. Only if that restore fails too does
+it fall back to the committed backup, restored with Chrysalis. A write cut
+short is worse than it looks: the firmware keeps parsing numbers across the
+newline, zero-filling each missing one after a second, and reads the next
+command as more data, so the restore first floods it with filler to finish
+that parse.
 
 The base layer has no arrow keys, so on the Hyper layer the **left thumb arc
 sends the four Hyper+arrows**, outer to inner: Ctrl ↑ (reading frame),

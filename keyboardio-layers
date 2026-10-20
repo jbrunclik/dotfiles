@@ -17,7 +17,8 @@ The Hyper bindings come live from Hammerspoon (hyperCheatsheetExport — the
 same data as the hold-Hyper overlay), so re-run after adding a binding.
 
 Dry run by default: prints the plan. --apply writes it to the keyboard over
-the Focus protocol (as Chrysalis does) and reads every value back to verify.
+the Focus protocol (as Chrysalis does) and reads every value back to verify;
+if a write fails or doesn't read back, it restores the values it snapshotted.
 Afterwards run keyboardio-backup and commit. Quit Chrysalis first.
 
 Usage:
@@ -171,11 +172,13 @@ def hyper_bindings():
     with tempfile.TemporaryDirectory() as tmp:
         path = os.path.join(tmp, "bindings.json")
         # </dev/null: hs reads commands from stdin when it isn't a terminal
-        subprocess.run(["perl", "-e", "alarm 10; exec @ARGV", "hs", "-c",
-                        f"return hyperCheatsheetExport('{path}')"],
-                       stdin=subprocess.DEVNULL, capture_output=True)
+        result = subprocess.run(["perl", "-e", "alarm 10; exec @ARGV", "hs", "-c",
+                                 f"return hyperCheatsheetExport('{path}')"],
+                                stdin=subprocess.DEVNULL, capture_output=True, text=True)
         if not os.path.exists(path):
-            sys.exit("no data from Hammerspoon — is it running?")
+            # A Lua error in the export reads very differently from "not running"
+            output = (result.stderr + result.stdout).strip()
+            sys.exit("no data from Hammerspoon — " + (output or "is it running?"))
         sections = json.load(open(path))["sections"]
     bound = {}
     for section in sections:
@@ -286,9 +289,42 @@ if not APPLY:
     print("Dry run — nothing written. Re-run with --apply.")
     sys.exit(0)
 
-for command, value in plan.items():
-    keyboard.request(command, value)
-keyboard.request("led.mode", plan["led_mode.default"])  # switch now, not just after replug
+
+def read_for_write(command):
+    """The current value, in the form a write takes."""
+    value = keyboard.request(command)
+    if command == "keymap.layerNames":  # read ends with "0 size=N", a write with "0"
+        return " ".join(value.split("\n")[:-1]) + " 0"
+    return value
+
+
+def restore(written, why):
+    """Put back what was there before, newest write first; exit with why."""
+    print(f"{why} — restoring the previous values…", file=sys.stderr)
+    try:
+        keyboard.resync()  # a cut-short write leaves the firmware mid-parse
+        for command in reversed(written):
+            keyboard.request(command, before[command])
+        keyboard.request("led.mode", before["led_mode.default"])
+        failed = [c for c in written if read_for_write(c).split() != before[c].split()]
+    except SystemExit as e:  # the keyboard stopped answering
+        failed = [f"all ({e})"]
+    if failed:
+        sys.exit(f"restore failed ({', '.join(failed)}): restore config/keyboardio/model100.json "
+                 "with Chrysalis's restore-from-backup")
+    sys.exit("keyboard back as it was; nothing changed")
+
+
+# Snapshot first, so a timeout halfway through can't leave a half-written keyboard
+before = {command: read_for_write(command) for command in plan}
+written = []
+try:
+    for command, value in plan.items():
+        written.append(command)  # before the request: a timeout may have written part of it
+        keyboard.request(command, value)
+    keyboard.request("led.mode", plan["led_mode.default"])  # switch now, not just after replug
+except SystemExit as e:
+    restore(written, f"writing {written[-1]} failed ({e})")
 
 # Verify by reading back
 problems = []
@@ -298,8 +334,7 @@ for command in ("palette", "colormap.map", "keymap.custom", "led.brightness", "l
 read_names = [line.split(" ", 1)[1] for line in keyboard.request("keymap.layerNames").split("\n")[:-1]]
 if read_names != names:
     problems.append(f"keymap.layerNames ({read_names})")
-keyboard.close()
 if problems:
-    sys.exit("written, but these didn't read back as sent: " + ", ".join(problems)
-             + " — restore config/keyboardio/model100.json with Chrysalis if anything misbehaves")
+    restore(written, "these didn't read back as sent: " + ", ".join(problems))
+keyboard.close()
 print("Applied and verified. Now: keyboardio-backup, then commit config/keyboardio/model100.json")
