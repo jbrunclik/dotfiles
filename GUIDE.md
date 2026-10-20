@@ -1255,9 +1255,9 @@ sysdiagnose.
 
 | Shortcut | Action |
 |---|---|
-| Hyper + A | Tile window left half |
+| Hyper + A | Tile window left half; again: ⅔, then ⅓ of the width (the split follows) |
 | Hyper + S | Maximize window (no fullscreen); again: back where it was |
-| Hyper + D | Tile window right half |
+| Hyper + D | Tile window right half; again: ⅔, then ⅓ |
 | Hyper + R | Move the split: 50 → 67 → 33 % (left side's share); everything docked at it follows. MacBook: 50 → 60 → 40 |
 | Hyper + F | Toggle native fullscreen |
 | Hyper + E | Swap the two sides, each keeping its width (the focused window keeps focus) |
@@ -1269,9 +1269,12 @@ sysdiagnose.
 | Hyper + G | Pick any window from a list, typing part of its app or title |
 | Hyper + Q | Hide the front app (like `Cmd+H`); focus returns to the previous app |
 
-**Splits (Hyper+R).** Each press moves the split between the two sides to
-the next step after the nearest one, so a window dragged by hand joins the
-cycle too. Every window *docked* against the split moves with it — full
+**Splits (Hyper+R, Hyper+A/D again).** Hyper+R moves the split between the
+two sides to the next step after the nearest one, so a window dragged by hand
+joins the cycle too. A second Hyper+A or Hyper+D on a window already docked
+on that side steps *its own* width ½ → ⅔ → ⅓ (Rectangle's convention), so A
+always resizes the left window and D the right one, while R steps the divider
+the same way whichever side you're on. Both move the split the same way. Every window *docked* against the split moves with it — full
 height, flush with a screen edge, inner edge on the split: the window on the
 other side and everything stacked behind either (Hyper+` only cycles windows
 that share a frame, so leaving them would break the stack). Undo is one

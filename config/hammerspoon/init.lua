@@ -548,46 +548,67 @@ bindHyper("f", "Windows", "Toggle native fullscreen", function()
     if win then win:toggleFullScreen() end
 end)
 
--- Hyper+ASD = tile left / maximize / tile right
-bindHyper("a", "Windows", "Tile left half", function()
-    local win = hs.window.focusedWindow()
-    moveWin(win, left)
-end)
-
-bindHyper("d", "Windows", "Tile right half", function()
-    local win = hs.window.focusedWindow()
-    moveWin(win, right)
-end)
-
--- Hyper+R = move the split: 50 → 67 → 33 → 50 % (the left side's share),
--- from wherever it is now. Thirds only: 60 next to 67 was too close to see. Every window docked against the split
--- follows, on both sides — the partner, and anything stacked under either
--- (Hyper+` cycles a stack only while its windows share a frame). On the
--- MacBook only 50 → 60 → 40: a third there is ~500 pt, narrower than
--- Messages or Slack will go. Read from live frames each press.
+-- Splits. Steps are the left side's share for Hyper+R and the focused
+-- window's own share for a repeated Hyper+A/D: thirds on the Dell (60 next
+-- to 67 was too close to see), 60/40 on the MacBook, where a third is
+-- ~500 pt — narrower than Messages or Slack will go.
 local SPLITS = { 0.5, 2 / 3, 1 / 3 }
 local SPLITS_BUILTIN = { 0.5, 0.6, 0.4 }
-bindHyper("r", "Windows", "Move the split: 50 → 67 → 33 %", function()
-    local win = hs.window.focusedWindow()
-    if not dockedSide(win) then return end
-    local screen = win:screen()
-    local current = splitRatio(win)
-    local splits = screen:name():find("^Built%-in") and SPLITS_BUILTIN or SPLITS
-    -- The next step after the nearest one; a split off the list (a window
-    -- dragged by hand) counts as its nearest step
+
+local function splitSteps(screen)
+    return screen:name():find("^Built%-in") and SPLITS_BUILTIN or SPLITS
+end
+
+-- The step after the nearest one: a split off the list (a window dragged by
+-- hand) counts as its nearest step
+local function nextStep(steps, value)
     local nearest = 1
-    for i, ratio in ipairs(splits) do
-        if math.abs(ratio - current) < math.abs(splits[nearest] - current) then nearest = i end
+    for i, step in ipairs(steps) do
+        if math.abs(step - value) < math.abs(steps[nearest] - value) then nearest = i end
     end
-    local nextRatio = splits[nearest % #splits + 1]
-    local edge = screen:frame().w * current
+    return steps[nearest % #steps + 1]
+end
+
+-- Move the split at `from` to `to` (left side's shares): every window docked
+-- against it follows, on both sides — the partner, and anything stacked under
+-- either (Hyper+` cycles a stack only while its windows share a frame).
+local function moveSplit(screen, from, to)
     for _, w in ipairs(hs.window.orderedWindows()) do
         local side = dockedSide(w)
         if w:isStandard() and side and w:screen() == screen
-            and math.abs(screen:frame().w * splitRatio(w) - edge) < threshold then
-            moveWin(w, sideRect(side, nextRatio))
+            and math.abs(splitRatio(w) - from) * screen:frame().w < threshold then
+            moveWin(w, sideRect(side, to))
         end
     end
+end
+
+-- Hyper+A/D = tile left / right half. Again, on a window already docked on
+-- that side: its own width steps ½ → ⅔ → ⅓ → ½ (Rectangle's convention), the
+-- split moving with everything docked at it, as with Hyper+R. So A always
+-- resizes the left window and D the right one.
+local function tileSide(side)
+    local win = hs.window.focusedWindow()
+    if not win then return end
+    if dockedSide(win) ~= side then
+        moveWin(win, side == "left" and left or right)
+        return
+    end
+    local split = splitRatio(win)
+    local share = side == "left" and split or 1 - split
+    local nextShare = nextStep(splitSteps(win:screen()), share)
+    moveSplit(win:screen(), split, side == "left" and nextShare or 1 - nextShare)
+end
+bindHyper("a", "Windows", "Tile left half (again: ⅔, ⅓)", function() tileSide("left") end)
+bindHyper("d", "Windows", "Tile right half (again: ⅔, ⅓)", function() tileSide("right") end)
+
+-- Hyper+R = move the split: 50 → 67 → 33 → 50 % (the left side's share),
+-- from wherever it is now, whichever side is focused. Read from live frames
+-- each press.
+bindHyper("r", "Windows", "Move the split: 50 → 67 → 33 %", function()
+    local win = hs.window.focusedWindow()
+    if not dockedSide(win) then return end
+    local split = splitRatio(win)
+    moveSplit(win:screen(), split, nextStep(splitSteps(win:screen()), split))
 end)
 
 -- Hyper+S again, on a window that's already maximized, puts it back where it
