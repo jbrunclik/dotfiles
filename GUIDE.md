@@ -1256,10 +1256,11 @@ sysdiagnose.
 | Shortcut | Action |
 |---|---|
 | Hyper + A | Tile window left half |
-| Hyper + S | Maximize window (no fullscreen); again on a maximized window: back to a half |
+| Hyper + S | Maximize window (no fullscreen); again: back where it was |
 | Hyper + D | Tile window right half |
+| Hyper + R | Move the split: 50 → 67 → 33 % (left side's share); everything docked at it follows. MacBook: 50 → 60 → 40 |
 | Hyper + F | Toggle native fullscreen |
-| Hyper + E | Swap the two halves (the focused window keeps focus) |
+| Hyper + E | Swap the two sides, each keeping its width (the focused window keeps focus) |
 | Hyper + Up | Reading frame: centered, ⅔ wide, full height; again: maximize. On the MacBook's screen: maximize (Model 100: left thumb Ctrl) |
 | Hyper + Down | Undo the last move — every window it moved (both halves of a layout); again: redo (Model 100: left thumb Backspace) |
 | Hyper + Tab | Toggle focus between left/right windows; nothing tiled, or the other half empty: the next window down |
@@ -1267,6 +1268,27 @@ sysdiagnose.
 | Hyper + ` (or ;) | Cycle the windows stacked on this half (or at this spot) |
 | Hyper + G | Pick any window from a list, typing part of its app or title |
 | Hyper + Q | Hide the front app (like `Cmd+H`); focus returns to the previous app |
+
+**Splits (Hyper+R).** Each press moves the split between the two sides to
+the next step after the nearest one, so a window dragged by hand joins the
+cycle too. Every window *docked* against the split moves with it — full
+height, flush with a screen edge, inner edge on the split: the window on the
+other side and everything stacked behind either (Hyper+` only cycles windows
+that share a frame, so leaving them would break the stack). Undo is one
+Hyper+Down for all of them. Thirds only on the Dell — 60 % next to 67 % was
+too close to tell apart. The MacBook uses 60/40 instead: a third there is
+~500 pt, narrower than Messages or Slack will go. Hyper+E keeps the split
+consistent too: the pair swaps sides and widths, and what's stacked behind
+each side moves to the new split.
+
+The rest of the window keys follow the split instead of assuming halves:
+"beside" (a second Hyper+1–6 press, launcher Shift+key) takes the rest of
+the split, a layout's second press
+still cycles focus, and Hyper+Tab / Left / Right go by each window's
+**centre**: a two-thirds window flush right is a right window, though its
+left edge is past the middle (the MacBook messenger float). One definition
+— `dockedSide`, `sideOf`, `splitRatio` in `init.lua` — for every key;
+before, four keys used three rules that agreed only at 50/50.
 
 Every move is instant — Hammerspoon's default 0.2 s slide is off
 (`hs.window.animationDuration = 0`), for tiling, layouts and the Messages float.
@@ -1291,8 +1313,11 @@ and the running command, so a particular Claude session is a few keystrokes.
 from live window positions on each press, but "where was it before" can't be
 read off the screen. So the last action is kept: every window one Hyper press
 moved (a layout or swap moves two; tiles, maximize, the reading frame, the
-messenger floats, "beside"), each with its frame from before, by window id —
-used only to undo. A mistaken Hyper+Z is one press from undone, both halves
+messenger floats, "beside", a split), each with its frame from before, by
+window id — used only to restore. Its one other reader is Hyper+S's second
+press: when the last move was that window maximizing, it goes back to the
+recorded frame; otherwise (maximized some other way, or something moved
+since) beside the window below it. A mistaken Hyper+Z is one press from undone, both halves
 at once, whichever window is in front. Moves made by dragging or by an app
 itself aren't recorded.
 
@@ -1549,7 +1574,7 @@ means KeepingYouAwake ignored the request.
 ### Reloading
 
 Saving any `.lua` file in `config/hammerspoon/` reloads Hammerspoon on its own
-(`hs.pathwatcher`), so there's no reload key — Hyper+R is free. To reload
+(`hs.pathwatcher`), so there's no reload key. To reload
 without an edit: `(hs -c 'hs.reload()' &)` in a terminal (in the background:
 in the foreground `hs` waits on the reload and hangs).
 

@@ -147,6 +147,44 @@ local function inPosition(win, unitRect)
         and math.abs(f.h - unitRect.h * s.h) < threshold
 end
 
+-- Sides, one definition for every key. A window is *docked* on a side when it
+-- is full height and flush with that screen edge, at any width — a half, or
+-- either part of a 60/40 split (Hyper+R). Its *side* is where its centre is,
+-- so a two-thirds window flush right counts as right even though its left
+-- edge is left of the midpoint. Exact halves agreed with any rule; splits
+-- don't, which is why nothing below tests for a half.
+local function dockedSide(win)
+    if not win then return nil end
+    local f, s = win:frame(), win:screen():frame()
+    if math.abs(f.y - s.y) >= threshold or math.abs(f.h - s.h) >= threshold
+        or f.w >= s.w - threshold then
+        return nil
+    end
+    if math.abs(f.x - s.x) < threshold then return "left" end
+    if math.abs(f.x + f.w - (s.x + s.w)) < threshold then return "right" end
+    return nil
+end
+
+local function sideOf(win)
+    local s = win:screen():frame()
+    return win:frame().center.x < s.x + s.w / 2 and "left" or "right"
+end
+
+local function otherSide(side) return side == "left" and "right" or "left" end
+
+-- Where a docked window's inner edge is, as a share of the screen width
+local function splitRatio(win)
+    local f, s = win:frame(), win:screen():frame()
+    local edge = dockedSide(win) == "left" and f.x + f.w or f.x
+    return (edge - s.x) / s.w
+end
+
+-- The unit rect of one side of a split at `ratio` (the left side's share)
+local function sideRect(side, ratio)
+    if side == "left" then return hs.geometry.rect(0, 0, ratio, 1) end
+    return hs.geometry.rect(ratio, 0, 1 - ratio, 1)
+end
+
 -- Check if a window occupies a given unit rect AND is the topmost window there.
 -- Position-only checks are fooled by windows stacked at the same coordinates
 -- (e.g. Slack and Dia both tiled right, with one covering the other).
@@ -168,8 +206,8 @@ end
 -- Hyper+Down's memory: the last action — every window one Hyper press moved
 -- (a layout moves two, a swap two, Hyper+A one), each with its frame from
 -- before. The one exception to deriving everything from live frames — "where
--- was it before" can't be read off the screen — and it's used only to restore;
--- nothing decides a layout from it. Keyed by window id, so a closed window is
+-- was it before" can't be read off the screen — and it's used only to restore
+-- (Hyper+Down, and Hyper+S un-maximizing); nothing decides a layout from it. Keyed by window id, so a closed window is
 -- simply skipped. A move during the same press joins the group; the first
 -- move of a new press starts a new one.
 local lastMove = { press = -1, frames = {} }
@@ -191,10 +229,12 @@ local function setWinFrame(win, frame)
     win:setFrame(frame)
 end
 
--- Two windows on opposite halves: what a "beside" press leaves
+-- Two windows docked on opposite sides of the same split: what a "beside"
+-- press leaves (50/50, or whatever Hyper+R made it)
 local function besideEachOther(a, b)
-    return a and b and ((inPosition(a, left) and inPosition(b, right))
-        or (inPosition(a, right) and inPosition(b, left)))
+    local sa, sb = dockedSide(a), dockedSide(b)
+    return sa ~= nil and sb ~= nil and sa ~= sb
+        and math.abs(splitRatio(a) - splitRatio(b)) * a:screen():frame().w < threshold
 end
 
 -- The next standard window below `win` in z-order that isn't another window
@@ -302,8 +342,11 @@ end
 local function tilePair(leftApp, rightApp)
     local lw = bestWindow(leftApp)
     local rw = bestWindow(rightApp)
-    -- If both windows are already in position, cycle focus
-    if isTiled(lw, left) and isTiled(rw, right) then
+    -- If both windows are already in position, cycle focus — at whatever
+    -- split they share, so a Hyper+R split isn't reset to halves
+    if dockedSide(lw) == "left" and besideEachOther(lw, rw)
+        and isTiled(lw, sideRect("left", splitRatio(lw)))
+        and isTiled(rw, sideRect("right", splitRatio(rw))) then
         local la = getApp(leftApp)
         if la and la:isFrontmost() then rw:focus() else lw:focus() end
         return
@@ -328,10 +371,12 @@ local function placeBeside(name, anchor)
     whenWindows({ name }, function(wins, settling)
         local win = wins[1]
         if not win or win == anchor then return end
-        local anchorHalf, otherHalf = left, right
-        if inPosition(anchor, right) then anchorHalf, otherHalf = right, left end
-        moveWin(anchor, anchorHalf, settling)
-        moveWin(win, otherHalf, settling)
+        -- A docked anchor keeps its side and width; anything else takes the
+        -- left half
+        local side, ratio = dockedSide(anchor), 0.5
+        if side then ratio = splitRatio(anchor) else side = "left" end
+        moveWin(anchor, sideRect(side, ratio), settling)
+        moveWin(win, sideRect(otherSide(side), ratio), settling)
         if not settling then raisePair(anchor, win) end
     end)
 end
@@ -348,28 +393,20 @@ bindHyper("v", "Layouts", "Zoom | Dia", function() tilePair("zoom.us", "Dia") en
 -- front app, sits on top of the z-order, and would otherwise be "focused" —
 -- a press that does nothing. Zoom's control strips are non-standard too.
 bindHyper("tab", "Windows", "Focus the other half", function()
-    local screen = hs.screen.mainScreen()
-    local mid = screen:frame().w / 2
     local current = hs.window.focusedWindow()
     if not current then return end
     -- Nothing tiled (maximized, floating): no "other half", so the next
     -- window down instead, like Cmd+` across apps
-    if not inPosition(current, left) and not inPosition(current, right) then
+    if not dockedSide(current) then
         local nextDown = hs.fnutils.find(hs.window.orderedWindows(), function(w)
             return w ~= current and w:isStandard()
         end)
         if nextDown then nextDown:focus() end
         return
     end
-    local targetSide = current:frame().x < mid and "right" or "left"
+    local targetSide = otherSide(sideOf(current))
     local wins = hs.fnutils.filter(hs.window.orderedWindows(), function(w)
-        if not w:isStandard() or w == current then
-            return false
-        elseif targetSide == "left" then
-            return w:frame().x < mid
-        else
-            return w:frame().x >= mid
-        end
+        return w:isStandard() and w ~= current and sideOf(w) == targetSide
     end)
     -- The other half is empty: the next window down, as with nothing tiled
     local target = wins[1] or hs.fnutils.find(hs.window.orderedWindows(), function(w)
@@ -381,14 +418,14 @@ end)
 -- Hyper+Left/Right = focus window in that direction
 bindHyper("left", "Windows", "Focus left half", function()
     local wins = hs.fnutils.filter(hs.window.orderedWindows(), function(w)
-        return w:isStandard() and w:frame().x < hs.screen.mainScreen():frame().w / 2
+        return w:isStandard() and sideOf(w) == "left"
     end)
     if wins[1] then wins[1]:focus() end
 end)
 
 bindHyper("right", "Windows", "Focus right half", function()
     local wins = hs.fnutils.filter(hs.window.orderedWindows(), function(w)
-        return w:isStandard() and w:frame().x >= hs.screen.mainScreen():frame().w / 2
+        return w:isStandard() and sideOf(w) == "right"
     end)
     if wins[1] then wins[1]:focus() end
 end)
@@ -415,19 +452,37 @@ end
 bindHyper("`", "Windows", "Cycle windows stacked on this half", cycleStack, "`/;")
 bindHyperKey(";", cycleStack)
 
--- Hyper+E = swap sides: the topmost left and right windows trade halves, and
--- the focused one keeps focus. One side empty: the focused window moves over.
-bindHyper("e", "Windows", "Swap the two halves", function()
+-- Hyper+E = swap sides: the topmost left and right windows trade sides, each
+-- keeping its width (a 60/40 split becomes 40/60), and the focused one keeps
+-- focus. One side empty: the focused window moves over.
+bindHyper("e", "Windows", "Swap the two sides", function()
     local current = hs.window.focusedWindow()
     if not current then return end
-    local l = hs.fnutils.find(hs.window.orderedWindows(), function(w) return w:isStandard() and inPosition(w, left) end)
-    local r = hs.fnutils.find(hs.window.orderedWindows(), function(w) return w:isStandard() and inPosition(w, right) end)
+    local function topDocked(side)
+        return hs.fnutils.find(hs.window.orderedWindows(), function(w)
+            return w:isStandard() and dockedSide(w) == side
+        end)
+    end
+    local l, r = topDocked("left"), topDocked("right")
+    -- The left window's width as the right side, and vice versa
+    local function flipped(w) return sideRect(otherSide(dockedSide(w)), 1 - splitRatio(w)) end
     if l and r then
-        moveWin(l, right)
-        moveWin(r, left)
+        local lTo, rTo = flipped(l), flipped(r)
+        -- What's stacked behind each side stays on its side but follows the
+        -- split to where the pair puts it, as with Hyper+R
+        local screen, old = l:screen(), splitRatio(l)
+        for _, w in ipairs(hs.window.orderedWindows()) do
+            local side = dockedSide(w)
+            if w ~= l and w ~= r and w:isStandard() and side and w:screen() == screen
+                and math.abs(splitRatio(w) - old) * screen:frame().w < threshold then
+                moveWin(w, sideRect(side, 1 - old))
+            end
+        end
+        moveWin(l, lTo)
+        moveWin(r, rTo)
         raisePair(current == l and r or l, current)
     elseif l or r then
-        moveWin(current, inPosition(current, left) and right or left)
+        moveWin(current, dockedSide(current) and flipped(current) or left)
     end
 end)
 
@@ -504,23 +559,62 @@ bindHyper("d", "Windows", "Tile right half", function()
     moveWin(win, right)
 end)
 
--- Hyper+S again, on a window that's already maximized, puts it back on a half:
--- the one not taken by the next standard window below it (so terminal
--- maximized over Slack-on-the-right goes left). Decided from that window's
--- live center, nothing remembered; with nothing below, left.
-bindHyper("s", "Windows", "Maximize (again: back to a half)", function()
+-- Hyper+R = move the split: 50 → 67 → 33 → 50 % (the left side's share),
+-- from wherever it is now. Thirds only: 60 next to 67 was too close to see. Every window docked against the split
+-- follows, on both sides — the partner, and anything stacked under either
+-- (Hyper+` cycles a stack only while its windows share a frame). On the
+-- MacBook only 50 → 60 → 40: a third there is ~500 pt, narrower than
+-- Messages or Slack will go. Read from live frames each press.
+local SPLITS = { 0.5, 2 / 3, 1 / 3 }
+local SPLITS_BUILTIN = { 0.5, 0.6, 0.4 }
+bindHyper("r", "Windows", "Move the split: 50 → 67 → 33 %", function()
+    local win = hs.window.focusedWindow()
+    if not dockedSide(win) then return end
+    local screen = win:screen()
+    local current = splitRatio(win)
+    local splits = screen:name():find("^Built%-in") and SPLITS_BUILTIN or SPLITS
+    -- The next step after the nearest one; a split off the list (a window
+    -- dragged by hand) counts as its nearest step
+    local nearest = 1
+    for i, ratio in ipairs(splits) do
+        if math.abs(ratio - current) < math.abs(splits[nearest] - current) then nearest = i end
+    end
+    local nextRatio = splits[nearest % #splits + 1]
+    local edge = screen:frame().w * current
+    for _, w in ipairs(hs.window.orderedWindows()) do
+        local side = dockedSide(w)
+        if w:isStandard() and side and w:screen() == screen
+            and math.abs(screen:frame().w * splitRatio(w) - edge) < threshold then
+            moveWin(w, sideRect(side, nextRatio))
+        end
+    end
+end)
+
+-- Hyper+S again, on a window that's already maximized, puts it back where it
+-- was — when the last move was this window maximizing, Hyper+Down's record
+-- has that frame (a restore, which is what the record is for). Otherwise
+-- (maximized some other way, or something moved since) beside the next
+-- standard window below it, at its split: terminal maximized over
+-- Slack-on-the-right goes left. With nothing below, the left half.
+bindHyper("s", "Windows", "Maximize (again: back beside)", function()
     local win = hs.window.focusedWindow()
     if not win then return end
     if not inPosition(win, hs.geometry.rect(0, 0, 1, 1)) then
         moveWin(win, hs.geometry.rect(0, 0, 1, 1))
         return
     end
+    local before = lastMove.frames[win:id()]
+    if before and before.w < win:screen():frame().w - threshold then
+        setWinFrame(win, before)
+        return
+    end
     local below = hs.fnutils.find(hs.window.orderedWindows(), function(w)
         return w ~= win and w:isStandard()
     end)
-    local s = win:screen():frame()
-    local belowLeft = below and below:frame().center.x < s.x + s.w / 2
-    moveWin(win, belowLeft and right or left)
+    -- Beside a docked window: the rest of its split. Otherwise a half.
+    local side = below and otherSide(sideOf(below)) or "left"
+    local ratio = below and dockedSide(below) and splitRatio(below) or 0.5
+    moveWin(win, sideRect(side, ratio))
 end)
 
 -- Hyper+Q = send the front app to the background, as Cmd+H does: macOS hands
