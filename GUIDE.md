@@ -1429,7 +1429,14 @@ so no employer detail lands in this repo; without it every link goes to Dia.
 One rule per line: with a dot it matches that domain and its subdomains
 (`miro.com` matches `app.miro.com`, not `evilmiro.com`); a single word matches
 any host containing it (`yourcompany` covers all its domains, and its Slack,
-Zoom and SSO subdomains). It's re-read per link, so edits apply at once.
+Zoom and SSO subdomains); either one followed by a path matches only URLs
+under it. It's re-read per link, so edits apply at once.
+
+- **Slack's sign-in redirect:** links into an app that signs in through Slack
+  (Jira, for one) leave Slack as `slack.com/openid/connect/…` with the real
+  destination kept by Slack, not in the URL — so they went to Dia. A
+  `slack.com/openid/` line in the work list sends that redirect to Chrome;
+  ordinary links from Slack are unaffected.
 
 - Shared domains are the limit: Gmail and Calendar serve both accounts from
   the same host, so a host can only go one way. Docs/Drive/Calendar → work,

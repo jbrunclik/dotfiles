@@ -1302,25 +1302,33 @@ function zoomShareKind() return zoomShare() or "none" end
 -- hosts on the machine-local work list open in Chrome's Work profile, the rest
 -- in Dia. The list stays out of this public repo; without it everything goes
 -- to Dia. A line with a dot matches that domain and its subdomains, a word
--- without one any host containing it. Re-read per link, so edits apply at once.
+-- without one any host containing it, and either followed by /path only URLs
+-- under that path. Re-read per link, so edits apply at once.
 local WORK_DOMAINS_FILE = os.getenv("HOME") .. "/.config/url-router/work.local"
 -- Chrome's folder for the Work profile ("Default" here: chrome://version shows it)
 local CHROME_WORK_PROFILE = "Default"
 local CHROME_BINARY = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
-local function isWorkHost(host)
+-- A rule with a slash also needs the path to start with what follows the
+-- host: `slack.com/openid/` is Slack's sign-in redirect, which Slack puts in
+-- front of links into apps that sign in through it (Jira) — the destination
+-- isn't in the URL, so the redirect itself has to count as work.
+local function isWorkURL(host, path)
     local f = io.open(WORK_DOMAINS_FILE, "r")
     if not f or not host then return false end
-    host = host:lower()
+    host, path = host:lower(), (path or "/"):lower()
     for line in f:lines() do
         local rule = line:gsub("#.*", ""):match("^%s*(.-)%s*$"):lower()
         if rule ~= "" then
+            local domain, prefix = rule:match("^([^/]+)(/.*)$")
+            domain = domain or rule
             local hit
-            if rule:find("%.") then
-                hit = host == rule or host:sub(-#rule - 1) == "." .. rule
+            if domain:find("%.") then
+                hit = host == domain or host:sub(-#domain - 1) == "." .. domain
             else
-                hit = host:find(rule, 1, true) ~= nil
+                hit = host:find(domain, 1, true) ~= nil
             end
+            if hit and prefix then hit = path:sub(1, #prefix) == prefix end
             if hit then f:close() return true end
         end
     end
@@ -1348,7 +1356,7 @@ end
 local function routeURL(url, host, option)
     local zoom = zoomJoinURL(url)
     if zoom then return "zoom", zoom end
-    local work = isWorkHost(host)
+    local work = isWorkURL(host, hs.http.urlParts(url).path)
     if option then work = not work end
     return work and "chrome" or "dia", url
 end
