@@ -152,9 +152,9 @@ Host myserver
 The keymap lives in the keyboard's firmware, edited with Chrysalis. Two
 scripts keep it in the repo (quit Chrysalis first — it holds the port):
 
-- `keyboardio-backup` — reads every setting and writes
-  `config/keyboardio/model100.json` in Chrysalis's own backup format, so
-  Chrysalis can restore it.
+- `keyboardio-backup` — reads every setting Chrysalis would back up and
+  writes `config/keyboardio/model100.json`; `--restore` writes it back
+  (Chrysalis can't load this format itself).
 - `keyboardio-layers` — builds the Hyper layer from the base layer and colors
   every layer: the Hyper layer by what each key does, read live from the same
   data as the on-screen cheatsheet. Dry run by default; `--apply` writes it and

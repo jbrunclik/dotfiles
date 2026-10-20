@@ -1,26 +1,55 @@
 #!/usr/bin/env python3
-"""Back up the Keyboardio Model 100's configuration into this repo.
+"""Back up the Keyboardio Model 100's configuration into this repo, or restore it.
 
 Asks the keyboard for every setting over its serial port (Kaleidoscope's
 "Focus" protocol, the same one Chrysalis uses) and writes them to
-config/keyboardio/model100.json in Chrysalis's own backup format: one JSON
-object mapping each setting to the keyboard's answer. Restore by loading that
-file with Chrysalis's restore-from-backup option.
+config/keyboardio/model100.json: one JSON object mapping each setting to the
+keyboard's answer — the format of the backups Chrysalis saves before a
+firmware update. Chrysalis can't load it (its "Restore from file" wants its
+own export format, and restores only the layout), so --restore writes it back.
 
-Read-only: every command is sent without arguments, which only reads, and
-the commands that act (device.reset, eeprom.erase, macros.trigger) are
-skipped. Quit Chrysalis first — it holds the port.
+A backup is read-only: every command is sent without arguments. It
+asks only for an allow list: the settings Chrysalis itself backs up and
+restores (eepromRestoreCommands in its src/api/focus.js) plus the read-only
+facts it records with them. Not eeprom.contents: a raw dump of the same
+EEPROM, which Chrysalis's own export drops too — restoring it would rewrite
+every byte. A command the firmware has that isn't listed is reported, so a
+new plugin's settings don't go unsaved unnoticed. Quit Chrysalis first.
+
+--restore writes each SETTINGS value from the file, then reads every one
+back to verify. A write cut short gets the keyboard resynced (see
+Keyboard.resync) and the restore stops; run it again.
 
 Usage:
-    keyboardio-backup            # writes config/keyboardio/model100.json
+    keyboardio-backup                      # writes config/keyboardio/model100.json
     keyboardio-backup out.json
+    keyboardio-backup --restore [file]     # writes the file back to the keyboard
 """
 
 import json
 import os
 import sys
 
-SKIP = {"device.reset", "eeprom.erase", "macros.trigger"}
+# Chrysalis's eepromRestoreCommands, with keymap.layerNames for its "layernames"
+# wrapper (the key its own on-disk backups use). Missing from a firmware = skipped.
+SETTINGS = [
+    "autoshift.categories", "autoshift.timeout", "colormap.map", "escape_oneshot.cancel_key",
+    "hardware.keyscan", "hardware.side_power", "hardware.sled_current", "hostos.type",
+    "idleleds.time_limit", "keymap.custom", "keymap.layerNames", "keymap.onlyCustom",
+    "led.brightness", "led_mode.default", "macros.map", "mousekeys.accel_duration",
+    "mousekeys.base_speed", "mousekeys.init_speed", "mousekeys.scroll_interval",
+    "oneshot.auto_layers", "oneshot.auto_mods", "oneshot.double_tap_timeout",
+    "oneshot.hold_timeout", "oneshot.stickable_keys", "oneshot.timeout", "palette",
+    "settings.defaultLayer", "spacecadet.mode", "spacecadet.timeout", "tapdance.map",
+    "typingbreaks.idleTimeLimit", "typingbreaks.leftMaxKeys", "typingbreaks.lockLength",
+    "typingbreaks.lockTimeOut", "typingbreaks.rightMaxKeys",
+    "mousekeys.warp_grid_size",  # not in Chrysalis's list, but a stored setting
+]
+# Recorded, never restored (Chrysalis's eepromBackupOnlyCommands)
+FACTS = ["help", "version", "plugins", "eeprom.free", "settings.valid?", "settings.version", "settings.crc"]
+# Known and deliberately left out: actions, the raw EEPROM, firmware constants, live state
+IGNORED = {"device.reset", "eeprom.erase", "macros.trigger", "eeprom.contents",
+           "keymap.default", "led.modes", "led.mode"}
 # Chrysalis stores this one as a JSON boolean; match it so restore reads it the same
 BOOLEANS = {"keymap.onlyCustom"}
 
@@ -29,15 +58,65 @@ repo = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, os.path.join(repo, "lib"))
 from kaleidoscope_focus import Keyboard  # noqa: E402
 
-out_path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(repo, "config/keyboardio/model100.json")
-keyboard = Keyboard()
-settings = {}
-for command in keyboard.commands():
-    if command in SKIP:
-        continue
+DEFAULT_PATH = os.path.join(repo, "config/keyboardio/model100.json")
+
+
+def as_written(command, value):
+    """A backed-up value in the form a write takes."""
+    if command in BOOLEANS:
+        return "1" if value else "0"
+    if command == "keymap.layerNames":  # read ends with "0 size=N", a write with "0"
+        return " ".join(value.split("\n")[:-1]) + " 0"
+    return value
+
+
+def restore(path):
+    backup = json.load(open(path))
+    keyboard = Keyboard()
+    available = keyboard.commands()
+    # Empty answers (a plugin with nothing set) aren't written, as in Chrysalis
+    plan = {c: as_written(c, backup[c]) for c in SETTINGS
+            if c in backup and c in available and backup[c] != ""}
+    missing = [c for c in SETTINGS if c in backup and c not in available]
+    if missing:
+        print("this firmware lacks, so skipped: " + ", ".join(missing), file=sys.stderr)
+    for n, (command, value) in enumerate(plan.items(), 1):
+        try:
+            keyboard.request(command, value)
+        except SystemExit as e:
+            keyboard.resync()
+            sys.exit(f"writing {command} failed ({e}); {n - 1} of {len(plan)} settings written,"
+                     " keyboard resynced — run --restore again")
+    if "led_mode.default" in plan:
+        keyboard.request("led.mode", plan["led_mode.default"])  # show the colors now
+    wrong = [c for c, v in plan.items() if as_written(c, read(keyboard, c)).split() != v.split()]
+    keyboard.close()
+    if wrong:
+        sys.exit("written, but these didn't read back as sent: " + ", ".join(wrong))
+    print(f"Restored and verified {len(plan)} settings from {path}")
+
+
+def read(keyboard, command):
     value = keyboard.request(command)
-    settings[command] = value == "1" if command in BOOLEANS else value
+    return value == "1" if command in BOOLEANS else value
+
+
+if sys.argv[1:2] == ["--restore"]:
+    restore(sys.argv[2] if len(sys.argv) > 2 else DEFAULT_PATH)
+    sys.exit(0)
+
+out_path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_PATH
+keyboard = Keyboard()
+available = keyboard.commands()
+settings = {}
+for command in SETTINGS + FACTS:
+    if command in available:
+        settings[command] = read(keyboard, command)
 keyboard.close()
+unlisted = [c for c in available if c not in SETTINGS + FACTS and c not in IGNORED]
+if unlisted:
+    print("not backed up — add to SETTINGS (restorable) or IGNORED in keyboardio-backup: "
+          + ", ".join(unlisted), file=sys.stderr)
 
 os.makedirs(os.path.dirname(out_path), exist_ok=True)
 with open(out_path, "w") as f:

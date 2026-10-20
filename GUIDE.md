@@ -1104,7 +1104,7 @@ change. It writes over the same protocol Chrysalis uses and reads every value
 back. Before writing it snapshots everything it is about to change, so a
 timeout halfway through or a value that doesn't read back puts the keyboard
 back as it was rather than half-written. Only if that restore fails too does
-it fall back to the committed backup, restored with Chrysalis. A write cut
+it fall back to the committed backup: `keyboardio-backup --restore`. A write cut
 short is worse than it looks: the firmware keeps parsing numbers across the
 newline, zero-filling each missing one after a second, and reads the next
 command as more data, so the restore first floods it with filler to finish
@@ -1126,9 +1126,19 @@ Model 100.
 
 **Back it up after every change in Chrysalis:** quit Chrysalis (it holds the
 serial port), run `keyboardio-backup`, and commit `config/keyboardio/model100.json`.
-The script asks the keyboard for every setting over the same protocol Chrysalis
-uses (read-only — it skips reset/erase/trigger) and writes Chrysalis's own
-backup format, so restoring is Chrysalis's restore-from-backup option. The
+The script asks the keyboard over the same protocol Chrysalis uses (read-only)
+for an allow list: the settings Chrysalis itself backs up and restores, plus
+the facts it records with them (firmware version, plugins). Not the raw
+`eeprom.contents` dump, which Chrysalis's export drops too — restoring it
+would rewrite every byte. A firmware command that's on neither list is
+printed, so a new plugin's settings can't go unsaved quietly.
+
+**Restore with `keyboardio-backup --restore`** (or `--restore other.json`):
+it writes each setting back and reads it back to verify; if a write is cut
+short it resyncs the keyboard and stops — run it again. Not with Chrysalis:
+the file is the format Chrysalis saves before a firmware update, but its
+"Restore from file" only reads its own export format (and only the layout),
+and the backups list isn't shown in 0.13. The
 lock works both ways: the scripts find the keyboard by Keyboardio's USB vendor
 ID (not just the first `/dev/cu.usbmodem*`) and open it exclusively, so
 Chrysalis can't connect while one is running. Chrysalis

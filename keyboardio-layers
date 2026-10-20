@@ -310,8 +310,8 @@ def restore(written, why):
     except SystemExit as e:  # the keyboard stopped answering
         failed = [f"all ({e})"]
     if failed:
-        sys.exit(f"restore failed ({', '.join(failed)}): restore config/keyboardio/model100.json "
-                 "with Chrysalis's restore-from-backup")
+        sys.exit(f"restore failed ({', '.join(failed)}): run keyboardio-backup --restore"
+                 " (writes the committed config/keyboardio/model100.json back)")
     sys.exit("keyboard back as it was; nothing changed")
 
 
