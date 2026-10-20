@@ -574,44 +574,73 @@ for _, binding in ipairs(appKeys) do
     bindHyper(binding[1], "Apps", binding[3] or binding[2], function() focusApp(binding[2]) end)
 end
 
--- Check Zoom mute state by reading the toolbar button's accessibility description
+-- Zoom mute state from the call toolbar's mic button (AXIdentifier "audio"),
+-- which offers the opposite action: "Unmute my audio" means muted. Not the
+-- AXTabGroups: there is one per participant tile, and the first is usually
+-- someone else's (your own tile is fastest to update, but finding it means
+-- knowing your display name). Both the button and the Meeting menu lag a
+-- toggle by ~1.2 s.
 local function isZoomMuted()
     local zoom = getApp("zoom.us")
     if not zoom then return nil end
     local axApp = hs.axuielement.applicationElement(zoom)
     for _, win in ipairs(axApp:childrenWithRole("AXWindow")) do
-        for _, elem in ipairs(win:childrenWithRole("AXTabGroup")) do
-            local desc = elem:attributeValue("AXDescription") or ""
-            if desc:find("audio unmuted") then return false end
-            if desc:find("audio muted") then return true end
+        for _, button in ipairs(win:childrenWithRole("AXButton")) do
+            if button:attributeValue("AXIdentifier") == "audio" then
+                local desc = button:attributeValue("AXDescription") or ""
+                if desc:find("^Unmute") then return true end
+                if desc:find("^Mute") then return false end
+            end
         end
     end
+    -- Toolbar not exposed: fall back to the menu
+    if zoom:findMenuItem({ "Meeting", "Unmute audio" }) then return true end
+    if zoom:findMenuItem({ "Meeting", "Mute audio" }) then return false end
     return nil -- not in a meeting
 end
 
--- Toggle Zoom mute from any app, without switching focus
+-- Toggle Zoom mute from any app, without switching focus.
+-- Zoom reports a toggle ~1.2 s late (button and menu alike), so a quick
+-- double press would read a stale state. Presses before the alert are one
+-- burst: its first press's state plus the press count gives the state to
+-- expect, and only the last press reports, once Zoom shows it. The burst
+-- lives only until that alert; nothing outlives it.
+local muteBurst = nil
 local function toggleZoomMute()
     local zoom = getApp("zoom.us")
     if not zoom then
         hs.alert.show("\u{1F4F5} Zoom not running")
         return
     end
-    if zoom:selectMenuItem({ "Meeting", "Unmute audio" }) or
-       zoom:selectMenuItem({ "Meeting", "Mute audio" }) then
-        -- Brief delay for Zoom to update its UI state
-        hs.timer.doAfter(0.2, function()
-            local muted = isZoomMuted()
-            if muted == true then
-                hs.alert.show("\u{1F507} Muted")
-            elseif muted == false then
-                hs.alert.show("\u{1F50A} Unmuted")
-            else
-                hs.alert.show("\u{1F50A} Toggled")
-            end
-        end)
-    else
+    local before = muteBurst and muteBurst.start or isZoomMuted()
+    if not (zoom:selectMenuItem({ "Meeting", "Unmute audio" }) or
+            zoom:selectMenuItem({ "Meeting", "Mute audio" })) then
         hs.alert.show("\u{26A0}\u{FE0F} Not in a meeting")
+        return
     end
+    muteBurst = { start = before, presses = (muteBurst and muteBurst.presses or 0) + 1 }
+    local burst = muteBurst
+    local expected = before
+    if before ~= nil and burst.presses % 2 == 1 then expected = not before end
+    local tries = 0
+    local function announce()
+        if muteBurst ~= burst then return end -- a later press reports instead
+        local muted = isZoomMuted()
+        tries = tries + 1
+        if (expected == nil or muted ~= expected) and tries < 40 then
+            hs.timer.doAfter(0.1, announce)
+            return
+        end
+        muteBurst = nil
+        if muted == true then
+            hs.alert.show("\u{1F507} Muted")
+        elseif muted == false then
+            hs.alert.show("\u{1F50A} Unmuted")
+        else
+            hs.alert.show("\u{1F50A} Toggled")
+        end
+    end
+    hs.timer.doAfter(0.1, announce)
 end
 bindHyper("m", "Zoom", "Mute / unmute (from any app)", toggleZoomMute)
 bindPlain("f18", "Any", "Zoom", "Mute / unmute (Model 100 Any key → F18)", toggleZoomMute)

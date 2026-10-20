@@ -1405,6 +1405,16 @@ alphabetically, System Settings last.
 | Any (Model 100) | Same, as one key: Chrysalis maps Any to `F18`, Hammerspoon binds `F18` |
 | Hyper + Return | Start / join the meeting about to begin |
 
+**The mute alert comes about a second after the key.** It reads the state
+back from Zoom's toolbar mic button, which (like the Meeting menu) only
+catches up ~1.2 s after a toggle; Hammerspoon waits for it to flip rather
+than guessing. Quick repeated presses count as one burst: the state at the
+first press plus the number of presses says where you'll end up, and only
+the last press shows an alert, once Zoom agrees. Not from the participant
+tiles: there is one per person, and the first is usually someone else's —
+which is how it once said "Unmuted" while you were muted. "Toggled" means
+Zoom's state couldn't be read.
+
 **Hyper+Return** joins the meeting about to begin from any app, without
 touching Zoom. The work calendar isn't in macOS Calendar, so it reads Zoom's
 own: the calendar sidebar on Zoom's home screen. About 10 minutes before a
