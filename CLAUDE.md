@@ -95,8 +95,11 @@ commit. Go through what applies:
 - **Thaw** keeps the layout in `config/thaw/layout` (the Dell/default
   layout); per-display profiles override it. Never `thaw-layout --apply` on
   the MacBook — it overwrites that profile until the next display switch.
-  Thaw won't move an icon into Visible from a collapsed section: ask the
-  user to drag it. Update a profile only while on its display. An icon ID
+  Thaw won't move an icon into Visible from a collapsed section, nor
+  reorder icons within a section (`--apply` sets sections only): ask the
+  user to drag, Profiles → Update, then `--capture`. The profile's
+  `itemOrder` is the truth; `savedSectionOrder` lags. Update a profile only
+  while on its display. An icon ID
   containing a UUID trips gitleaks: add that exact value to
   `.gitleaks.toml`, never a broader pattern.
 - **Ghostty** doesn't watch its config: Cmd+Shift+, (or the Ghostty >

@@ -670,21 +670,30 @@ settings; new apps land in Hidden.
 **The layout lives in a file:** `config/thaw/layout`, one icon per line under
 `[visible]`, `[hidden]` and `[always-hidden]`, left to right. Work-only icons
 (the IT agents) go in the untracked `~/.config/thaw/layout.local`, same
-format, so they stay out of this public repo.
+format, so they stay out of this public repo. They land at the left end of
+their section unless the line says where: `<id> after <other id>` (what
+`--capture` writes for a work icon sitting among the others).
 
 | Command | Does |
 |---|---|
-| `thaw-layout` | Compares the file with Thaw: its saved layout (order included), and where each icon actually is. Exits 1 on any difference; `drift.sh` runs it |
-| `thaw-layout --apply` | Writes the file into Thaw — quits and relaunches it — then checks every icon landed. Refuses on the built-in display unless `--force` |
-| `thaw-layout --capture` | The other way: after dragging icons in Thaw, writes its layout into the files (local icons stay local; it names anything new so you can move work-only ones) |
+| `thaw-layout` | Compares the file with Thaw, in exact order in every section: the display's profile, and where each icon actually is on screen. Exits 1 on any difference; `drift.sh` runs it |
+| `thaw-layout --apply` | Writes the file into Thaw's profile and preferences — quits and relaunches it — then checks every icon landed. Refuses on the built-in display unless `--force` |
+| `thaw-layout --capture` | The other way: after dragging icons and Profiles → Update, writes the display's profile into the files (local icons stay local; it names anything new so you can move work-only ones) |
 
-How it works: Thaw stores the layout in its preferences
-(`MenuBarItemManager.savedSectionOrder`) and restores it on launch, moving
-icons to match. Where they are is read back through each app's accessibility
-tree via `hs` — Thaw's three icons are the section dividers. One limit is
-Thaw's: it won't move an icon *into* Visible from a collapsed section (its log
-says "skipping the visible-bound move … parked offscreen"); drag that one in
-Thaw's settings, then `--capture`. Moves into the hidden sections always work.
+How it works: each display's profile
+(`~/Library/Application Support/Thaw/Profiles/<id>.json`, `itemOrder`) holds
+the layout Thaw restores. Its `savedSectionOrder` — in the preferences and in
+each profile — lags behind the screen, which is why `thaw-layout` reads the
+profile instead: comparing against `savedSectionOrder` failed even with
+every icon in place. Where icons are is read back through each app's
+accessibility tree via `hs` — Thaw's three icons are the section dividers.
+
+Two limits are Thaw's. It restores which section an icon is in, **not the
+order within a section**, so `--apply` can't reorder: drag in Thaw's
+settings, Profiles → Update, then `--capture`. And it won't move an icon
+*into* Visible from a collapsed section (its log says "skipping the
+visible-bound move … parked offscreen"); drag that one too. Moves between
+sections otherwise work.
 
 **Per-display profiles.** Thaw switches layout by display (Settings →
 Profiles → Auto-Switch): **Dell** is the full layout; **MacBook** moves
