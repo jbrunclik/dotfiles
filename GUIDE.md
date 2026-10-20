@@ -1112,7 +1112,10 @@ Model 100.
 serial port), run `keyboardio-backup`, and commit `config/keyboardio/model100.json`.
 The script asks the keyboard for every setting over the same protocol Chrysalis
 uses (read-only — it skips reset/erase/trigger) and writes Chrysalis's own
-backup format, so restoring is Chrysalis's restore-from-backup option. Chrysalis
+backup format, so restoring is Chrysalis's restore-from-backup option. The
+lock works both ways: the scripts find the keyboard by Keyboardio's USB vendor
+ID (not just the first `/dev/cu.usbmodem*`) and open it exclusively, so
+Chrysalis can't connect while one is running. Chrysalis
 only backs up by itself before a firmware update, which is why its last one
 predated the Hyper and butterfly keys.
 
