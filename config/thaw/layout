@@ -5,10 +5,10 @@
 [always-hidden]
 com.1password.1password:bb3cc23c-6950-4e96-8b40-850e09f46934   # 1Password
 com.apple.controlcenter:Bluetooth                              # Bluetooth
+com.pilotmoon.scroll-reverser:Item-0                           # Scroll Reverser
 com.anthropic.claudefordesktop:Item-0                          # Claude
 com.apple.controlcenter:NowPlaying                             # Now Playing
 com.apple.systemuiserver:Siri                                  # Siri
-com.pilotmoon.scroll-reverser:Item-0                           # Scroll Reverser
 com.garmin.renu.service:Item-0                                 # Garmin Express Service
 notion.id:Item-0                                               # Notion
 us.zoom.xos:Item-0                                             # Zoom
