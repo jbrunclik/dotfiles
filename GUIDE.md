@@ -1011,6 +1011,30 @@ verified on that GitLab account.
 Why not 1Password's SSH agent: with the lid closed (no Touch ID) and no Apple
 Watch, each approval means typing the 1Password password.
 
+### GnuPG: the PIN comes from a dialog, not the terminal
+
+gpg asks for the passphrase or YubiKey PIN through gpg-agent, which shows
+**pinentry-mac** (`config/gnupg/gpg-agent.conf`). That's what lets gpg run
+where there is no terminal — scripts, password helpers such as an Ansible
+vault script, Claude Code's shell.
+
+**Never put `pinentry-mode loopback` in `gpg.conf`.** Loopback makes gpg read
+the PIN from its own terminal instead of asking the agent, so every caller
+without one fails with `gpg: cannot open '/dev/tty': Device not configured`
+(and may then hang).
+
+Over SSH, where no dialog can appear, opt into loopback for one command — the
+agent allows it (`allow-loopback-pinentry`):
+
+```bash
+gpg --pinentry-mode loopback --clearsign file.txt
+```
+
+After editing either file, `gpgconf --kill gpg-agent`; the agent restarts on
+the next gpg call. Only `gpg.conf` and `gpg-agent.conf` are linked:
+`common.conf` (`use-keyboxd`) is gpg's own. `install.sh` keeps `~/.gnupg` at
+700 — anything looser makes gpg warn about unsafe permissions.
+
 ## Hyper key
 
 Hyper (Cmd+Option+Ctrl+Shift) is a dedicated modifier that doesn't

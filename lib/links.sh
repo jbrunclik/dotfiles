@@ -35,6 +35,9 @@ LINKS=(
     "config/lazygit/config.yml|$HOME/Library/Application Support/lazygit/config.yml"
     # Only config.yml: hosts.yml next to it holds the auth token
     "config/gh/config.yml|$HOME/.config/gh/config.yml"
+    # Not common.conf: gpg writes use-keyboxd there itself on first run
+    "config/gnupg/gpg.conf|$HOME/.gnupg/gpg.conf"
+    "config/gnupg/gpg-agent.conf|$HOME/.gnupg/gpg-agent.conf"
     "config/btop/themes/catppuccin_mocha.theme|$HOME/.config/btop/themes/catppuccin_mocha.theme"
     "config/karabiner|$HOME/.config/karabiner"
     "gh-new-repo|$HOME/.local/bin/gh-new-repo"
@@ -76,6 +79,7 @@ REQUIRED_BINS=(
     "gitleaks|secret scanning in the global pre-commit hook"
     "git-lfs|git-lfs hooks in the global hooksPath; they exit 2 without it"
     "gm|GraphicsMagick, pinned by the gm alias in bash_profile"
+    "pinentry-mac|gpg-agent's passphrase/PIN dialog (pinentry-program)"
 )
 
 # Files that must exist locally but are deliberately not in the repo.

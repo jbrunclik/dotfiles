@@ -50,6 +50,7 @@ what to watch out for.
 | Modern CLI | `bat`, `eza`, `fd`, `ripgrep`, `sd`, `dust`, `btop`, `delta`, `difftastic`, `jless`, `tldr`, `bat-extras`, `just`, `hyperfine`, `tokei` | `Brewfile`, `config/bat/` |
 | Runtimes | [mise](https://mise.jdx.dev/) for Node, Go and Java; `uv` and `ruff` for Python | `config/mise/config.toml` |
 | SSH | Agent, keepalive, one reused connection per host | `ssh_config` |
+| GnuPG | Passphrase/PIN in a pinentry-mac dialog, so gpg works without a terminal | `config/gnupg/` |
 
 **Keyboard and windows**
 

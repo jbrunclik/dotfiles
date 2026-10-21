@@ -68,6 +68,9 @@ done
 # repo. ssh only rejects a config that is writable by group/other, and the
 # repo's 644 already satisfies that.
 chmod 700 "$HOME/.ssh"
+# gpg warns about "unsafe permissions" on a home dir that link's mkdir -p
+# created world-readable
+chmod 700 "$HOME/.gnupg"
 
 # Hammerspoon doesn't follow symlinks for init.lua — use a loader file
 mkdir -p "$HOME/.hammerspoon"
