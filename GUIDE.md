@@ -1068,6 +1068,12 @@ rather than starting a timer: Karabiner's delayed actions run from the
 *press* and an earlier tap's timer outlived a later tap, so the old rule gave a
 ~150 ms window and lost the repeat after two quick taps.
 
+Karabiner lets go of the keyboard at sleep and grabs it again only a few
+seconds after wake, so CapsLock pressed in that gap — a Hyper chord the
+moment the lid opens — is a real Caps Lock and the light comes on.
+Hammerspoon turns Caps Lock off a second after every unlock (nothing in this
+setup wants it on); one pressed after that point is remapped as usual.
+
 ### Keyboardio Model 100
 
 The keymap lives in the keyboard itself (Kaleidoscope firmware, edited with

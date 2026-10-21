@@ -1633,4 +1633,14 @@ bandWallpaperWatcher = hs.pathwatcher.new(
     function() hs.timer.doAfter(1, bandAllScreens) end  -- let the store finish writing
 ):start()
 
+-- Karabiner stops grabbing the keyboard at sleep and only starts again a few
+-- seconds after wake, so a CapsLock press in that gap (a Hyper chord the moment
+-- the lid opens) reaches macOS as a real Caps Lock. Nothing here ever wants it
+-- on, so clear it at unlock, once Karabiner is grabbing again.
+capsLockUnlockWatcher = hs.caffeinate.watcher.new(function(event)
+    if event == hs.caffeinate.watcher.screensDidUnlock then
+        hs.timer.doAfter(1, function() hs.hid.capslock.set(false) end)
+    end
+end):start()
+
 hs.alert.show("\u{1F528} Hammerspoon loaded")
