@@ -1,0 +1,16 @@
+#!/bin/bash
+# JankyBorders: a border around the focused window, which macOS only marks
+# with a slightly darker title bar and shadow. borders runs this file when
+# started without arguments (brew services does); running it again while
+# borders is up updates the live instance.
+#
+# Catppuccin Mocha blue on the focused window, nothing on the rest.
+options=(
+    style=round
+    width=6.0
+    hidpi=on
+    active_color=0xff89b4fa
+    inactive_color=0x00000000
+)
+
+borders "${options[@]}"

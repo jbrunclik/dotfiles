@@ -36,6 +36,12 @@ cask "scroll-reverser"
 cask "the-unarchiver"
 # Menubar toggle that keeps the Mac awake (instead of a `caffeinate -d` tab)
 cask "keepingyouawake"
+# A border around the focused window (config/borders/bordersrc), which
+# macOS only marks with a slightly darker title bar. Its own tap, which
+# Homebrew loads only once trusted: install.sh trusts this one formula.
+# Started as a login service by install.sh.
+tap "felixkratz/formulae"
+brew "felixkratz/formulae/borders"
 # Menu bar manager: hides icons behind a divider. Free, open-source fork of
 # the abandoned Ice; replaces Bartender
 cask "thaw"

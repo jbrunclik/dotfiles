@@ -40,6 +40,7 @@ LINKS=(
     "config/gnupg/gpg-agent.conf|$HOME/.gnupg/gpg-agent.conf"
     "config/btop/themes/catppuccin_mocha.theme|$HOME/.config/btop/themes/catppuccin_mocha.theme"
     "config/karabiner|$HOME/.config/karabiner"
+    "config/borders/bordersrc|$HOME/.config/borders/bordersrc"
     "gh-new-repo|$HOME/.local/bin/gh-new-repo"
     "hyper-cheatsheet|$HOME/.local/bin/hyper-cheatsheet"
     "keyboardio-backup|$HOME/.local/bin/keyboardio-backup"

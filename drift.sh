@@ -262,6 +262,16 @@ else
     echo -e "  ${YELLOW}SKIP${RESET}     no ~/.config/url-router/work.local — every link goes to Dia"
 fi
 
+# The focused-window border: installed, but not running, is a quiet loss
+echo ""
+header "Window border:"
+if pgrep -x borders > /dev/null; then
+    echo -e "  ${GREEN}OK${RESET}       borders is running"
+else
+    echo -e "  ${RED}MISSING${RESET}  borders isn't running (brew services start felixkratz/formulae/borders)"
+    DRIFTED=1
+fi
+
 # Updates: the weekly Homebrew agent must be loaded and have succeeded within
 # ~10 days (a missed Monday runs at the next wake); dotfiles-update (Neovim
 # plugins, casks, mise, App Store) is only a reminder after 14 days

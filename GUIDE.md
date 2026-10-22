@@ -1321,6 +1321,21 @@ too close to tell apart. The MacBook uses 60/40 instead: a third there is
 consistent too: the pair swaps sides and widths, and what's stacked behind
 each side moves to the new split.
 
+**Gaps and the focused-window border.** JankyBorders (`borders`, a login
+service) draws a 6 pt Catppuccin blue border around the focused window —
+macOS itself only darkens the title bar a little. It draws *outside* the
+window, so a window flush with a screen edge lost that side of it: every
+window placed here keeps 8 pt from the screen's edges (`GAP` in `init.lua`).
+There's no gap between the two sides of a split. A gap there would show a
+strip of whatever is underneath, and a maximized window under a pair stays
+hidden only because both cover exactly the same rect. On that side the
+focused window's border lies over its neighbour's edge instead. Colors and
+width are in `config/borders/bordersrc`; after editing it, run it
+(`~/.config/borders/bordersrc`) to update the running border. Off for a
+while: `brew services stop borders`. It's a third-party tap that Homebrew
+loads only once trusted, so `install.sh` trusts that one formula
+(`brew trust --formula felixkratz/formulae/borders`).
+
 The rest of the window keys follow the split instead of assuming halves.
 Anything placed on a side takes **the screen's split**: the split of the
 topmost docked window, or a half when nothing's docked. That covers a first

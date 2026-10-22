@@ -75,6 +75,7 @@ what to watch out for.
 | Component | Tool | Config |
 |---|---|---|
 | System settings | Fast key repeat, Dock on the right, fixed Spaces, Touch ID for `sudo`, … | `install.sh` |
+| Focused window | [JankyBorders](https://github.com/FelixKratz/JankyBorders) — a Catppuccin blue border around the focused window; tiled windows keep a gap from the screen edges so all of it shows | `config/borders/bordersrc` |
 | Dark menu bar | Hammerspoon draws a band into the wallpaper under macOS 26's transparent menu bar — black on the MacBook (hides the notch), Catppuccin Crust elsewhere | `config/hammerspoon/init.lua` |
 | Wallpaper | Generated low-poly Catppuccin Mocha wallpaper at each screen's exact size, Mac, iPhone and iPad — `wallpaper` | `config/wallpaper/generate.swift` |
 | Default apps | Finder "open with" per file type — text/code → VS Code, media → IINA, archives → The Unarchiver | `config/finder/default-apps` |

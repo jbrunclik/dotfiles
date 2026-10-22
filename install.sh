@@ -51,6 +51,10 @@ if ! find_brew; then
 fi
 
 header "Installing Homebrew packages"
+# Homebrew loads formulae from a third-party tap only once trusted: trust
+# the one formula the Brewfile takes from one (borders), not the whole tap
+brew trust --formula felixkratz/formulae/borders > /dev/null \
+    || warn "couldn't trust felixkratz/formulae/borders — the Brewfile's borders entry will fail"
 # Don't let one failed entry abort the whole install (set -e): the mas
 # lines fail until you're signed in to the App Store, and a cask can fail on
 # a flaky download. drift.sh lists whatever is still missing afterwards.
@@ -152,6 +156,15 @@ if launchctl bootstrap "gui/$(id -u)" "$AGENT"; then
     echo -e "  ${GREEN}✓${RESET} brew-autoupdate, Mondays 9:30 (log: ~/Library/Logs/brew-autoupdate.log)"
 else
     warn "couldn't load $AGENT"
+fi
+
+# The focused-window border (JankyBorders): a login service, which runs
+# ~/.config/borders/bordersrc (linked above) when it starts
+header "Starting the window border"
+if brew services start felixkratz/formulae/borders > /dev/null 2>&1; then
+    echo -e "  ${GREEN}✓${RESET} borders (config: ~/.config/borders/bordersrc)"
+else
+    warn "couldn't start borders — is it installed? (brew bundle above)"
 fi
 
 header "Checking required binaries"
