@@ -92,10 +92,12 @@ jobs:
 
       - name: Every Brewfile formula and cask still exists
         run: |
-          # Taps first, and the one formula install.sh trusts: Homebrew won't
-          # load an untrusted tap's formula, even for `brew info`
-          grep -E '^tap "' Brewfile | sed -E 's/^tap "([^"]+)".*/\1/' | xargs -n1 brew tap
-          brew trust --formula felixkratz/formulae/borders
+          # Taps first, and trusted as install.sh does: Homebrew won't load an
+          # untrusted tap's formula, even for `brew info`. This repo's own
+          # tap comes from the checkout, as the Brewfile taps it.
+          grep -E '^tap "' Brewfile | grep -v 'jbrunclik/dotfiles' | sed -E 's/^tap "([^"]+)".*/\1/' | xargs -n1 brew tap
+          brew tap jbrunclik/dotfiles "$GITHUB_WORKSPACE"
+          brew trust --tap jbrunclik/dotfiles
           # Same parsing as drift.sh. One name at a time: a batch `brew info`
           # fails as a whole on the first unknown name.
           status=0 known=()

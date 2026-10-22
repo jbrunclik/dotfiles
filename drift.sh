@@ -268,7 +268,7 @@ header "Window border:"
 if pgrep -x borders > /dev/null; then
     echo -e "  ${GREEN}OK${RESET}       borders is running"
 else
-    echo -e "  ${RED}MISSING${RESET}  borders isn't running (brew services start felixkratz/formulae/borders)"
+    echo -e "  ${RED}MISSING${RESET}  borders isn't running (brew services start jbrunclik/dotfiles/borders)"
     DRIFTED=1
 fi
 

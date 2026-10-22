@@ -37,11 +37,13 @@ cask "the-unarchiver"
 # Menubar toggle that keeps the Mac awake (instead of a `caffeinate -d` tab)
 cask "keepingyouawake"
 # A border around the focused window (config/borders/bordersrc), which
-# macOS only marks with a slightly darker title bar. Its own tap, which
-# Homebrew loads only once trusted: install.sh trusts this one formula.
-# Started as a login service by install.sh.
-tap "felixkratz/formulae"
-brew "felixkratz/formulae/borders"
+# macOS only marks with a slightly darker title bar. Patched to stay out of
+# screen-share pickers (Formula/borders.rb), so it comes from this repo,
+# tapped from its local path: a committed formula change lands on the next
+# `brew update`, no push needed. Homebrew loads a non-official tap only once
+# trusted: install.sh trusts it. Started as a login service by install.sh.
+tap "jbrunclik/dotfiles", File.dirname(File.realpath(__FILE__))
+brew "jbrunclik/dotfiles/borders"
 # Menu bar manager: hides icons behind a divider. Free, open-source fork of
 # the abandoned Ice; replaces Bartender
 cask "thaw"

@@ -15,6 +15,9 @@ hostnames, or employer-specific detail in tracked files.
   and applied to Thaw.
 - `brew-autoupdate` (weekly, launchd: `config/launchd/`) and `dotfiles-update`
   (on demand: Neovim plugins with rollback, mise, App Store, casks).
+- `Formula/` — this repo as a Homebrew tap (`jbrunclik/dotfiles`, tapped
+  from its local path): patched formulae, now borders. Homebrew sees a
+  formula change only once committed, then `brew update`.
 - `config/<tool>/` — per-tool config; most files are symlinked into place, so
   editing the repo file changes the live config.
 - `GUIDE.md` — user-facing reference for every shortcut and workaround.

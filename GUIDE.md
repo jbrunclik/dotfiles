@@ -1361,9 +1361,26 @@ hidden only because both cover exactly the same rect. On that side the
 focused window's border lies over its neighbour's edge instead. Colors and
 width are in `config/borders/bordersrc`; after editing it, run it
 (`~/.config/borders/bordersrc`) to update the running border. Off for a
-while: `brew services stop borders`. It's a third-party tap that Homebrew
-loads only once trusted, so `install.sh` trusts that one formula
-(`brew trust --formula felixkratz/formulae/borders`).
+while: `brew services stop borders`.
+
+borders is patched (`Formula/borders.rb`) so it stays out of Zoom's share
+picker. Each border is a separate window, and Zoom's "Windows" list used to
+show a blank "borders" tile for every open window. Zoom lists only windows
+on the normal layer and ignores whether a window allows capture, so the
+patch moves the borders one layer up. The catch: a border now draws *over*
+a window that covers its target, where it used to stay underneath, which
+the tiled layouts rarely produce. The patch also turns off capture for the
+border windows, so the border doesn't show up in screenshots, recordings
+or a full-screen share. Viewers see your windows without it.
+
+That's why the Brewfile takes borders from this repo instead of
+felixkratz's tap. It taps the repo by its local path (`jbrunclik/dotfiles`),
+so a *committed* formula change arrives with the next `brew update`
+(uncommitted edits don't). Then run `brew reinstall borders`. Homebrew
+loads a non-official tap only once trusted, so `install.sh` runs
+`brew trust --tap jbrunclik/dotfiles`. Upstream releases don't arrive by
+themselves: to move to a new one, bump `url` and `sha256` in the formula,
+and if the patch no longer applies, regenerate it against the new tag.
 
 The rest of the window keys follow the split instead of assuming halves.
 Anything placed on a side takes **the screen's split**: the split of the
