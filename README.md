@@ -172,7 +172,8 @@ scripts keep it in the repo (quit Chrysalis first — it holds the port):
   Non-zero exit on drift.
 - Updates: a launchd agent upgrades Homebrew formulae (and Claude Code)
   every Monday; `dotfiles-update` does the rest — Neovim plugins with a
-  check and automatic rollback, mise, App Store, casks — and `drift.sh` says
+  check and automatic rollback, mise, App Store, casks, a note when a patched
+  formula falls behind upstream — and `drift.sh` says
   when it's due.
 - CI lints every push: shellcheck, Python/Lua/JSON/YAML syntax, and that every
   binary a config shells out to has a Brewfile entry. It also runs the

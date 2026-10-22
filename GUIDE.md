@@ -773,14 +773,17 @@ with a reminder.
 | What | How | When |
 |---|---|---|
 | Homebrew formulae, and claude-code | `brew-autoupdate`, a launchd agent | Mondays 9:30 (missed: at the next wake) |
-| Neovim plugins, parsers, Mason servers · mise runtimes · App Store · other casks | `dotfiles-update` | when `drift.sh` says it's due (14 days) |
+| Neovim plugins, parsers, Mason servers · mise runtimes · App Store · other casks · a note on the patched formulae | `dotfiles-update` | when `drift.sh` says it's due (14 days) |
 
 - **Unattended:** `brew update`, every outdated formula, and the casks in
   `AUTO_CASKS` (claude-code). The log is `~/Library/Logs/brew-autoupdate.log`;
   only a failure posts a notification. Most casks update themselves (Sparkle),
   and the rest can need sudo or quit the app, so they wait for
   `dotfiles-update`, which asks per cask. `brew pin <formula>` holds one back.
-- **`dotfiles-update`** runs the Homebrew step too, then `mise upgrade`,
+- **`dotfiles-update`** runs the Homebrew step too, then compares each
+  formula in `Formula/` (pinned to an upstream tag, patched, which
+  `brew upgrade` never moves) with upstream's newest tag, and says when one
+  is behind: moving is by hand. Then `mise upgrade`,
   `mas upgrade` and the Neovim updates, and checks Neovim afterwards: no
   startup errors, lua_ls and basedpyright attach, treesitter highlights. If
   that passes, the `lazy-lock.json` change is left to review and commit; if
@@ -1381,8 +1384,10 @@ so a *committed* formula change arrives with the next `brew update`
 (uncommitted edits don't). Then run `brew reinstall borders`. Homebrew
 loads a non-official tap only once trusted, so `install.sh` runs
 `brew trust --tap jbrunclik/dotfiles`. Upstream releases don't arrive by
-themselves: to move to a new one, bump `url` and `sha256` in the formula,
-and if the patch no longer applies, regenerate it against the new tag.
+themselves, but `dotfiles-update` says when upstream has tagged a newer
+one. To move to it, bump `url` and `sha256` in the formula
+(`curl -sL <url> | shasum -a 256`), and if the patch no longer applies,
+regenerate it against the new tag.
 
 The rest of the window keys follow the split instead of assuming halves.
 Anything placed on a side takes **the screen's split**: the split of the

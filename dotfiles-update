@@ -5,9 +5,11 @@ set -uo pipefail
 # (drift.sh reminds after 14 days):
 #   1. Homebrew: brew-autoupdate (formulae + the automatic casks), then the
 #      other outdated casks, asked one by one — some need sudo or quit the app.
-#   2. mise runtimes (`mise upgrade`; config/mise asks for latest).
-#   3. App Store apps (`mas upgrade`).
-#   4. Neovim: plugins (:Lazy sync), treesitter parsers, Mason's servers —
+#   2. This repo's own formulae (Formula/): pinned to an upstream tag, so
+#      only a note when upstream has tagged a newer one.
+#   3. mise runtimes (`mise upgrade`; config/mise asks for latest).
+#   4. App Store apps (`mas upgrade`).
+#   5. Neovim: plugins (:Lazy sync), treesitter parsers, Mason's servers —
 #      then a check: no startup errors, lua_ls and basedpyright attach,
 #      treesitter highlights. Pass: the lazy-lock.json diff is left to review
 #      and commit. Fail: the lock is put back and :Lazy restore returns every
@@ -36,6 +38,28 @@ if [ "${1:-}" != "--no-casks" ]; then
         [[ "$answer" == [yY]* ]] && { brew upgrade --cask "$cask" || failed+=("cask $cask"); }
     done
 fi
+
+# The patched formulae in Formula/ are pinned to the tag in their url, and
+# brew upgrade never moves them. Compare with upstream's newest tag
+# (git ls-remote: no API token needed); moving is by hand, the patch may
+# need regenerating.
+header "Patched formulae"
+for formula in "$DOTFILES"/Formula/*.rb; do
+    name="$(basename "$formula" .rb)"
+    read -r repo pinned < <(sed -nE \
+        's|^  url "https://github.com/([^/]+/[^/]+)/archive/refs/tags/([^"]+)\.tar\.gz"|\1 \2|p' "$formula")
+    [ -n "${repo:-}" ] || { echo "  $name: no GitHub tag url to compare"; continue; }
+    latest="$(git ls-remote --tags --refs --sort=-v:refname "https://github.com/$repo" 2> /dev/null \
+        | head -1 | sed 's|.*refs/tags/||')"
+    if [ -z "$latest" ]; then
+        echo "  $name: couldn't list $repo's tags"
+    elif [ "$latest" = "$pinned" ]; then
+        echo -e "  ${GREEN}$name $pinned is upstream's newest.${RESET}"
+    else
+        echo -e "  ${BOLD}$name: upstream has $latest${RESET}, Formula/$name.rb pins $pinned —" \
+            "bump url and sha256, check the patch still applies"
+    fi
+done
 
 header "mise runtimes"
 if command -v mise > /dev/null; then mise upgrade --yes || failed+=("mise"); fi
