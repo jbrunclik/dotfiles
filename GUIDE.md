@@ -1680,6 +1680,48 @@ waits up to 2 s for the process to follow and shows what it found. So clicking
 the cup by hand in between never puts the alert out of step; "(didn't change)"
 means KeepingYouAwake ignored the request.
 
+### Audio setups (Hammerspoon)
+
+| Shortcut | Action |
+|---|---|
+| Hyper + Y | Switch to the next audio setup available right now |
+
+Three setups, each an output and an input:
+
+| Setup | Output | Input | Available |
+|---|---|---|---|
+| 🎧 Headset | Shokz, through the Loop120 dongle (over Bluetooth when the dongle isn't plugged in) | Same | Headset on |
+| 🔊 External | The Dell's audio, out to the Eris speakers | PodMic, or the Insta360's mic until the PodMic is plugged in | Docked |
+| 💻 Built-in | MacBook speakers | MacBook mic | Undocked |
+
+It switches by itself when something changes. The headset turning on
+switches to Headset, docked or not. The headset turning off, docking or
+undocking picks External when docked and Built-in otherwise. Hyper+Y steps
+through the setups available right now, so docked with the headset on it
+flips between Headset and External. A short alert names the setup each time.
+When the headset connects, its output is also unmuted at full volume: the
+dongle brings it up muted at volume 0 every time. Zoom unmutes it for
+itself, but Google Meet and others stay silent. Turn it down with the
+headset's own buttons. Hyper+Y and docking leave the volume alone.
+System sound effects follow the output.
+
+**The Bluetooth pairing is load-bearing.** The dongle can't report whether
+the headset is linked: it shows the same input and output either way. The
+headset is also paired with the Mac over Bluetooth ("OpenComm2 by
+Shokz_II", connected to both at once), and that link appearing is the
+"headset on" signal. Audio still goes through the dongle whenever it's
+plugged in. Unpairing the headset from the Mac ends the automatic switch to
+it; Hyper+Y then never offers Headset either.
+
+Docked means the Dell's audio output is present. Devices arrive one by one
+when you dock, so it acts once the device list has been still for 2 s. Only
+a change in headset or dock switches anything: the dongle reconnecting after
+sleep leaves a setup you picked with Hyper+Y alone. Devices are matched by
+part of their name (`AUDIO` in `init.lua`): "PodMic" is a guess at the new
+mic's name, so check it once it's plugged in. Cameras are each app's own
+setting, not the system's, so Zoom picks the Insta360 or the built-in camera
+by itself.
+
 ### Reloading
 
 Saving any `.lua` file in `config/hammerspoon/` reloads Hammerspoon on its own

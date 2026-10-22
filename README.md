@@ -59,7 +59,7 @@ what to watch out for.
 |---|---|---|
 | Hyper key, nav layer | [Karabiner-Elements](https://karabiner-elements.pqrs.org/) — Caps Lock is Hyper when held, Backspace when tapped | `config/karabiner/` |
 | Keyboardio Model 100 | Firmware keymap with a lit Hyper layer — `keyboardio-layers`, `keyboardio-backup` | `config/keyboardio/model100.json` |
-| Windows, apps, cheatsheet | [Hammerspoon](https://www.hammerspoon.org/) — layouts, app focus, Messages, Zoom mute and join, a link router (work → Chrome, rest → Dia); reloads on save | `config/hammerspoon/` |
+| Windows, apps, cheatsheet | [Hammerspoon](https://www.hammerspoon.org/) — layouts, app focus, Messages, Zoom mute and join, audio setups that follow the headset and the dock, a link router (work → Chrome, rest → Dia); reloads on save | `config/hammerspoon/` |
 
 **Editors and Git**
 
@@ -177,7 +177,7 @@ scripts keep it in the repo (quit Chrysalis first — it holds the port):
 - CI lints every push: shellcheck, Python/Lua/JSON/YAML syntax, and that every
   binary a config shells out to has a Brewfile entry. It also runs the
   Hammerspoon tests: the real config under a fake `hs`, window keys pressed
-  against fake windows, and the Hyper layer checked for collisions with
+  against fake windows, audio devices plugged in and out, and the Hyper layer checked for collisions with
   Karabiner and for a GUIDE row per key. A macOS job checks every
   Brewfile formula and cask still exists (and isn't disabled or deprecated),
   links everything into an empty `$HOME`, and validates the Ghostty config.

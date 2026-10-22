@@ -246,10 +246,14 @@ function Window:focus()
 end
 function Window:raise() return self:focus() end
 
+-- Audio devices, defaults and the watcher callback (see hs.audiodevice)
+local audioDevices, audioDefaults, audioCallback = {}, {}, nil
+
 -- Reset the world between tests
 function M.reset()
     screens, apps, windows, zorder, queue = {}, {}, {}, {}, {}
     hotkeys, M.bindings, M.written, M.alerts = {}, {}, {}, {}
+    audioDevices, audioDefaults, audioCallback = {}, {}, nil
 end
 
 -- A screen; `name` "Built-in Retina Display" makes it the MacBook's
@@ -387,6 +391,43 @@ hs.application = setmetatable({
 }, stubMeta)
 hs.alert = setmetatable({
     show = function(msg) table.insert(M.alerts, msg) end,
+}, stubMeta)
+-- Audio devices: M.audio(name, transport, kinds) adds one ("in", "out" or
+-- "inout"), M.unplug(name) removes it, M.audioEvent() fires the watcher
+local AudioDevice = {}
+AudioDevice.__index = AudioDevice
+function AudioDevice:name() return self.n end
+function AudioDevice:uid() return self.n .. ":" .. self.kind end
+function AudioDevice:transportType() return self.transport end
+function AudioDevice:setDefaultOutputDevice() audioDefaults.output = self return true end
+function AudioDevice:setDefaultEffectDevice() audioDefaults.effect = self return true end
+function AudioDevice:setDefaultInputDevice() audioDefaults.input = self return true end
+function AudioDevice:outputVolume() return self.volume end
+function AudioDevice:outputMuted() return self.muted end
+function AudioDevice:setOutputVolume(v) self.volume = v return true end
+function AudioDevice:setOutputMuted(m) self.muted = m return true end
+function M.audio(name, transport, kinds)
+    for kind in (kinds or "inout"):gmatch("[io][nu]t?") do
+        -- Volume 0 and muted, as the Shokz dongle comes up
+        table.insert(audioDevices, setmetatable({ n = name, transport = transport, kind = kind,
+                                                  volume = 0, muted = true }, AudioDevice))
+    end
+end
+function M.unplug(name)
+    audioDevices = filter(audioDevices, function(d) return d.n ~= name end)
+end
+function M.audioEvent(event) if audioCallback then audioCallback(event or "dev#") end end
+function M.defaultAudio(kind) return audioDefaults[kind] and audioDefaults[kind].n end
+local function ofKind(kind) return filter(audioDevices, function(d) return d.kind == kind end) end
+hs.audiodevice = setmetatable({
+    allInputDevices = function() return ofKind("in") end,
+    allOutputDevices = function() return ofKind("out") end,
+    defaultOutputDevice = function() return audioDefaults.output end,
+    defaultInputDevice = function() return audioDefaults.input end,
+    watcher = {
+        setCallback = function(fn) audioCallback = fn end,
+        start = function() end,
+    },
 }, stubMeta)
 hs.fs = setmetatable({
     dir = function() return function() return nil end end,

@@ -972,6 +972,117 @@ local function toggleAwake()
 end
 bindHyper("0", "Utilities", "Keep the Mac awake (KeepingYouAwake on / off)", toggleAwake)
 
+-- Audio setups: Headset (Shokz), External (the Dell's audio out to the desk
+-- speakers, a desk mic) and Built-in (the MacBook's own). The headset
+-- turning on switches to it, docked or not; turning off, or docking and
+-- undocking, picks External when docked, Built-in otherwise. Hyper+Y steps
+-- through the setups available right now.
+--
+-- The dongle can't tell whether the headset is linked: it shows the same
+-- devices either way. The headset is also paired with the Mac over
+-- Bluetooth, though, and that link appearing is the "headset on" signal.
+-- Audio still goes through the dongle whenever it's plugged in. Devices are
+-- matched by a fragment of their name (or "Built-in" by transport).
+local AUDIO = {
+    headset = "OpenComm2",                -- its Bluetooth link: present = on
+    dongle = "Loop120",                   -- its USB dongle
+    dock = "DELL",                        -- the Dell's audio: present = docked
+    deskMics = { "PodMic", "Insta360" },  -- first one present
+}
+local AUDIO_SETUPS = {
+    { name = "Headset", icon = "\u{1F3A7}", when = function(s) return s.headset end,
+      output = { AUDIO.dongle, AUDIO.headset }, input = { AUDIO.dongle, AUDIO.headset } },
+    { name = "External", icon = "\u{1F50A}", when = function(s) return s.docked end,
+      output = { AUDIO.dock }, input = AUDIO.deskMics },
+    { name = "Built-in", icon = "\u{1F4BB}", when = function(s) return not s.docked end,
+      output = { "Built-in" }, input = { "Built-in" } },
+}
+
+-- The first device of the kind ("input" / "output") matching a fragment,
+-- trying the fragments in order
+local function audioDevice(kind, fragments)
+    local devices = kind == "input" and hs.audiodevice.allInputDevices()
+        or hs.audiodevice.allOutputDevices()
+    for _, fragment in ipairs(fragments) do
+        for _, d in ipairs(devices) do
+            if fragment == "Built-in" and d:transportType() == "Built-in"
+               or d:name():find(fragment, 1, true) then
+                return d
+            end
+        end
+    end
+end
+
+local function audioState()
+    return { headset = audioDevice("output", { AUDIO.headset }) ~= nil,
+             docked = audioDevice("output", { AUDIO.dock }) ~= nil }
+end
+
+local function applyAudio(setup)
+    local output = audioDevice("output", setup.output)
+    if not output then return end
+    output:setDefaultOutputDevice()
+    output:setDefaultEffectDevice()
+    local input = audioDevice("input", setup.input)
+    if input then input:setDefaultInputDevice() end
+    hs.alert.show(setup.icon .. " " .. setup.name)
+    return output
+end
+
+-- The setup the system output belongs to now, read live
+local function currentAudio()
+    local out = hs.audiodevice.defaultOutputDevice()
+    for i, setup in ipairs(AUDIO_SETUPS) do
+        local d = audioDevice("output", setup.output)
+        if out and d and d:uid() == out:uid() then return i end
+    end
+end
+
+bindHyper("y", "Utilities", "Audio: next setup (headset, speakers, built-in)", function()
+    local state, current = audioState(), currentAudio()
+    -- Starting after the current setup, the next one available now
+    for step = 1, #AUDIO_SETUPS do
+        local i = ((current or 0) + step - 1) % #AUDIO_SETUPS + 1
+        if i ~= current and AUDIO_SETUPS[i].when(state) then return applyAudio(AUDIO_SETUPS[i]) end
+    end
+    local setup = AUDIO_SETUPS[current]
+    hs.alert.show(setup.icon .. " " .. setup.name .. " (the only setup now)")
+end)
+
+-- Devices arrive one by one (docking adds the Dell, the dongle and the
+-- camera; the headset adds an input and an output), so act once the list
+-- has been still for 2 s. Only a change in headset or dock switches: the
+-- dongle re-appearing after sleep leaves a setup picked with Hyper+Y alone.
+-- This is the one remembered value, and only to tell what changed.
+local audioLast = audioState()
+local audioSettle
+hs.audiodevice.watcher.setCallback(function(event)
+    if event ~= "dev#" then return end
+    if audioSettle then audioSettle:stop() end
+    audioSettle = hs.timer.doAfter(2, function()
+        local state = audioState()
+        local changed = state.headset ~= audioLast.headset or state.docked ~= audioLast.docked
+        local connected = state.headset and not audioLast.headset
+        audioLast = state
+        if not changed then return end
+        for _, setup in ipairs(AUDIO_SETUPS) do
+            if setup.when(state) then
+                local output = applyAudio(setup)
+                -- The dongle's output comes up muted at volume 0 each time
+                -- the headset links. Zoom unmutes it for itself, Google Meet
+                -- doesn't: unmute it at full volume (the headset's own
+                -- buttons turn it down from there)
+                if connected and output then
+                    output:setOutputMuted(false)
+                    output:setOutputVolume(100)
+                end
+                return
+            end
+        end
+    end)
+end)
+hs.audiodevice.watcher.start()
+
 -- Quick-reply floats: summon / dismiss a messenger without touching the
 -- current layout. It floats over the right third; pressing again hides it,
 -- and macOS hands focus back to the app you were in. Nothing is remembered

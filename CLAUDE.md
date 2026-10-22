@@ -118,7 +118,8 @@ A PostToolUse hook (`.claude/hooks/check-config.sh`) validates each edited file
 - `./drift.sh` — symlinks, packages, required binaries, local files.
 - `lua tests/hammerspoon/run.lua` — the real `init.lua` under a fake `hs`
   (`mock.lua`): window keys pressed against fake windows and screens
-  (`windows_test.lua`), and the Hyper layer checked for collisions, the
+  (`windows_test.lua`), audio setups switched as fake devices come and go
+  (`audio_test.lua`), and the Hyper layer checked for collisions, the
   cheatsheet description form and a GUIDE.md row per key
   (`bindings_test.lua`). Run it after changing Hammerspoon, `karabiner.json`
   or GUIDE.md; the hook doesn't, as it never executes repo code. A
