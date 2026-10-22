@@ -1083,6 +1083,77 @@ hs.audiodevice.watcher.setCallback(function(event)
 end)
 hs.audiodevice.watcher.start()
 
+-- Studio: the living room and kitchen covers and lights (Shelly Gen4, local
+-- HTTP RPC, no credentials), from the Model 100's Studio layer (Fn+Y locks
+-- it; keyboardio-layers). Its keys send Ctrl+Option+Cmd + F13–F20, one
+-- column per room: light, cover up, preset, cover down. The devices'
+-- addresses stay out of this public repo, in STUDIO_FILE: one
+-- "<role> <host>" per line, the roles being living-light, living-cover,
+-- kitchen-light, kitchen-cover. Re-read per press, so edits apply at once.
+local STUDIO_FILE = os.getenv("HOME") .. "/.config/studio/devices.local"
+local STUDIO_PRESET = 15  -- cover position (0 closed, 100 open): the slats' gaps open
+local STUDIO_MODS = { "cmd", "alt", "ctrl" }
+
+local function studioHost(role)
+    local f = io.open(STUDIO_FILE, "r")
+    if not f then return nil end
+    for line in f:lines() do
+        local r, host = line:gsub("#.*", ""):match("^%s*(%S+)%s+(%S+)")
+        if r == role then f:close() return host end
+    end
+    f:close()
+end
+
+-- One RPC call; `done` gets the decoded reply. A failure (away from home,
+-- a device offline) alerts: nothing else would show it.
+local function shelly(role, method, params, done)
+    local host = studioHost(role)
+    if not host then
+        hs.alert.show("\u{26A0}\u{FE0F} Studio: no " .. role .. " in " .. STUDIO_FILE)
+        return
+    end
+    local query = {}
+    for k, v in pairs(params) do table.insert(query, k .. "=" .. tostring(v)) end
+    table.sort(query)
+    local url = "http://" .. host .. "/rpc/" .. method .. "?" .. table.concat(query, "&")
+    hs.http.asyncGet(url, nil, function(status, body)
+        if status ~= 200 then
+            hs.alert.show("\u{26A0}\u{FE0F} Studio: " .. role .. " didn't answer")
+        elseif done then
+            done(hs.json.decode(body) or {})
+        end
+    end)
+end
+
+-- Up / down: the cover heads that way, or stops if it's already moving
+-- that way, so a second press stops it where it is. The preset stops a
+-- cover moving either way (it can be heading for the preset from above or
+-- below). Read live per press.
+local function studioCover(role, method, params, stopWhen)
+    shelly(role, "Cover.GetStatus", { id = 0 }, function(status)
+        if stopWhen[status.state] then
+            shelly(role, "Cover.Stop", { id = 0 })
+        else
+            shelly(role, method, params)
+        end
+    end)
+end
+
+for i, room in ipairs({ "living", "kitchen" }) do
+    local f = 13 + 4 * (i - 1)
+    local light, cover = room .. "-light", room .. "-cover"
+    hs.hotkey.bind(STUDIO_MODS, "f" .. f, function() shelly(light, "Switch.Toggle", { id = 0 }) end)
+    hs.hotkey.bind(STUDIO_MODS, "f" .. f + 1, function()
+        studioCover(cover, "Cover.Open", { id = 0 }, { opening = true })
+    end)
+    hs.hotkey.bind(STUDIO_MODS, "f" .. f + 2, function()
+        studioCover(cover, "Cover.GoToPosition", { id = 0, pos = STUDIO_PRESET }, { opening = true, closing = true })
+    end)
+    hs.hotkey.bind(STUDIO_MODS, "f" .. f + 3, function()
+        studioCover(cover, "Cover.Close", { id = 0 }, { closing = true })
+    end)
+end
+
 -- Quick-reply floats: summon / dismiss a messenger without touching the
 -- current layout. It floats over the right third; pressing again hides it,
 -- and macOS hands focus back to the app you were in. Nothing is remembered

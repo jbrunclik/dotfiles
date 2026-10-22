@@ -1103,6 +1103,7 @@ The **Function layer** (hold the left palm key):
 | A / D · F | Previous / next track · Play/Pause |
 | `,` / `.` | Previous / next tab (sends Hyper+`,` / `.`) |
 | `` ` `` · ⌫ | Tab · Forward delete |
+| Y | **Studio layer** on (below); Y again turns it off |
 
 The media keys sit on WASD by direction (up/down is volume, left/right the
 track, X under S mutes), where the stock layer had mouse keys; the stock
@@ -1140,6 +1141,8 @@ brightness 200/255):
   | 0 — keep awake | yellow |
   | Space — launcher | green (like the app keys) |
 
+- **Studio** — only its keys lit: lights yellow, covers sky, Y (the way
+  out) white.
 - **Function** / **Numpad** — only their own keys lit, by kind: F-keys pink,
   arrows sky, volume blue, the other media keys yellow, mouse keys green, brackets orange, editing and
   navigation lavender, the Fn layer's tab keys white; digits green, operators
@@ -1206,6 +1209,46 @@ Chrysalis can't connect while one is running. Chrysalis
 only backs up by itself before a firmware update, which is why its last one
 predated the Hyper and butterfly keys.
 
+### Studio layer: covers and lights
+
+**Fn+Y** locks the **Studio layer**, and **Y** unlocks it. It controls the
+living room and kitchen's covers and lights, one column per room:
+
+| Key | Living room | Key | Kitchen |
+|---|---|---|---|
+| 7 | Light on / off | 8 | Light on / off |
+| U | Cover up | I | Cover up |
+| J | Cover to the preset (85 % covered) | K | Cover to the preset |
+| M | Cover down | `,` | Cover down |
+
+Up and down while the cover is moving that way stop it, so a second press
+stops it where it is. Against its movement, they reverse it. The preset key
+stops a cover moving either way, including on its way to the preset. Each press
+reads the cover's live state from the device. The preset leaves just the
+gaps between the slats open: `STUDIO_PRESET` in `init.lua`, a position from
+0 (closed) to 100 (open).
+
+It's locked rather than held so several keys can go in a row (a cover, then
+a light). While it's on, every other key does nothing, so typing with the
+layer left on can't move a cover. The unlit keyboard says so.
+
+The devices are Shelly Gen4 relays (1PM for the lights, 2PM in cover mode
+for the covers), driven over their local HTTP API, which needs no
+credentials on the home network. The keys send Ctrl+Option+Cmd + F13–F20,
+chords nothing else uses; Hammerspoon turns each into a request to the
+device. Addresses stay out of this public repo: `~/.config/studio/devices.local`
+holds one `<role> <host>` per line, the roles being `living-light`,
+`living-cover`, `kitchen-light` and `kitchen-cover`:
+
+```
+living-cover  shellyXXXX-XXXXXXXXXXXX.local
+```
+
+Use the device's `.local` name, which survives a new DHCP lease
+(`dns-sd -B _shelly._tcp` lists them). Without the file, or away from home,
+a key shows an alert instead. The layer itself is `STUDIO_KEYS` in
+`keyboardio-layers`.
+
 ### Model 100 at a glance
 
 What's different on the Model 100, at a glance (the printed cheatsheet's
@@ -1221,6 +1264,7 @@ Hyper page carries this table):
 | Fn+, . | Previous / next tab, two-handed |
 | Butterfly | Shottr area capture |
 | Num | Numpad layer on / off |
+| Fn+Y | Studio layer on / off: covers and lights (Y off) |
 
 Any (Zoom mute) and Prog (Messages) are on the Hyper page already, with
 their sections.

@@ -248,12 +248,15 @@ function Window:raise() return self:focus() end
 
 -- Audio devices, defaults and the watcher callback (see hs.audiodevice)
 local audioDevices, audioDefaults, audioCallback = {}, {}, nil
+-- HTTP requests made, and the function that answers them (see hs.http)
+local httpReply
 
 -- Reset the world between tests
 function M.reset()
     screens, apps, windows, zorder, queue = {}, {}, {}, {}, {}
     hotkeys, M.bindings, M.written, M.alerts = {}, {}, {}, {}
     audioDevices, audioDefaults, audioCallback = {}, {}, nil
+    M.requests, M.files, httpReply = {}, {}, function() return 200, "{}" end
 end
 
 -- A screen; `name` "Built-in Retina Display" makes it the MacBook's
@@ -305,6 +308,14 @@ local function modsKey(mods)
     return table.concat(sorted, "+")
 end
 M.HYPER = HYPER
+
+-- A chord with other modifiers than Hyper: M.pressWith({ "cmd", "alt" }, "f13")
+function M.pressWith(mods, key)
+    local fn = hotkeys[modsKey(mods) .. " " .. key]
+    assert(fn, "no binding for " .. modsKey(mods) .. " " .. key)
+    fn()
+    M.flush()
+end
 
 function M.press(key)
     local fn = hotkeys[HYPER .. " " .. (ANSI_NAMES[ANSI[key]] or key)]
@@ -448,6 +459,17 @@ hs.json = setmetatable({
     end,
 }, stubMeta)
 hs.execute = function() return "", true end
+-- HTTP: every URL asked for lands in M.requests; M.httpReply(fn) sets what
+-- answers, fn(url) → status, body (default 200, "{}"). Answered at once.
+M.requests = {}
+function M.httpReply(fn) httpReply = fn end
+hs.http = setmetatable({
+    asyncGet = function(url, _, callback)
+        table.insert(M.requests, url)
+        callback(httpReply(url))
+    end,
+}, stubMeta)
+hs.json.decode = decodeJSON
 
 _G.hs = hs
 package.preload["hs.ipc"] = function() return stub() end
@@ -459,6 +481,22 @@ os.getenv = function(name)
     return realGetenv(name)
 end
 os.remove = function() return true end
+
+-- Files under the fake HOME come from M.files (path relative to HOME →
+-- contents); any other path under it doesn't exist
+M.files = {}
+local realOpen = io.open
+local FAKE_HOME = "/nonexistent-hammerspoon-test-home/"
+io.open = function(path, mode)
+    if path:sub(1, #FAKE_HOME) ~= FAKE_HOME then return realOpen(path, mode) end
+    local text = M.files[path:sub(#FAKE_HOME + 1)]
+    if not text then return nil end
+    return {
+        lines = function() return text:gmatch("[^\n]+") end,
+        read = function() return text end,
+        close = function() end,
+    }
+end
 
 function M.load(path)
     dofile(path)
