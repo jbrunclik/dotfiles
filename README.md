@@ -17,7 +17,8 @@ same on a MacBook and a Keyboardio Model 100. Catppuccin Mocha everywhere.
   side (press again to swap focus), Hyper+1–6 jump to an app — press again
   to put it beside the window you came from — Hyper+Space then one letter
   reaches the rest (W WhatsApp, C Claude…; Shift+letter for "beside"),
-  Hyper+A/S/D tile or maximize. Messages pops over the current layout and hides again
+  Hyper+A/S/D tile or maximize, and Hyper+R moves the split — one per
+  screen, so every tiled window follows it. Messages pops over the current layout and hides again
   (Hyper+T); Zoom mutes from any app (Hyper+M, or one key on the Model 100),
   and Hyper+Return joins the meeting about to begin.
 - **A nav layer under the right hand.** Hyper+H/J/K/L are arrows; U/I page,
@@ -29,7 +30,7 @@ same on a MacBook and a Keyboardio Model 100. Catppuccin Mocha everywhere.
 - **Keyboard firmware as code.** The Model 100's keymap and colors are backed
   up into the repo and its lit Hyper layer is generated from the dotfiles.
 - **Kept honest.** `drift.sh` checks the machine against the repo, CI lints
-  every push, global pre-commit and pre-push hooks scan for secrets, and a Claude Code
+  and tests every push, global pre-commit and pre-push hooks scan for secrets, and a Claude Code
   hook validates every config file as it's edited.
 
 | On screen: hold Hyper | On the desk: `hyper-cheatsheet` |
@@ -172,7 +173,10 @@ scripts keep it in the repo (quit Chrysalis first — it holds the port):
   check and automatic rollback, mise, App Store, casks — and `drift.sh` says
   when it's due.
 - CI lints every push: shellcheck, Python/Lua/JSON/YAML syntax, and that every
-  binary a config shells out to has a Brewfile entry. A macOS job checks every
+  binary a config shells out to has a Brewfile entry. It also runs the
+  Hammerspoon tests: the real config under a fake `hs`, window keys pressed
+  against fake windows, and the Hyper layer checked for collisions with
+  Karabiner and for a GUIDE row per key. A macOS job checks every
   Brewfile formula and cask still exists (and isn't disabled or deprecated),
   links everything into an empty `$HOME`, and validates the Ghostty config.
 - Global git hooks run [gitleaks](https://github.com/gitleaks/gitleaks) in every

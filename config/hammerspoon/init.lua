@@ -131,20 +131,39 @@ local function bestWindow(appName)
     return app:mainWindow()
 end
 
-local left  = hs.geometry.rect(0, 0, 0.5, 1)
-local right = hs.geometry.rect(0.5, 0, 0.5, 1)
-
 local threshold = 20
+
+-- Gaps: every window placed here keeps GAP from the screen's edges.
+-- JankyBorders draws its border outside the window, so a window flush with
+-- an edge lost that side of it; GAP is a little over the border's width
+-- (config/borders/bordersrc). None between the two sides of a split: a gap
+-- there would show a strip of whatever is underneath (a maximized window
+-- under a pair is hidden only because both cover the same rect), and the
+-- focused window's border shows anyway, over its neighbour. A window flush
+-- with an edge (dragged, or tiled by macOS) is within threshold, so it
+-- still counts as docked.
+local GAP = 8
+
+-- A unit rect of the screen as a frame in points, inset by the gaps at the
+-- screen's edges
+local function gapped(screen, unit)
+    local s = screen:frame()
+    local l = unit.x < 0.001 and GAP or 0
+    local r = unit.x + unit.w > 0.999 and GAP or 0
+    local t = unit.y < 0.001 and GAP or 0
+    local b = unit.y + unit.h > 0.999 and GAP or 0
+    return hs.geometry.rect(s.x + unit.x * s.w + l, s.y + unit.y * s.h + t,
+        unit.w * s.w - l - r, unit.h * s.h - t - b)
+end
 
 -- Check if a window occupies a given unit rect of its screen (position only)
 local function inPosition(win, unitRect)
     if not win then return false end
-    local f = win:frame()
-    local s = win:screen():frame()
-    return math.abs(f.x - (s.x + unitRect.x * s.w)) < threshold
-        and math.abs(f.y - (s.y + unitRect.y * s.h)) < threshold
-        and math.abs(f.w - unitRect.w * s.w) < threshold
-        and math.abs(f.h - unitRect.h * s.h) < threshold
+    local f, want = win:frame(), gapped(win:screen(), unitRect)
+    return math.abs(f.x - want.x) < threshold
+        and math.abs(f.y - want.y) < threshold
+        and math.abs(f.w - want.w) < threshold
+        and math.abs(f.h - want.h) < threshold
 end
 
 -- Sides, one definition for every key. A window is *docked* on a side when it
@@ -155,7 +174,8 @@ end
 -- don't, which is why nothing below tests for a half.
 local function dockedSide(win)
     if not win then return nil end
-    local f, s = win:frame(), win:screen():frame()
+    -- The screen less its outer gaps: where a maximized window ends
+    local f, s = win:frame(), gapped(win:screen(), hs.geometry.rect(0, 0, 1, 1))
     if math.abs(f.y - s.y) >= threshold or math.abs(f.h - s.h) >= threshold
         or f.w >= s.w - threshold then
         return nil
@@ -183,6 +203,17 @@ end
 local function sideRect(side, ratio)
     if side == "left" then return hs.geometry.rect(0, 0, ratio, 1) end
     return hs.geometry.rect(ratio, 0, 1 - ratio, 1)
+end
+
+-- The screen's split: that of the topmost docked window on it, other than
+-- `except` (the one being placed); a half with nothing docked. One split
+-- per screen, read off the windows each time — what anything placed on a
+-- side takes, so it lines up with what's already there.
+local function currentSplit(screen, except)
+    local docked = hs.fnutils.find(hs.window.orderedWindows(), function(w)
+        return w ~= except and w:isStandard() and w:screen() == screen and dockedSide(w) ~= nil
+    end)
+    return docked and splitRatio(docked) or 0.5
 end
 
 -- Check if a window occupies a given unit rect AND is the topmost window there.
@@ -222,7 +253,7 @@ end
 local function moveWin(win, unitRect, settling)
     if not win then return end
     if not settling then remember(win) end
-    win:move(unitRect)
+    win:setFrame(gapped(win:screen(), unitRect))
 end
 local function setWinFrame(win, frame)
     remember(win)
@@ -351,10 +382,13 @@ local function tilePair(leftApp, rightApp)
         if la and la:isFrontmost() then rw:focus() else lw:focus() end
         return
     end
+    -- Read once, before anything moves: an Electron app restoring its own
+    -- frame mid-launch would otherwise be what the settling pass reads
+    local ratio = currentSplit(hs.screen.mainScreen())
     whenWindows({ leftApp, rightApp }, function(wins, settling)
         local l, r = wins[1], wins[2]
-        moveWin(l, left, settling)
-        moveWin(r, right, settling)
+        moveWin(l, sideRect("left", ratio), settling)
+        moveWin(r, sideRect("right", ratio), settling)
         -- Right first (brings it above the old occupant), then left on top
         if not settling then raisePair(r, l) end
     end)
@@ -362,19 +396,21 @@ end
 
 -- Put an app's window on the other half from `anchor`, the window you're
 -- working in: an anchor tiled right stays right and the app goes left;
--- tiled left, maximized or anything else, the anchor takes the left half.
+-- tiled left, maximized or anything else, the anchor takes the left side,
+-- at the screen's split.
 -- The app ends up focused — it was summoned to be used. Whatever was on that
 -- half stays underneath (Hyper+` reaches it). Sides are decided from the
 -- anchor's live frame on every call, so the Electron re-move lands the same.
 local function placeBeside(name, anchor)
     if not anchor then return end
+    -- A docked anchor keeps its side and width; anything else takes the
+    -- left side of the split docked windows below it share. Read once, as
+    -- in tilePair.
+    local side, ratio = dockedSide(anchor), nil
+    if side then ratio = splitRatio(anchor) else side, ratio = "left", currentSplit(anchor:screen(), anchor) end
     whenWindows({ name }, function(wins, settling)
         local win = wins[1]
         if not win or win == anchor then return end
-        -- A docked anchor keeps its side and width; anything else takes the
-        -- left half
-        local side, ratio = dockedSide(anchor), 0.5
-        if side then ratio = splitRatio(anchor) else side = "left" end
         moveWin(anchor, sideRect(side, ratio), settling)
         moveWin(win, sideRect(otherSide(side), ratio), settling)
         if not settling then raisePair(anchor, win) end
@@ -468,21 +504,23 @@ bindHyper("e", "Windows", "Swap the two sides", function()
     local function flipped(w) return sideRect(otherSide(dockedSide(w)), 1 - splitRatio(w)) end
     if l and r then
         local lTo, rTo = flipped(l), flipped(r)
-        -- What's stacked behind each side stays on its side but follows the
-        -- split to where the pair puts it, as with Hyper+R
-        local screen, old = l:screen(), splitRatio(l)
+        -- Every other docked window stays on its side but follows the split
+        -- to where the pair puts it, as with Hyper+R
+        local screen, to = l:screen(), 1 - splitRatio(l)
         for _, w in ipairs(hs.window.orderedWindows()) do
             local side = dockedSide(w)
-            if w ~= l and w ~= r and w:isStandard() and side and w:screen() == screen
-                and math.abs(splitRatio(w) - old) * screen:frame().w < threshold then
-                moveWin(w, sideRect(side, 1 - old))
+            if w ~= l and w ~= r and w:isStandard() and side and w:screen() == screen then
+                moveWin(w, sideRect(side, to))
             end
         end
         moveWin(l, lTo)
         moveWin(r, rTo)
         raisePair(current == l and r or l, current)
     elseif l or r then
-        moveWin(current, dockedSide(current) and flipped(current) or left)
+        -- Undocked: beside the docked side, at its split
+        local docked = l or r
+        moveWin(current, dockedSide(current) and flipped(current)
+            or sideRect(otherSide(dockedSide(docked)), splitRatio(docked)))
     end
 end)
 
@@ -569,14 +607,15 @@ local function nextStep(steps, value)
     return steps[nearest % #steps + 1]
 end
 
--- Move the split at `from` to `to` (left side's shares): every window docked
--- against it follows, on both sides — the partner, and anything stacked under
--- either (Hyper+` cycles a stack only while its windows share a frame).
-local function moveSplit(screen, from, to)
+-- Move the screen's split to `to` (the left side's share): every window
+-- docked on that screen follows, each on its own side — the partner, anything
+-- stacked under either (Hyper+` cycles a stack only while its windows share a
+-- frame), and windows left at an older split (a 50/50 pair under a 33/66
+-- one), so the one you bring forward next already fits. One split per screen.
+local function moveSplit(screen, to)
     for _, w in ipairs(hs.window.orderedWindows()) do
         local side = dockedSide(w)
-        if w:isStandard() and side and w:screen() == screen
-            and math.abs(splitRatio(w) - from) * screen:frame().w < threshold then
+        if w:isStandard() and side and w:screen() == screen then
             moveWin(w, sideRect(side, to))
         end
     end
@@ -590,16 +629,16 @@ local function tileSide(side)
     local win = hs.window.focusedWindow()
     if not win then return end
     if dockedSide(win) ~= side then
-        moveWin(win, side == "left" and left or right)
+        moveWin(win, sideRect(side, currentSplit(win:screen(), win)))
         return
     end
     local split = splitRatio(win)
     local share = side == "left" and split or 1 - split
     local nextShare = nextStep(splitSteps(win:screen()), share)
-    moveSplit(win:screen(), split, side == "left" and nextShare or 1 - nextShare)
+    moveSplit(win:screen(), side == "left" and nextShare or 1 - nextShare)
 end
-bindHyper("a", "Windows", "Tile left half (again: ⅔, ⅓)", function() tileSide("left") end)
-bindHyper("d", "Windows", "Tile right half (again: ⅔, ⅓)", function() tileSide("right") end)
+bindHyper("a", "Windows", "Tile left, at the split (again: ⅔, ⅓)", function() tileSide("left") end)
+bindHyper("d", "Windows", "Tile right, at the split (again: ⅔, ⅓)", function() tileSide("right") end)
 
 -- Hyper+R = move the split: 50 → 67 → 33 → 50 % (the left side's share),
 -- from wherever it is now, whichever side is focused. Read from live frames
@@ -608,7 +647,7 @@ bindHyper("r", "Windows", "Move the split: 50 → 67 → 33 %", function()
     local win = hs.window.focusedWindow()
     if not dockedSide(win) then return end
     local split = splitRatio(win)
-    moveSplit(win:screen(), split, nextStep(splitSteps(win:screen()), split))
+    moveSplit(win:screen(), nextStep(splitSteps(win:screen()), split))
 end)
 
 -- Hyper+S again, on a window that's already maximized, puts it back where it
@@ -632,9 +671,10 @@ bindHyper("s", "Windows", "Maximize (again: back beside)", function()
     local below = hs.fnutils.find(hs.window.orderedWindows(), function(w)
         return w ~= win and w:isStandard()
     end)
-    -- Beside a docked window: the rest of its split. Otherwise a half.
+    -- Beside a docked window: the rest of its split. Otherwise the left
+    -- side of the screen's split.
     local side = below and otherSide(sideOf(below)) or "left"
-    local ratio = below and dockedSide(below) and splitRatio(below) or 0.5
+    local ratio = currentSplit(win:screen(), win)
     moveWin(win, sideRect(side, ratio))
 end)
 
@@ -949,23 +989,26 @@ local FLOAT_MIN_WIDTH = {
 }
 
 local function placeFloat(win, minWidth)
-    local s = win:screen():frame()
     -- A third, or two thirds where the app can't fit in a third (both
     -- messengers on the MacBook): squeezed to its minimum, the fixed
-    -- sidebars leave the conversation a narrow strip
-    local w = minWidth > s.w / 3 and s.w * 2 / 3 or s.w / 3
-    setWinFrame(win, { x = s.x + s.w - w, y = s.y, w = w, h = s.h })
+    -- sidebars leave the conversation a narrow strip. Gapped like a tiled
+    -- third, so it lines up with one.
+    local third = gapped(win:screen(), hs.geometry.rect(2 / 3, 0, 1 / 3, 1))
+    local share = minWidth > third.w and 2 / 3 or 1 / 3
+    local frame = gapped(win:screen(), hs.geometry.rect(1 - share, 0, share, 1))
+    setWinFrame(win, frame)
     -- Fallback if a minimum ever grows: apps widen themselves back only some
     -- time after a move, so watch for an overflow for 1.5 s and pin the
     -- right edge
+    local edge = frame.x + frame.w
     local deadline = hs.timer.secondsSinceEpoch() + 1.5
     hs.timer.waitUntil(function()
         local f = win:frame()
-        return f.x + f.w > s.x + s.w + 1 or hs.timer.secondsSinceEpoch() > deadline
+        return f.x + f.w > edge + 1 or hs.timer.secondsSinceEpoch() > deadline
     end, function()
         local f = win:frame()
-        if f.x + f.w > s.x + s.w + 1 then
-            f.x = s.x + s.w - f.w
+        if f.x + f.w > edge + 1 then
+            f.x = edge - f.w
             win:setFrame(f)
         end
     end, 0.05)

@@ -112,8 +112,16 @@ A PostToolUse hook (`.claude/hooks/check-config.sh`) validates each edited file
 — shellcheck, JSON, Lua syntax, Karabiner lint, Ghostty config. Beyond that:
 
 - `./drift.sh` — symlinks, packages, required binaries, local files.
-- CI (`.github/workflows/ci.yml`) runs shellcheck, Lua/JSON/YAML syntax and the
-  Brewfile ↔ `REQUIRED_BINS` check on every push.
+- `lua tests/hammerspoon/run.lua` — the real `init.lua` under a fake `hs`
+  (`mock.lua`): window keys pressed against fake windows and screens
+  (`windows_test.lua`), and the Hyper layer checked for collisions, the
+  cheatsheet description form and a GUIDE.md row per key
+  (`bindings_test.lua`). The hook runs it on edits to Hammerspoon,
+  `karabiner.json` and GUIDE.md. A window-key change gets a test; check a new
+  one fails without the change (`HS_CONFIG` etc. point it at a broken copy).
+- CI (`.github/workflows/ci.yml`) runs shellcheck, Lua/JSON/YAML syntax, the
+  Hammerspoon window tests and the Brewfile ↔ `REQUIRED_BINS` check on every
+  push.
 - Keyboard and GUI behavior can't be exercised from a shell: apply it, check
   the tool's log or state, then ask the user to press the keys.
 

@@ -32,7 +32,13 @@ case "$rel" in
             out="$("$cli" --lint-complex-modifications "$tmp" 2>&1)"; rc=$?
             rm -f "$tmp"
             [ $rc -eq 0 ] || fail "Karabiner lint failed" "$out"
-        fi ;;
+        fi
+        have lua || exit 0
+        out="$(lua tests/hammerspoon/run.lua 2>&1)" || fail "Hammerspoon tests failed" "$out" ;;
+    GUIDE.md)
+        # A Hyper key needs a row here (tests/hammerspoon/bindings_test.lua)
+        have lua || exit 0
+        out="$(lua tests/hammerspoon/run.lua 2>&1)" || fail "Hammerspoon tests failed" "$out" ;;
     *.json)
         # VS Code settings are JSONC (comments), which jq rejects
         case "$rel" in config/vscode/*) exit 0 ;; esac
@@ -43,6 +49,11 @@ case "$rel" in
         have luajit || exit 0
         out="$(LUA_FILE="$rel" luajit -e 'local ok, err = loadfile(os.getenv("LUA_FILE")) if not ok then io.stderr:write(err, "\n") os.exit(1) end' 2>&1)" \
             || fail "Lua syntax error" "$out" ;;
+    config/hammerspoon/*.lua|tests/hammerspoon/*.lua)
+        have luac || exit 0
+        out="$(luac -p "$rel" 2>&1)" || fail "Lua syntax error" "$out"
+        have lua || exit 0
+        out="$(lua tests/hammerspoon/run.lua 2>&1)" || fail "Hammerspoon tests failed" "$out" ;;
     *.lua)
         have luac || exit 0
         out="$(luac -p "$rel" 2>&1)" || fail "Lua syntax error" "$out" ;;

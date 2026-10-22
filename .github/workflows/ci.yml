@@ -35,6 +35,12 @@ jobs:
           find config -name '*.lua' -not -path 'config/nvim/*' -print0 | xargs -0 -n1 luac5.4 -p
           find config/nvim -name '*.lua' -print0 | xargs -0 -n1 sh -c 'LUA_FILE="$1" luajit -e "local ok, err = loadfile(os.getenv(\"LUA_FILE\")) if not ok then io.stderr:write(err, \"\\n\") os.exit(1) end"' _
 
+      # The real init.lua under a fake hs (tests/hammerspoon/mock.lua):
+      # window keys pressed against fake windows, and the Hyper layer checked
+      # against karabiner.json and GUIDE.md
+      - name: Hammerspoon tests
+        run: lua5.4 tests/hammerspoon/run.lua
+
       # Every tracked JSON file except VS Code's, which is JSONC (comments)
       - name: JSON syntax
         run: git ls-files -z '*.json' ':!config/vscode/*' | xargs -0 -r -n1 jq empty --

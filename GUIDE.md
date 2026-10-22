@@ -1285,10 +1285,10 @@ sysdiagnose.
 
 | Shortcut | Action |
 |---|---|
-| Hyper + A | Tile window left half; again: ⅔, then ⅓ of the width (the split follows) |
+| Hyper + A | Tile window left, at the screen's split (a half if nothing's docked); again: ½, ⅔, ⅓ of the width (the split follows) |
 | Hyper + S | Maximize window (no fullscreen); again: back where it was |
-| Hyper + D | Tile window right half; again: ⅔, then ⅓ |
-| Hyper + R | Move the split: 50 → 67 → 33 % (left side's share); everything docked at it follows. MacBook: 50 → 60 → 40 |
+| Hyper + D | Tile window right, at the screen's split; again: ½, ⅔, ⅓ |
+| Hyper + R | Move the split: 50 → 67 → 33 % (left side's share); every docked window follows. MacBook: 50 → 60 → 40 |
 | Hyper + F | Toggle native fullscreen |
 | Hyper + E | Swap the two sides, each keeping its width (the focused window keeps focus) |
 | Hyper + Up | Reading frame: centered, ⅔ wide, full height; again: maximize. On the MacBook's screen: maximize (Model 100: left thumb Ctrl) |
@@ -1304,20 +1304,30 @@ two sides to the next step after the nearest one, so a window dragged by hand
 joins the cycle too. A second Hyper+A or Hyper+D on a window already docked
 on that side steps *its own* width ½ → ⅔ → ⅓ (Rectangle's convention), so A
 always resizes the left window and D the right one, while R steps the divider
-the same way whichever side you're on. Both move the split the same way. Every window *docked* against the split moves with it — full
-height, flush with a screen edge, inner edge on the split: the window on the
-other side and everything stacked behind either (Hyper+` only cycles windows
-that share a frame, so leaving them would break the stack). Undo is one
-Hyper+Down for all of them. Thirds only on the Dell — 60 % next to 67 % was
+the same way whichever side you're on. Both move the split the same way.
+
+**One split per screen.** Every window *docked* on the screen moves with the
+split — full height, flush with a screen edge, at any width: the window on
+the other side, everything stacked behind either (Hyper+` only cycles
+windows that share a frame), and windows left at an older split. Without
+that last part, a 50/50 pair under a 33/66 one came back at 50/50 when
+you switched to it. Undo is one Hyper+Down for all of them. Maximized and
+floating windows aren't docked and stay put. Windows of hidden or minimized
+apps aren't visible to Hammerspoon, so they keep their old width until the
+next split move. A visible Messages float is docked too, and moves with the
+split. Thirds only on the Dell — 60 % next to 67 % was
 too close to tell apart. The MacBook uses 60/40 instead: a third there is
 ~500 pt, narrower than Messages or Slack will go. Hyper+E keeps the split
 consistent too: the pair swaps sides and widths, and what's stacked behind
 each side moves to the new split.
 
-The rest of the window keys follow the split instead of assuming halves:
-"beside" (a second Hyper+1–6 press, launcher Shift+key) takes the rest of
-the split, a layout's second press
-still cycles focus, and Hyper+Tab / Left / Right go by each window's
+The rest of the window keys follow the split instead of assuming halves.
+Anything placed on a side takes **the screen's split**: the split of the
+topmost docked window, or a half when nothing's docked. That covers a first
+Hyper+A/D, a layout (Hyper+Z…), "beside" next to a maximized window, Hyper+S
+again, and Hyper+E with one side empty. "Beside" next to a docked window (a
+second Hyper+1–6 press, launcher Shift+key) takes the rest of its split. A
+layout's second press still cycles focus, and Hyper+Tab / Left / Right go by each window's
 **centre**: a two-thirds window flush right is a right window, though its
 left edge is past the middle (the MacBook messenger float). One definition
 — `dockedSide`, `sideOf`, `splitRatio` in `init.lua` — for every key;
@@ -1368,7 +1378,9 @@ so it can't undo it.
 | Hyper + C | Meeting + chat — Zoom left, Slack right |
 | Hyper + V | Meeting + browsing — Zoom left, Dia right |
 
-Press the same layout again to swap focus between the two sides. An app that
+The pair takes the screen's current split (halves when nothing's docked), so
+a layout doesn't undo a Hyper+R; Hyper+R steps it from there. Press the same
+layout again to swap focus between the two sides. An app that
 isn't running (or has no window) is launched first; the layout waits for its
 window — up to 10 s, since Slack and Notion take a few seconds — then tiles,
 and repeats the move half a second later because Electron apps restore their
@@ -1410,8 +1422,9 @@ The first press brings up the app's main window (launching the app if it has
 no window). The second puts it **beside the window you came from**, so
 `Hyper+4 4` from the terminal gives "terminal + Slack" without a fixed layout:
 
-- The window you came from keeps its half if it's tiled; if it was maximized
-  or floating, it takes the left half. The app gets the other half and the
+- The window you came from keeps its side and width if it's tiled; if it was
+  maximized or floating, it takes the left side of the screen's split (a half
+  when nothing's docked). The app gets the other half and the
   focus. Whatever was on that half stays underneath — Hyper+` reaches it.
 - "The window you came from" is the next window down in the stacking order
   (skipping the app's own other windows), so nothing is remembered between

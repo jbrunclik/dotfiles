@@ -85,6 +85,8 @@ brew "shfmt"
 brew "pyright"
 brew "typescript-language-server"
 brew "lua-language-server"
+# Runs the Hammerspoon window tests (tests/hammerspoon) outside Hammerspoon
+brew "lua"
 
 # Modern CLI replacements
 brew "bat"
