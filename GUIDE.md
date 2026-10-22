@@ -1136,7 +1136,7 @@ brightness 200/255):
   | Space — launcher | green (like the app keys) |
 
 - **Function** / **Numpad** — only their own keys lit, by kind: F-keys pink,
-  arrows sky, media yellow, mouse keys green, brackets orange, editing and
+  arrows sky, volume blue, the other media keys yellow, mouse keys green, brackets orange, editing and
   navigation lavender, the Fn layer's tab keys white; digits green, operators
   yellow. The key that gets you back out of a layer stays white.
 

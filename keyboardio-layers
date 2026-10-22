@@ -77,7 +77,7 @@ PROG = 0                                         # row 0, col 0 of the base laye
 PALETTE = [
     (0, 0, 0),        # 0  off
     (150, 40, 255),   # 1  mauve     Layouts
-    (0, 70, 255),     # 2  blue      Windows, Zoom
+    (0, 70, 255),     # 2  blue      Windows, Zoom, volume keys
     (0, 255, 40),     # 3  green     Apps, numpad digits, mouse keys
     (255, 0, 40),     # 4  red       Zoom (also the Any key)
     (0, 255, 170),    # 5  teal      Messages (also the Prog key)
@@ -165,6 +165,8 @@ def layer_color(k, base_key):
     if k == TRANSPARENT:
         return 12 if is_layer_key(base_key) else 0
     hi, code = k >> 8, k & 0xFF
+    if k in (MUTE, VOL_UP, VOL_DOWN):    # volume, apart from the track keys beside it
+        return 2
     if hi == 0x48:                       # consumer: media keys
         return 6
     if hi == 0x50:                       # mouse keys
