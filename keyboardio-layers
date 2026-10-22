@@ -7,6 +7,8 @@ What it sets, starting from the keyboard's current state:
     The Hyper key (base layer, right thumb-cluster) becomes "hold for layer
     3", so holding it lights that layer — chords behave exactly as before.
   * Prog → F19 (Messages toggle in Hammerspoon).
+  * Layer 2 "Function" (hold the left palm key): the stock layer, cleaned up
+    — media keys on WASD, Fn+,/. switch tabs (FN_KEYS).
   * Colors (Colormap LED mode, Catppuccin Mocha): the Hyper layer is colored
     by cheatsheet section, so the keyboard shows what's bound; unbound keys
     stay dark. Base is dim with the single-purpose keys marked; the Fn and
@@ -121,6 +123,31 @@ LCTRL, LCMD, LSHIFT, BACKSPACE = 0xE0, 0xE3, 0xE1, 0x2A
 # (forward delete), which stays on Fn+Backspace.
 THUMB_ARROWS = {LCTRL: HID["↑"], BACKSPACE: HID["↓"], LCMD: HID["←"], LSHIFT: HID["→"]}
 
+# Function layer: changes to the stock layer, by (row, col); None is
+# transparent (the base key). Dropped: what a Mac with a trackpad never uses —
+# mouse keys and warp, Home/End (they scroll, not move the cursor), Print
+# Screen, Insert, Caps Lock, Fn+Space = Enter. The media keys move to WASD, by
+# direction: up/down volume, left/right track, X (under S) mute, F play. Fn+,/.
+# send Hyper+,/. — the tab keys, as a two-hand chord (Hyper is the right palm,
+# the same hand as , and .). Kept as stock: F-keys, arrows on HJKL, the
+# brackets and \ | (the base layer has no [ ] \), Fn+` Tab, Fn+⌫ forward
+# delete, Fn+butterfly Menu.
+CONSUMER = 0x4800
+MUTE, VOL_UP, VOL_DOWN = CONSUMER | 0xE2, CONSUMER | 0xE9, CONSUMER | 0xEA
+NEXT_TRACK, PREV_TRACK, PLAY_PAUSE = CONSUMER | 0xB5, CONSUMER | 0xB6, CONSUMER | 0xCD
+FN_KEYS = {
+    (1, 2): VOL_UP, (2, 2): VOL_DOWN, (3, 2): MUTE,        # W S X
+    (2, 1): PREV_TRACK, (2, 3): NEXT_TRACK, (2, 4): PLAY_PAUSE,  # A D F
+    (3, 12): HYPER_MODS | HID[","], (3, 13): HYPER_MODS | HID["."],
+    (0, 6): None,                                          # Caps Lock (LED key)
+    (1, 4): None, (1, 5): None, (1, 6): None,              # R T Tab: right click, warp
+    (2, 5): None, (2, 6): None, (3, 4): None, (3, 5): None,  # G Esc V B: warp, middle click
+    (2, 0): None, (3, 0): None, (3, 1): None,              # Home End Print Screen
+    (1, 8): None,                                          # Space: Enter
+    (0, 9): None, (1, 9): None, (1, 10): None,             # Any Enter Y: old track keys
+    (3, 10): None, (3, 11): None,                          # N M: old mute, volume down
+}
+
 
 def plain(k):
     """HID usage of a plain, unmodified key, else None."""
@@ -142,6 +169,8 @@ def layer_color(k, base_key):
         return 6
     if hi == 0x50:                       # mouse keys
         return 3
+    if hi == HYPER_MODS >> 8:            # Fn+,/.: the tab keys, white as on the Hyper layer
+        return 12
     if is_layer_key(k):
         return 12
     if hi & ~0x1F:                       # macros, LED keys, …
@@ -223,6 +252,10 @@ def setcolor(layer, i, color):
 # Base layer: Hyper key holds the Hyper layer; Prog sends F19
 setkey(BASE, hyper_at[0], SHIFT_TO_LAYER + HYPER)
 setkey(BASE, PROG, F19)
+
+# Function layer
+for (row, col), k in FN_KEYS.items():
+    setkey(FN, row * 16 + col, TRANSPARENT if k is None else k)
 
 # Numpad: move layer 1 to layer 4 (once — afterwards layer 4 is the source),
 # point the Num key at it, and leave layer 1 empty

@@ -23,7 +23,7 @@ everything at once.
 | Command palette (every action, searchable) | `Cmd+Shift+P` |
 | Edit config | `Cmd+,` |
 | Reload config | `Cmd+Shift+,` |
-| Previous / next tab | `Hyper+,` / `Hyper+.` (Karabiner), `Ctrl+Shift+Tab` / `Ctrl+Tab`, or `Cmd+Shift+[` / `]` (U.S. layout only) |
+| Previous / next tab | `Hyper+,` / `Hyper+.` (Karabiner; Model 100: also `Fn+,` / `Fn+.`), `Ctrl+Shift+Tab` / `Ctrl+Tab`, or `Cmd+Shift+[` / `]` (U.S. layout only) |
 | Move tab left / right | `Ctrl+,` / `Ctrl+.` (the `<` `>` keys) |
 
 The quick terminal is a system-wide dropdown terminal — press
@@ -1086,6 +1086,31 @@ here, layer 0:
 | Butterfly | `Cmd+Shift+4` | Shottr area capture (its hotkey; macOS's own `Cmd+Shift+4` is off) |
 | Any | `F18` (custom code 109) | Zoom mute (Hammerspoon binds F18) |
 | Prog | `F19` (custom code 110) | Messages show / hide (Hammerspoon binds F19) |
+| Left palm key (Fn) | Holds the **Function layer** (below) | F-keys, arrows, brackets, media, tabs |
+
+The **Function layer** (hold the left palm key):
+
+| Keys | Fn gives |
+|---|---|
+| 1–0, Num, `=` | F1–F12 |
+| H J K L | ← ↓ ↑ → |
+| U I · O P · `/` `-` | `{` `}` · `[` `]` · `\` `\|` — the base layer has no `[ ] \` keys |
+| W / S · X | Volume up / down · Mute |
+| A / D · F | Previous / next track · Play/Pause |
+| `,` / `.` | Previous / next tab (sends Hyper+`,` / `.`) |
+| `` ` `` · ⌫ · Butterfly | Tab · Forward delete · Menu |
+
+The media keys sit on WASD by direction (up/down is volume, left/right the
+track, X under S mutes), where the stock layer had mouse keys; the stock
+row N M `,` (mute, down, up) gave no hint which key went which way. Also
+dropped from the stock layer, as useless with a trackpad on a Mac: mouse
+keys and pointer warp, Home/End (they scroll rather than move the cursor),
+Print Screen, Insert, Caps Lock and Fn+Space = Enter. **Fn+`,`/`.` are the tab
+keys as a two-hand chord**: Hyper is the right palm, the same hand as `,` and
+`.`, while Fn is the left. They send Hyper+`,`/`.`, so the Karabiner rule
+(Tabs, below) still does the rest. These changes are `FN_KEYS` in
+`keyboardio-layers`: change those keys there, not in Chrysalis — the next
+`--apply` writes them back.
 
 **Colors.** The LEDs run in Colormap mode with per-layer colors (Catppuccin
 Mocha's color families, saturated — its pastels read as near-white on LEDs;
@@ -1112,8 +1137,8 @@ brightness 200/255):
 
 - **Function** / **Numpad** — only their own keys lit, by kind: F-keys pink,
   arrows sky, media yellow, mouse keys green, brackets orange, editing and
-  navigation lavender; digits green, operators yellow. The key that gets you
-  back out of a layer stays white.
+  navigation lavender, the Fn layer's tab keys white; digits green, operators
+  yellow. The key that gets you back out of a layer stays white.
 
 The Numpad is on **layer 4**, not the stock layer 1: the firmware's stock NumPad
 plugin is tied to layer 1 and, while it's active, forces the number keys to its
@@ -1186,6 +1211,8 @@ Hyper page carries this table):
 | L thumb | With Hyper: Ctrl ↑ reading frame · ⌫ ↓ undo · Cmd ← · Shift → focus a half |
 | R Shift | With Hyper + a nav key: select while moving |
 | Fn+⌫ | Forward delete — Fn is the left palm key (Hyper+⌫ is ↓ here) |
+| Fn+W S X | Volume up · down · mute (A D F: track back · forward · play) |
+| Fn+, . | Previous / next tab, two-handed |
 | Butterfly | Shottr area capture |
 | Num | Numpad layer on / off |
 
@@ -1273,7 +1300,8 @@ MacBook, right ⌘ works too (right Shift is a stretch with Caps Lock held).
 | Hyper + . | Next tab |
 
 In every app: Ghostty, Chrome, Dia, Safari, Finder, VS Code (where Ctrl+Tab
-cycles recent editors). These have to live in Karabiner: macOS reserves
+cycles recent editors). On the Model 100, Fn+`,` / `.` send the same chords
+from the other hand (see the Function layer). These have to live in Karabiner: macOS reserves
 `Hyper+,`, `Hyper+.` and `Hyper+/` for sysdiagnose (a ~400 MB archive in
 `/private/var/tmp`) and swallows them before any app sees them. Karabiner runs
 first and rewrites them to `Ctrl+Shift+Tab` / `Ctrl+Tab` — not `Cmd+Shift+[` /
