@@ -91,6 +91,7 @@ for entry in "${DEFAULTS[@]}"; do
     fi
 done
 echo -e "  ${GREEN}✓${RESET} ${#DEFAULTS[@]} settings"
+# shellcheck disable=SC2119
 if n="$(set_dock)"; then
     echo -e "  ${GREEN}✓${RESET} Dock: $n items (DOCK)"
 else
