@@ -74,7 +74,7 @@ what to watch out for.
 
 | Component | Tool | Config |
 |---|---|---|
-| System settings | Fast key repeat, Dock on the right, fixed Spaces, Touch ID for `sudo`, … | `install.sh` |
+| System settings | Fast key repeat, Dock on the right with its apps in a set order, fixed Spaces, Touch ID for `sudo`, … | `install.sh`, `lib/links.sh` |
 | Focused window | [JankyBorders](https://github.com/FelixKratz/JankyBorders) — a Catppuccin blue border around the focused window; tiled windows keep a gap from the screen edges so all of it shows. Patched to stay out of Zoom's share picker and out of screenshots | `config/borders/bordersrc`, `Formula/borders.rb` |
 | Dark menu bar | Hammerspoon draws a band into the wallpaper under macOS 26's transparent menu bar — black on the MacBook (hides the notch), Catppuccin Crust elsewhere | `config/hammerspoon/init.lua` |
 | Wallpaper | Generated low-poly Catppuccin Mocha wallpaper at each screen's exact size, Mac, iPhone and iPad — `wallpaper` | `config/wallpaper/generate.swift` |
@@ -108,7 +108,8 @@ The install script:
 2. Symlinks every config file. An existing file is moved to `*.bak`, or
    `*.bak.<timestamp>` if a backup is already there.
 3. Sets macOS defaults — accent color, key repeat, Dock and Spaces, Finder
-   extensions, Touch ID for `sudo` — and a few app preferences (see
+   extensions, Touch ID for `sudo` — the Dock's apps and their order, and a
+   few app preferences (see
    [GUIDE.md](GUIDE.md#macos-settings)).
 4. Sets Finder's default apps, configures Claude Code, installs VS Code
    extensions.

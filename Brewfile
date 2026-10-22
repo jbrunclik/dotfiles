@@ -34,6 +34,8 @@ cask "aldente"
 cask "scroll-reverser"
 # Archive Utility cannot open .rar or .7z
 cask "the-unarchiver"
+# The Dock's contents and order, from DOCK in lib/links.sh
+brew "dockutil"
 # Menubar toggle that keeps the Mac awake (instead of a `caffeinate -d` tab)
 cask "keepingyouawake"
 # A border around the focused window (config/borders/bordersrc), which

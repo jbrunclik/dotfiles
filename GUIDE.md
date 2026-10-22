@@ -732,6 +732,7 @@ settings without saying so. (Touch ID for `sudo` is a file, checked separately.)
 | Press-and-hold | Off | Holding a letter repeats it instead of opening the accent picker |
 | File extensions in Finder | Always shown | |
 | Dock | Right edge, auto-hide, 0.2 s delay, quick slide, no magnification | A bottom Dock popped up over Zoom's toolbar on overshoot. The short delay keeps it from covering controls near the right edge, like Slack's thread close button |
+| Dock contents | The apps in `DOCK` (`lib/links.sh`), in that order, then Downloads (fan, newest first) | `install.sh` rebuilds the Dock from the list with `dockutil`, skipping apps that aren't installed, so work-only apps just don't appear on a personal Mac. `drift.sh` flags an icon an app install or macOS update added. To change the order, edit `DOCK`, not the Dock: rerunning `install.sh` would undo a drag |
 | Minimize | Into the app's Dock icon | Dock doesn't grow a pile of minimized windows |
 | Spaces order | Fixed (no reordering by recent use) | Positions stay where muscle memory expects them |
 | Click wallpaper to reveal desktop | Off | A near-miss on a window edge no longer hides every window |

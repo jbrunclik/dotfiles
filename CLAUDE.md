@@ -6,7 +6,8 @@ hostnames, or employer-specific detail in tracked files.
 ## Layout
 
 - `lib/links.sh` — the symlink manifest (`LINKS`) plus `REQUIRED_BINS`,
-  `LOCAL_FILES` and the macOS settings (`DEFAULTS`). `install.sh` and
+  `LOCAL_FILES`, the macOS settings (`DEFAULTS`) and the Dock's contents
+  (`DOCK`). `install.sh` and
   `drift.sh` both source it.
 - `install.sh` — Brewfile, symlinks, macOS `defaults`, Finder default apps,
   Claude Code bootstrap, VS Code extensions. `drift.sh` reports divergence.

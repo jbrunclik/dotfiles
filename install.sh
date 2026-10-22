@@ -91,6 +91,11 @@ for entry in "${DEFAULTS[@]}"; do
     fi
 done
 echo -e "  ${GREEN}✓${RESET} ${#DEFAULTS[@]} settings"
+if n="$(set_dock)"; then
+    echo -e "  ${GREEN}✓${RESET} Dock: $n items (DOCK)"
+else
+    warn "couldn't set the Dock — is dockutil installed? (brew bundle above)"
+fi
 killall Dock 2>/dev/null || true  # no Dock running, e.g. over SSH
 
 # Touch ID for sudo. /etc/pam.d/sudo_local survives macOS updates (unlike

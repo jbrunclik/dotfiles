@@ -81,6 +81,7 @@ REQUIRED_BINS=(
     "git-lfs|git-lfs hooks in the global hooksPath; they exit 2 without it"
     "gm|GraphicsMagick, pinned by the gm alias in bash_profile"
     "pinentry-mac|gpg-agent's passphrase/PIN dialog (pinentry-program)"
+    "dockutil|the Dock's contents (DOCK)"
 )
 
 # Files that must exist locally but are deliberately not in the repo.
@@ -152,6 +153,56 @@ DEFAULTS=(
     'com.lwouis.alt-tab-macos|holdShortcut2|shortcut|<dict><key>secureData</key><data>YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRyb290gAGlCwwZGhtVJG51bGzWDQ4PEBESExQVFBcUXW1vZGlmaWVyRmxhZ3NfEBtjaGFyYWN0ZXJzSWdub3JpbmdNb2RpZmllcnNWJGNsYXNzWmNoYXJhY3RlcnNXa2V5Q29kZVd2ZXJzaW9ugAOAAIAEgACAAoAAEf//EgAQAADSHB0eH1okY2xhc3NuYW1lWCRjbGFzc2VzWlNSU2hvcnRjdXSiHiBYTlNPYmplY3QIERokKTI3SUxRU1lfbHqYn6qyury+wMLExsnO097n8vUAAAAAAAABAQAAAAAAAAAhAAAAAAAAAAAAAAAAAAAA/g==</data><key>string</key><string>⌘</string></dict>'
     'com.lwouis.alt-tab-macos|nextWindowShortcut2|shortcut|<dict><key>secureData</key><data>YnBsaXN0MDDUAQIDBAUGHiFZJGFyY2hpdmVyWCRvYmplY3RzVCR0b3BYJHZlcnNpb25fEA9OU0tleWVkQXJjaGl2ZXKmBwgVFhcdVSRudWxs1gkKCwwNDg8QERITFFYkY2xhc3NaY2hhcmFjdGVyc18QG2NoYXJhY3RlcnNJZ25vcmluZ01vZGlmaWVyc1drZXlDb2RlXW1vZGlmaWVyRmxhZ3NXdmVyc2lvboAEgAWABYACgAOAABAyEADSGBkaG1gkY2xhc3Nlc1okY2xhc3NuYW1lohscWlNSU2hvcnRjdXRYTlNPYmplY3RRYNEfIFRyb290gAESAAGGoAgRGyQpMkRLUV5lcI6WpKyusLK0tri6vMHK1djj7O7x9vgAAAAAAAABAQAAAAAAAAAiAAAAAAAAAAAAAAAAAAAA/Q==</data><key>string</key><string>`</string></dict>'
 )
+
+# The Dock, in order: install.sh rebuilds it from this list, drift.sh checks
+# it (an app install or OS update can add icons). Apps that aren't installed
+# are skipped, so work-only apps simply don't appear on a personal Mac.
+# Folders go after the separator, as a fan of newest files first.
+DOCK=(
+    "/System/Applications/Apps.app"
+    "/Applications/1Password.app"
+    "/Applications/Ghostty.app"
+    "/Applications/Dia.app"
+    "/Applications/Google Chrome.app"
+    "/Applications/Slack.app"
+    "/Applications/Claude.app"
+    "/Applications/Notion.app"
+    "/System/Applications/Messages.app"
+    "/Applications/WhatsApp.app"
+    "/Applications/zoom.us.app"
+    "/System/Applications/App Store.app"
+    "/System/Applications/System Settings.app"
+    "$HOME/Downloads"
+)
+
+# Rebuilds the Dock from DOCK, without restarting it (install.sh restarts
+# it after the defaults). Pass --check to only compare, printing what differs.
+set_dock() {
+    local items=() listed=() path
+    for path in "${DOCK[@]}"; do
+        [ -e "$path" ] && items+=("$path")
+    done
+    if [ "${1:-}" = --check ]; then
+        # dockutil lists file URLs, percent-encoded; decode them back to paths
+        mapfile -t listed < <(dockutil --list | cut -f2 \
+            | python3 -c 'import sys, urllib.parse
+for u in sys.stdin: print(urllib.parse.unquote(u.strip()).removeprefix("file://").rstrip("/"))')
+        [ "${items[*]}" = "${listed[*]}" ] && return 0
+        echo "  expected: ${items[*]##*/}"
+        echo "  actual:   ${listed[*]##*/}"
+        return 1
+    fi
+    dockutil --remove all --no-restart > /dev/null
+    for path in "${items[@]}"; do
+        if [[ "$path" == *.app ]]; then
+            dockutil --add "$path" --no-restart > /dev/null
+        else
+            dockutil --add "$path" --view fan --display stack --sort datecreated \
+                --section others --no-restart > /dev/null
+        fi
+    done
+    echo "${#items[@]}"
+}
 
 # True when a DEFAULTS entry's domain/key holds its value. `defaults read`
 # prints bools as 1/0 and floats in its own format, so those are normalized

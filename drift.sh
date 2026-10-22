@@ -87,6 +87,20 @@ for entry in "${DEFAULTS[@]}"; do
 done
 [ "$BAD_DEFAULTS" -eq 0 ] && echo -e "  ${GREEN}All ${#DEFAULTS[@]} settings match.${RESET}"
 
+# Check the Dock's contents and order (install.sh rebuilds it from DOCK)
+echo ""
+header "Dock:"
+if ! command -v dockutil &>/dev/null; then
+    echo -e "  ${RED}MISSING${RESET}  dockutil (brew bundle install)"
+    DRIFTED=1
+elif dock_diff="$(set_dock --check)"; then
+    echo -e "  ${GREEN}OK${RESET}       matches DOCK, in order"
+else
+    echo -e "  ${YELLOW}CHANGED${RESET}  the Dock differs from DOCK (./install.sh rebuilds it)"
+    echo "$dock_diff"
+    DRIFTED=1
+fi
+
 # Check Hammerspoon loader file
 echo ""
 header "Hammerspoon:"
