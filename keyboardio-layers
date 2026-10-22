@@ -118,10 +118,11 @@ HID.update({"←": 0x50, "→": 0x4F, "↑": 0x52, "↓": 0x51})
 LCTRL, LCMD, LSHIFT, BACKSPACE = 0xE0, 0xE3, 0xE1, 0x2A
 # Hyper+arrows (focus a half; reading frame, restore): the base layer has no
 # arrows, so the Hyper layer sends all four from the left thumb arc, outer to
-# inner Ctrl ↑, Backspace ↓, Cmd ←, Shift →. The modifiers are idle during a
+# inner Ctrl ←, Backspace →, Cmd ↑, Shift ↓ — focus, the most used, on the two
+# keys under the thumb's resting reach. The modifiers are idle during a
 # Hyper chord, which already holds every one; Backspace gives up Hyper+⌫
 # (forward delete), which stays on Fn+Backspace.
-THUMB_ARROWS = {LCTRL: HID["↑"], BACKSPACE: HID["↓"], LCMD: HID["←"], LSHIFT: HID["→"]}
+THUMB_ARROWS = {LCTRL: HID["←"], BACKSPACE: HID["→"], LCMD: HID["↑"], LSHIFT: HID["↓"]}
 
 # Function layer: changes to the stock layer, by (row, col); None is
 # transparent (the base key). Dropped: what a Mac with a trackpad never uses —

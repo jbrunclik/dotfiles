@@ -1168,8 +1168,9 @@ command as more data, so the restore first floods it with filler to finish
 that parse.
 
 The base layer has no arrow keys, so on the Hyper layer the **left thumb arc
-sends the four Hyper+arrows**, outer to inner: Ctrl ↑ (reading frame),
-Backspace ↓ (restore), Cmd ← and Shift → (focus left / right half). The
+sends the four Hyper+arrows**, outer to inner: Ctrl ← and Backspace →
+(focus left / right half), Cmd ↑ (reading frame), Shift ↓ (undo). Focus,
+used most, gets the two outer keys, the easiest reach for the thumb. The
 modifiers are idle during a Hyper chord anyway — Hyper already holds every
 one. Backspace gives up Hyper+⌫ (forward delete) on this keyboard; forward
 delete stays on Fn+Backspace. This is an override in `keyboardio-layers`
@@ -1210,7 +1211,7 @@ Hyper page carries this table):
 | Keys | Does |
 |---|---|
 | R palm | Hold: Hyper (the Hyper layer, every key sends Hyper + itself) |
-| L thumb | With Hyper: Ctrl ↑ reading frame · ⌫ ↓ undo · Cmd ← · Shift → focus a half |
+| L thumb | With Hyper: Ctrl ← · ⌫ → focus a half · Cmd ↑ reading frame · Shift ↓ undo |
 | R Shift | With Hyper + a nav key: select while moving |
 | Fn+⌫ | Forward delete — Fn is the left palm key (Hyper+⌫ is ↓ here) |
 | Fn+W S X | Volume up · down · mute (A D F: track back · forward · play) |
@@ -1321,10 +1322,10 @@ sysdiagnose.
 | Hyper + R | Move the split: 50 → 67 → 33 % (left side's share); every docked window follows. MacBook: 50 → 60 → 40 |
 | Hyper + F | Toggle native fullscreen |
 | Hyper + E | Swap the two sides, each keeping its width (the focused window keeps focus) |
-| Hyper + Up | Reading frame: centered, ⅔ wide, full height; again: maximize. On the MacBook's screen: maximize (Model 100: left thumb Ctrl) |
-| Hyper + Down | Undo the last move — every window it moved (both halves of a layout); again: redo (Model 100: left thumb Backspace) |
+| Hyper + Up | Reading frame: centered, ⅔ wide, full height; again: maximize. On the MacBook's screen: maximize (Model 100: left thumb Cmd) |
+| Hyper + Down | Undo the last move — every window it moved (both halves of a layout); again: redo (Model 100: left thumb Shift) |
 | Hyper + Tab | Toggle focus between left/right windows; nothing tiled, or the other half empty: the next window down |
-| Hyper + Left/Right | Focus window in that direction (MacBook arrows; Model 100: left thumb Cmd / Shift) |
+| Hyper + Left/Right | Focus window in that direction (MacBook arrows; Model 100: left thumb Ctrl / Backspace) |
 | Hyper + ` (or ;) | Cycle the windows stacked on this half (or at this spot) |
 | Hyper + G | Pick any window from a list, typing part of its app or title |
 | Hyper + Q | Hide the front app (like `Cmd+H`); focus returns to the previous app |
