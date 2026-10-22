@@ -1098,14 +1098,15 @@ The **Function layer** (hold the left palm key):
 | W / S · X | Volume up / down · Mute |
 | A / D · F | Previous / next track · Play/Pause |
 | `,` / `.` | Previous / next tab (sends Hyper+`,` / `.`) |
-| `` ` `` · ⌫ · Butterfly | Tab · Forward delete · Menu |
+| `` ` `` · ⌫ | Tab · Forward delete |
 
 The media keys sit on WASD by direction (up/down is volume, left/right the
 track, X under S mutes), where the stock layer had mouse keys; the stock
 row N M `,` (mute, down, up) gave no hint which key went which way. Also
 dropped from the stock layer, as useless with a trackpad on a Mac: mouse
 keys and pointer warp, Home/End (they scroll rather than move the cursor),
-Print Screen, Insert, Caps Lock and Fn+Space = Enter. **Fn+`,`/`.` are the tab
+Print Screen, Insert, Caps Lock, Fn+Space = Enter and the Menu key (it
+opens the window's menu, not the selection's). **Fn+`,`/`.` are the tab
 keys as a two-hand chord**: Hyper is the right palm, the same hand as `,` and
 `.`, while Fn is the left. They send Hyper+`,`/`.`, so the Karabiner rule
 (Tabs, below) still does the rest. These changes are `FN_KEYS` in
