@@ -1154,6 +1154,121 @@ for i, room in ipairs({ "living", "kitchen" }) do
     end)
 end
 
+-- Slack: park on your own DM, where nothing new arrives, so a channel left
+-- open can't mark messages read as they come in. Hyper+N parks it now;
+-- otherwise Slack parks itself once it has been in the background for
+-- SLACK_PARK_AFTER and no Slack window is visible (hidden, minimized or
+-- covered). A Slack window still in view, say beside Zoom, is left alone
+-- and checked again after the same delay; coming back to Slack cancels it.
+--
+-- Parking presses the DM's sidebar entry through accessibility, which
+-- doesn't bring Slack forward: a slack:// link would (Slack activates
+-- itself on every link, `open -g` or not). The entry is found by its DOM
+-- id, the DM's conversation id, so it survives renames. The ids stay out
+-- of this public repo, in SLACK_DM_FILE: "team T…" and "dm D…" lines.
+local SLACK_DM_FILE = os.getenv("HOME") .. "/.config/slack/self-dm.local"
+local SLACK_PARK_AFTER = 120
+
+local function slackIds()
+    local f = io.open(SLACK_DM_FILE, "r")
+    if not f then return nil end
+    local ids = {}
+    for line in f:lines() do
+        local k, v = line:gsub("#.*", ""):match("^%s*(%S+)%s+(%S+)")
+        if k then ids[k] = v end
+    end
+    f:close()
+    if ids.team and ids.dm then return ids end
+end
+
+-- Electron builds its accessibility tree only when asked, and the first
+-- walk after asking can still come back empty: ask early (when Slack goes
+-- to the background), so it's there by the time parking needs it
+local function slackAX(slack)
+    local ax = hs.axuielement.applicationElement(slack)
+    ax:setAttributeValue("AXManualAccessibility", true)
+    return ax
+end
+
+-- The DM's sidebar entry, searched for in every Slack window (hidden ones
+-- included): the row carries the DM id, its first child takes the press
+local function slackDMEntry(slack, dm)
+    for _, win in ipairs(slackAX(slack):attributeValue("AXWindows") or {}) do
+        local found, seen = nil, 0
+        local function walk(el, depth)
+            if found or depth > 40 or seen > 20000 then return end
+            seen = seen + 1
+            if el:attributeValue("AXDOMIdentifier") == dm then found = el return end
+            for _, child in ipairs(el:attributeValue("AXChildren") or {}) do walk(child, depth + 1) end
+        end
+        walk(win, 0)
+        if found then return (found:attributeValue("AXChildren") or {})[1] end
+    end
+end
+
+-- `orLink`: when the entry can't be pressed, open the DM's link instead,
+-- which brings Slack forward. The automatic park never does: better to
+-- skip a park than to pull Slack over a call.
+local function parkSlack(orLink)
+    local slack, ids = getApp("Slack"), slackIds()
+    if not ids then
+        if orLink then hs.alert.show("\u{26A0}\u{FE0F} Slack: no team / dm in " .. SLACK_DM_FILE) end
+        return
+    end
+    local entry = slack and slackDMEntry(slack, ids.dm)
+    if entry and entry:performAction("AXPress") then return end
+    if orLink then hs.urlevent.openURL("slack://channel?team=" .. ids.team .. "&id=" .. ids.dm) end
+end
+bindHyper("n", "Utilities", "Slack: park on your own DM (focus stays)", function() parkSlack(true) end)
+
+-- A Slack window is visible when it isn't minimized, its app isn't hidden,
+-- and some of it isn't covered by the windows above it (sampled on a grid)
+local function slackVisible(slack)
+    if slack:isHidden() then return false end
+    local above = {}
+    for _, w in ipairs(hs.window.orderedWindows()) do
+        if w:application() and w:application():bundleID() == BUNDLE_IDS.Slack then
+            if w:isStandard() and not w:isMinimized() then
+                local f = w:frame()
+                for i = 1, 3 do
+                    for j = 1, 3 do
+                        local x, y = f.x + f.w * i / 4, f.y + f.h * j / 4
+                        local covered = hs.fnutils.find(above, function(a)
+                            return x >= a.x and x <= a.x + a.w and y >= a.y and y <= a.y + a.h
+                        end)
+                        if not covered then return true end
+                    end
+                end
+            end
+        else
+            table.insert(above, w:frame())
+        end
+    end
+    return false
+end
+
+local slackParkTimer
+local function scheduleSlackPark()
+    if slackParkTimer then slackParkTimer:stop() end
+    slackParkTimer = hs.timer.doAfter(SLACK_PARK_AFTER, function()
+        slackParkTimer = nil
+        local slack = getApp("Slack")
+        if not slack or slack:isFrontmost() then return end
+        if slackVisible(slack) then return scheduleSlackPark() end
+        parkSlack(false)
+    end)
+end
+-- A global, so the watcher isn't garbage-collected
+slackParkWatcher = hs.application.watcher.new(function(_, event, app)
+    if not app or app:bundleID() ~= BUNDLE_IDS.Slack then return end
+    if event == hs.application.watcher.activated then
+        if slackParkTimer then slackParkTimer:stop() slackParkTimer = nil end
+    elseif event == hs.application.watcher.deactivated then
+        slackAX(app)
+        scheduleSlackPark()
+    end
+end):start()
+
 -- Quick-reply floats: summon / dismiss a messenger without touching the
 -- current layout. It floats over the right third; pressing again hides it,
 -- and macOS hands focus back to the app you were in. Nothing is remembered

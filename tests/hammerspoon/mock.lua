@@ -250,6 +250,8 @@ function Window:raise() return self:focus() end
 local audioDevices, audioDefaults, audioCallback = {}, {}, nil
 -- HTTP requests made, and the function that answers them (see hs.http)
 local httpReply
+-- Application watcher callbacks (see hs.application.watcher)
+local appWatchers = {}
 
 -- Reset the world between tests
 function M.reset()
@@ -257,6 +259,7 @@ function M.reset()
     hotkeys, M.bindings, M.written, M.alerts = {}, {}, {}, {}
     audioDevices, audioDefaults, audioCallback = {}, {}, nil
     M.requests, M.files, httpReply = {}, {}, function() return 200, "{}" end
+    appWatchers, M.urls, M.axPressed = {}, {}, {}
 end
 
 -- A screen; `name` "Built-in Retina Display" makes it the MacBook's
@@ -470,6 +473,50 @@ hs.http = setmetatable({
     end,
 }, stubMeta)
 hs.json.decode = decodeJSON
+
+-- Application watcher: M.appEvent("activated" | "deactivated", app) calls
+-- every watcher started, as Hammerspoon would
+hs.application.watcher = {
+    activated = 5, deactivated = 6,
+    new = function(fn)
+        local w = { start = function(self) table.insert(appWatchers, fn) return self end, stop = function() end }
+        return w
+    end,
+}
+function M.appEvent(event, app)
+    for _, fn in ipairs(appWatchers) do fn(app:name(), hs.application.watcher[event], app) end
+end
+
+-- URLs opened through hs.urlevent land in M.urls
+M.urls = {}
+hs.urlevent = setmetatable({
+    openURL = function(url) table.insert(M.urls, url) return true end,
+}, stubMeta)
+
+-- Accessibility: an element is a table of attributes plus `children`;
+-- M.axTree(app, windows) sets the app's AXWindows. An element with `press`
+-- set records the press in M.axPressed (the value of `press`).
+M.axPressed = {}
+local AXElement = {}
+AXElement.__index = AXElement
+function AXElement:attributeValue(name)
+    if name == "AXChildren" then return self.children end
+    return self.attrs[name]
+end
+function AXElement:setAttributeValue(name, value) self.attrs[name] = value return self end
+function AXElement:performAction(action)
+    if action == "AXPress" and self.press then table.insert(M.axPressed, self.press) return self end
+    return nil
+end
+function M.ax(attrs, children, press)
+    return setmetatable({ attrs = attrs or {}, children = children or {}, press = press }, AXElement)
+end
+function M.axTree(app, windows) app.axWindows = windows end
+hs.axuielement = setmetatable({
+    applicationElement = function(app)
+        return M.ax({ AXWindows = app.axWindows or {} })
+    end,
+}, stubMeta)
 
 _G.hs = hs
 package.preload["hs.ipc"] = function() return stub() end

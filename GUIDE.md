@@ -1102,6 +1102,7 @@ The **Function layer** (hold the left palm key):
 | W / S · X | Volume up / down · Mute |
 | A / D · F | Previous / next track · Play/Pause |
 | `,` / `.` | Previous / next tab (sends Hyper+`,` / `.`) |
+| N | Slack to your own DM (sends Hyper+N) |
 | `` ` `` · ⌫ | Tab · Forward delete |
 | Y | **Studio layer** on (below); Y again turns it off |
 
@@ -1262,6 +1263,7 @@ Hyper page carries this table):
 | Fn+⌫ | Forward delete — Fn is the left palm key (Hyper+⌫ is ↓ here) |
 | Fn+W S X | Volume up · down · mute (A D F: track back · forward · play) |
 | Fn+, . | Previous / next tab, two-handed |
+| Fn+N | Slack to your own DM (Hyper+N), two-handed |
 | Butterfly | Shottr area capture |
 | Num | Numpad layer on / off |
 | Fn+Y | Studio layer on / off: covers and lights (Y off) |
@@ -1770,6 +1772,45 @@ part of their name (`AUDIO` in `init.lua`): "PodMic" is a guess at the new
 mic's name, so check it once it's plugged in. Cameras are each app's own
 setting, not the system's, so Zoom picks the Insta360 or the built-in camera
 by itself.
+
+### Slack: park on your own DM (Hammerspoon)
+
+| Shortcut | Action |
+|---|---|
+| Hyper + N | Slack to your own DM, without bringing it forward |
+| Fn + N (Model 100) | Same, two-handed: Hyper and N are both right-hand keys there |
+
+Slack marks messages read as they arrive in the conversation it has open,
+so a channel left open can mark things read you never saw. Your own DM gets
+nothing new, which makes it the safe place to leave Slack. Hyper+N parks it
+there, and Slack also parks itself once it has been in the background for
+2 minutes (`SLACK_PARK_AFTER`) with no Slack window visible: hidden,
+minimized or fully covered. A Slack window still in view, beside Zoom say,
+is left alone and checked again every 2 minutes. Coming back to Slack
+within the delay cancels it, so jumping back and forth doesn't park.
+
+Parking presses the DM's entry in Slack's sidebar through accessibility,
+which works while Slack is hidden and doesn't bring it forward. A
+`slack://` link would: Slack activates itself for every link, even one
+opened with `open -g`. The entry is found by the DM's conversation ID, so
+it survives a rename. It's in your **Starred** section here, which keeps it
+near the top of the sidebar (Slack only builds the rows it shows). If the
+entry can't be pressed, Hyper+N opens the link instead, bringing Slack
+forward; the automatic park just skips that round, rather than pull Slack
+over a call.
+
+The IDs are work details, so they stay out of this repo, in
+`~/.config/slack/self-dm.local`:
+
+```
+team T0XXXXXXX
+dm   D0XXXXXXXXX
+```
+
+The team ID is the `T…` part of the address when Slack is open in a
+browser (`app.slack.com/client/T…/…`). The DM's ID is the last part of its
+link (right-click your DM in the sidebar → Copy link → `…/archives/D…`).
+Without the file Hyper+N says so and nothing parks.
 
 ### Reloading
 

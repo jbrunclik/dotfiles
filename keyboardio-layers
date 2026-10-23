@@ -134,7 +134,8 @@ THUMB_ARROWS = {LCTRL: HID["←"], BACKSPACE: HID["→"], LCMD: HID["↑"], LSHI
 # the window's menu, not the selection's). The media keys move to WASD, by
 # direction: up/down volume, left/right track, X (under S) mute, F play. Fn+,/.
 # send Hyper+,/. — the tab keys, as a two-hand chord (Hyper is the right palm,
-# the same hand as , and .). Kept as stock: F-keys, arrows on HJKL, the
+# the same hand as , and .). Fn+N sends Hyper+N (Slack to your DM) for the
+# same reason. Kept as stock: F-keys, arrows on HJKL, the
 # brackets and \ | (the base layer has no [ ] \), Fn+` Tab, Fn+⌫ forward
 # delete.
 CONSUMER = 0x4800
@@ -151,7 +152,8 @@ FN_KEYS = {
     (1, 8): None, (2, 9): None,                            # Space: Enter · butterfly: Menu
     (0, 9): None, (1, 9): None,                            # Any Enter: old track keys
     (1, 10): LOCK_LAYER + STUDIO,                          # Y (was a track key)
-    (3, 10): None, (3, 11): None,                          # N M: old mute, volume down
+    (3, 10): HYPER_MODS | HID["N"],                        # N: Hyper+N, Slack to your DM
+    (3, 11): None,                                         # M: old volume down
 }
 
 
