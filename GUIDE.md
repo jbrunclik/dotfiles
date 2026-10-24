@@ -192,6 +192,12 @@ that matches the fragments. A
 directory in the current one always wins, and `CDPATH` isn't exported, so
 scripts' `cd` is unaffected.
 
+Claude Code sets `_ZO_DOCTOR=0` (`settings.base.json`). Its Bash tool keeps
+your shell functions, zoxide's `cd` included, but not `PROMPT_COMMAND`. So
+zoxide's check never finds its hook there and prints a "configuration issue"
+warning on every command. Terminals still run the check, so a real
+misconfiguration still shows up.
+
 ### Modern CLI tools
 
 Most are aliased over the defaults. Use them as you normally would:

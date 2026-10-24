@@ -6,6 +6,9 @@
   "remoteControlAtStartup": true,
   "agentPushNotifEnabled": true,
   "skipAutoPermissionPrompt": true,
+  "env": {
+    "_ZO_DOCTOR": "0"
+  },
   "permissions": {
     "defaultMode": "auto"
   },
