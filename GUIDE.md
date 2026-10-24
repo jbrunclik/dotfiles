@@ -1045,6 +1045,74 @@ the next gpg call. Only `gpg.conf` and `gpg-agent.conf` are linked:
 `common.conf` (`use-keyboxd`) is gpg's own. `install.sh` keeps `~/.gnupg` at
 700 — anything looser makes gpg warn about unsafe permissions.
 
+### YubiKey: two identical keys, one carried, one kept at home
+
+Both are YubiKey 5C NFCs set up the same way; the one at home is the
+disaster-recovery copy. Everything on a key is per key, so **every change is
+made on both** — afterwards `ykman info`, `ykman openpgp info` and
+`ykman fido info` print the same on each, and `ykman oath accounts list`
+shows the same accounts.
+
+| What | Where it lives |
+|---|---|
+| GPG subkeys (sign, auth, encrypt) | Only on the two cards — `gpg -K` shows `ssb>` |
+| GPG master key (certify) | Only in 1Password (`sec#` locally); restore with `op read "op://<vault>/<item>/<file>.asc" \| gpg --import` |
+| What the GPG key decrypts | Also stored in 1Password, so losing both cards loses nothing: make a new subkey from the master and re-encrypt |
+| Critical TOTP seeds | 1Password for daily use, copied to OATH on both keys as the last resort |
+| Passkeys | Registered on both keys at once, or the second key never gets it |
+| Security-key (U2F) 2FA | Nothing on the key records it — the 1Password tag `U2F` marks those accounts; each site's security settings must list both keys |
+
+Enabled: OpenPGP, OATH, FIDO2/U2F. **Disabled on both, USB and NFC**: PIV
+(unused, and it ships with factory PIN, PUK and management key), Yubico OTP
+(a brush on the button types a `cccc…` string into whatever has focus; over
+NFC the phone pops up its link) and YubiHSM Auth. `ykman config usb --enable
+<app>` brings one back.
+
+Deliberate choices:
+
+- **No subkey expiry.** Its point is a dead-man switch for people who rely on
+  the public key; nobody else does.
+- **No touch policy.** The key is plugged in only while it's needed — that's
+  the presence check — and the keychain form factor's button is fiddly.
+- **No OATH password.** The recovery path must depend on nothing but the
+  key; a password kept in 1Password would bring 1Password back into it.
+- **The same FIDO2 PIN on both**, known by heart: in a disaster it's needed
+  without 1Password.
+- **No FIDO2 for the rest.** The TOTP copies already cover recovery, and
+  security-key logins only add phishing resistance to logins made with the
+  key, which daily use (1Password) never does.
+
+Copy a 1Password TOTP onto the plugged-in key without showing the seed
+(1Password stores either an `otpauth://` URI, which keeps digits and period,
+or a bare secret, which gets the 6-digit/30 s defaults):
+
+```bash
+yk_add() {  # yk_add "<1Password item title>" "<name on the key>"
+  local v
+  v=$(op item get "$1" --format json | jq -r 'first(.fields[] | select(.type == "OTP") | .value)')
+  case "$v" in
+    otpauth://*) ykman oath accounts uri "$v" ;;
+    ?*)          ykman oath accounts add "$2" "$v" ;;
+    *)           echo "no TOTP field in '$1'" >&2; return 1 ;;
+  esac
+}
+```
+
+Check it: `ykman oath accounts code -s <name>` must equal
+`op item get "<title>" --otp`.
+
+Watch out for:
+
+- **Three wrong admin PINs lock the OpenPGP applet**, and the only way out
+  is a reset that wipes the keys. Before anything that asks for it, check
+  `ykman openpgp info` shows 3 tries; after one failure, stop and find the
+  PIN.
+- **Either card works:** gpg-agent finds the subkeys on whichever is
+  plugged in. If gpg ever insists on the other card's serial,
+  `gpg-connect-agent "scd serialno" "learn --force" /bye` rebinds the stubs.
+- **Interactive `ykman` commands go in a real terminal**, not Claude Code's
+  `!`: they prompt for PINs on the TTY.
+
 ## Hyper key
 
 Hyper (Cmd+Option+Ctrl+Shift) is a dedicated modifier that doesn't
