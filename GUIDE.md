@@ -1059,7 +1059,7 @@ shows the same accounts.
 | GPG master key (certify) | Only in 1Password (`sec#` locally); restore with `op read "op://<vault>/<item>/<file>.asc" \| gpg --import` |
 | What the GPG key decrypts | Also stored in 1Password, so losing both cards loses nothing: make a new subkey from the master and re-encrypt |
 | Critical TOTP seeds | 1Password for daily use, copied to OATH on both keys as the last resort |
-| Passkeys | Registered on both keys at once, or the second key never gets it |
+| Passkeys | Only for what must work before 1Password is back (the main email account), on both keys — a passkey signs in with the key and its PIN alone, where a TOTP still needs the password from 1Password |
 | Security-key (U2F) 2FA | Nothing on the key records it — the 1Password tag `U2F` marks those accounts; each site's security settings must list both keys |
 
 Enabled: OpenPGP, OATH, FIDO2/U2F. **Disabled on both, USB and NFC**: PIV
@@ -1107,6 +1107,14 @@ Watch out for:
   is a reset that wipes the keys. Before anything that asks for it, check
   `ykman openpgp info` shows 3 tries; after one failure, stop and find the
   PIN.
+- **Creating a passkey on the key:** 1Password's extension and macOS's
+  "Save a passkey?" sheet both capture the prompt and offer only password
+  managers. Use the site's "use another device" option instead, which opens
+  the browser's own dialog. A key the site already has as a plain security
+  key refuses ("already registered") until that old entry is deleted. And a
+  passkey shows under the site's "security keys" heading either way: only
+  `ykman fido credentials list` tells, since a passkey takes a slot on the
+  key (25 on firmware 5.4) and a plain security key doesn't.
 - **Either card works:** gpg-agent finds the subkeys on whichever is
   plugged in. If gpg ever insists on the other card's serial,
   `gpg-connect-agent "scd serialno" "learn --force" /bye` rebinds the stubs.
