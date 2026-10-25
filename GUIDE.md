@@ -1059,6 +1059,18 @@ claude() {
 }
 ```
 
+MCP servers' bearer tokens work the same way. Claude Code expands `${VAR}`
+in an HTTP server's `headers`, including the servers kept in
+`~/.claude.json`. So the header there reads `"Authorization": "Bearer
+${SOME_MCP_TOKEN}"`, and the wrapper sets `SOME_MCP_TOKEN` alongside the
+other token. Give each one a name of its own: Claude Code reads some
+well-known credential names (`ANTHROPIC_*`, `NPM_TOKEN`, …) as empty in
+remote headers, and `GH_TOKEN` would also change which login the `gh` CLI
+uses. `claude mcp list` warns "Missing environment variables" for a server
+started without the wrapper. Claude Code keeps copies of `~/.claude.json`
+in `~/.claude/backups/`, so a token pasted there earlier sits in those
+copies too until they rotate out.
+
 Not an `export` at shell start: a lookup costs ~35 ms, which would turn an
 8 ms `.bash_profile.local` into 45 ms on every new shell. Scoping it also
 keeps the token out of every other process. Claude Code's own children
