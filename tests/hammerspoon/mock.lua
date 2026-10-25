@@ -530,13 +530,21 @@ end
 os.remove = function() return true end
 
 -- Files under the fake HOME come from M.files (path relative to HOME →
--- contents); any other path under it doesn't exist
+-- contents); any other path under it doesn't exist. Appending ("a") creates
+-- or extends the entry.
 M.files = {}
 local realOpen = io.open
 local FAKE_HOME = "/nonexistent-hammerspoon-test-home/"
 io.open = function(path, mode)
     if path:sub(1, #FAKE_HOME) ~= FAKE_HOME then return realOpen(path, mode) end
-    local text = M.files[path:sub(#FAKE_HOME + 1)]
+    local rel = path:sub(#FAKE_HOME + 1)
+    if mode == "a" then
+        return {
+            write = function(_, ...) M.files[rel] = (M.files[rel] or "") .. table.concat({ ... }) end,
+            close = function() end,
+        }
+    end
+    local text = M.files[rel]
     if not text then return nil end
     return {
         lines = function() return text:gmatch("[^\n]+") end,

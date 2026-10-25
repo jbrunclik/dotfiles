@@ -1394,6 +1394,24 @@ section makes the script fail rather than silently drop it. Each page shrinks
 its font to fit. Rendering uses macOS's own WebKit, compiled on the fly — needs
 Hammerspoon running and the Xcode Command Line Tools (`swiftc`).
 
+### Usage stats
+
+`hyper-stats` shows how often each shortcut was pressed in the last 30 days
+(`--days N`, or `--all`), then the bindings never pressed: candidates to
+drop, or to move to a better key. Worth a look every few months.
+
+Every Hammerspoon key press (`bindHyper`, the `;` alias, the Model 100's
+F18/F19) appends a line to `~/.local/state/hammerspoon/usage.tsv`: time,
+key, description. The log stays on this machine and out of the repo. Counts
+go by description, so a binding keeps its history when it moves to another
+key. "Never pressed" is checked against the live cheatsheet, so it needs
+Hammerspoon running and lists only what's bound today.
+
+Not counted: Karabiner's rules (Karabiner records nothing when a rule fires),
+the launcher's second key, and the Studio layer. The log only grows (a
+line is ~50 bytes, so a year of heavy use is a few MB); delete it to start
+over.
+
 ### Navigation (Karabiner)
 
 | Shortcut | Action |

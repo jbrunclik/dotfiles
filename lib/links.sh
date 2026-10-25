@@ -43,6 +43,7 @@ LINKS=(
     "config/borders/bordersrc|$HOME/.config/borders/bordersrc"
     "gh-new-repo|$HOME/.local/bin/gh-new-repo"
     "hyper-cheatsheet|$HOME/.local/bin/hyper-cheatsheet"
+    "hyper-stats|$HOME/.local/bin/hyper-stats"
     "keyboardio-backup|$HOME/.local/bin/keyboardio-backup"
     "keyboardio-layers|$HOME/.local/bin/keyboardio-layers"
     "thaw-layout|$HOME/.local/bin/thaw-layout"

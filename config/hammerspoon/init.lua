@@ -39,16 +39,31 @@ local sectionNotes = {
 -- can tell that another key came in meanwhile and stand down. A count of
 -- keypresses, not window state.
 local hyperPresses = 0
-local function bindHyperKey(key, fn)
+-- Every bound key press is appended to USAGE_LOG (time, key, description;
+-- tab-separated) for the hyper-stats script. It stays on this machine, out of
+-- the repo. The description goes on every line so old lines still read right
+-- after a binding moves or changes.
+local USAGE_DIR = os.getenv("HOME") .. "/.local/state/hammerspoon"
+local USAGE_LOG = USAGE_DIR .. "/usage.tsv"
+hs.fs.mkdir(os.getenv("HOME") .. "/.local/state")
+hs.fs.mkdir(USAGE_DIR)
+local function logUsage(key, desc)
+    local f = io.open(USAGE_LOG, "a")
+    if not f then return end
+    f:write(os.date("%Y-%m-%dT%H:%M:%S"), "\t", key, "\t", desc, "\n")
+    f:close()
+end
+local function bindHyperKey(key, desc, fn)
     hs.hotkey.bind(hyper, ansiKeys[key] or key, function()
         hyperPresses = hyperPresses + 1
+        logUsage("Hyper+" .. key, desc)
         fn()
     end)
 end
 -- `label`, when given, is what the cheatsheet shows instead of the key
 local function bindHyper(key, section, desc, fn, label)
     table.insert(cheatsheet, { key = key, label = label, section = section, desc = desc })
-    bindHyperKey(key, fn)
+    bindHyperKey(key, desc, fn)
 end
 
 -- A plain key (no Hyper) that should still be on the cheatsheet — e.g. F18,
@@ -56,7 +71,10 @@ end
 -- F13–F20 are physical keys nothing in macOS or the apps uses.
 local function bindPlain(key, label, section, desc, fn)
     table.insert(cheatsheet, { key = key, label = label, section = section, desc = desc })
-    hs.hotkey.bind({}, key, fn)
+    hs.hotkey.bind({}, key, function()
+        logUsage(key, desc)
+        fn()
+    end)
 end
 
 -- Apps are looked up by bundle ID, never by name: a name matches any process
@@ -486,7 +504,7 @@ local function cycleStack()
     if #stack > 1 then stack[#stack]:focus() end
 end
 bindHyper("`", "Windows", "Cycle windows stacked on this half", cycleStack, "`/;")
-bindHyperKey(";", cycleStack)
+bindHyperKey(";", "Cycle windows stacked on this half", cycleStack)
 
 -- Hyper+E = swap sides: the topmost left and right windows trade sides, each
 -- keeping its width (a 60/40 split becomes 40/60), and the focused one keeps

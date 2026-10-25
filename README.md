@@ -170,6 +170,8 @@ scripts keep it in the repo (quit Chrysalis first — it holds the port):
   note), required binaries, local files, macOS settings, mise runtimes, Claude
   Code settings, Neovim parsers, VS Code extensions, Touch ID for `sudo`.
   Non-zero exit on drift.
+- `hyper-stats` — how often each Hammerspoon shortcut is pressed, and which
+  never are, from a local usage log that stays out of the repo.
 - Updates: a launchd agent upgrades Homebrew formulae (and Claude Code)
   every Monday; `dotfiles-update` does the rest — Neovim plugins with a
   check and automatic rollback, mise, App Store, casks, a note when a patched
