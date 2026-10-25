@@ -51,6 +51,13 @@ header "Symlinks:"
 for entry in "${LINKS[@]}"; do
     check "$DOTFILES/${entry%%|*}" "${entry#*|}"
 done
+if [ -d "$PRIVATE_DOTFILES" ]; then
+    echo ""
+    header "Symlinks (private overlay, $PRIVATE_DOTFILES):"
+    for entry in ${PRIVATE_LINKS[@]+"${PRIVATE_LINKS[@]}"}; do
+        check "$PRIVATE_DOTFILES/${entry%%|*}" "${entry#*|}"
+    done
+fi
 
 echo ""
 header "Local files (not in repo):"

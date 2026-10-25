@@ -8,7 +8,11 @@ hostnames, or employer-specific detail in tracked files.
 - `lib/links.sh` — the symlink manifest (`LINKS`) plus `REQUIRED_BINS`,
   `LOCAL_FILES`, the macOS settings (`DEFAULTS`) and the Dock's contents
   (`DOCK`). `install.sh` and
-  `drift.sh` both source it.
+  `drift.sh` both source it. It also sources `links.sh` from the private
+  overlay (`~/src/dotfiles-private`, a private repo) when present:
+  `PRIVATE_LINKS` for work config and personal hosts. A new `*.local` file
+  worth carrying between machines goes there, never in this repo. Secrets
+  never go in either repo.
 - `install.sh` — Brewfile, symlinks, macOS `defaults`, Finder default apps,
   Claude Code bootstrap, VS Code extensions. `drift.sh` reports divergence.
   It takes no arguments: `install.sh --help` runs a full install.

@@ -52,6 +52,16 @@ LINKS=(
     "config/launchd/dotfiles.brew-autoupdate.plist|$HOME/Library/LaunchAgents/dotfiles.brew-autoupdate.plist"
 )
 
+# A private overlay: a second checkout for what can't be public (work config,
+# personal hosts). Its links.sh sets PRIVATE_LINKS, in LINKS' format with paths
+# relative to that checkout. Absent (CI, a fresh machine), it's skipped.
+PRIVATE_DOTFILES="${PRIVATE_DOTFILES:-$HOME/src/dotfiles-private}"
+PRIVATE_LINKS=()
+if [ -f "$PRIVATE_DOTFILES/links.sh" ]; then
+    # shellcheck disable=SC1091
+    source "$PRIVATE_DOTFILES/links.sh"
+fi
+
 # Binaries the configs reference but that nothing else verifies. Neovim's
 # conform.nvim and nvim-lint shell out to these; when they're absent,
 # format-on-save silently no-ops and linting throws ENOENT on every buffer.

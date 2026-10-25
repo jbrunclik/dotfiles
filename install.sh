@@ -66,6 +66,10 @@ header "Linking config files"
 for entry in "${LINKS[@]}"; do
     link "$DOTFILES/${entry%%|*}" "${entry#*|}"
 done
+for entry in ${PRIVATE_LINKS[@]+"${PRIVATE_LINKS[@]}"}; do
+    link "$PRIVATE_DOTFILES/${entry%%|*}" "${entry#*|}"
+done
+[ -d "$PRIVATE_DOTFILES" ] || warn "no private overlay at $PRIVATE_DOTFILES — clone it and re-run if you have one"
 
 # Only the directory needs locking down. Don't chmod ~/.ssh/config — it's a
 # symlink, so chmod would follow it and change the mode of the file in the

@@ -117,7 +117,8 @@ The install script:
    steps (accessibility permissions, apps without a cask).
 
 `install.sh` and `drift.sh` share one symlink manifest (`lib/links.sh`), so the
-two can't disagree about what "installed" means.
+two can't disagree about what "installed" means. A private overlay's links
+(below) go through the same manifest.
 
 ### Files not in this repo
 
@@ -131,6 +132,14 @@ created by hand:
 | `~/.gitconfig.local` | `[user]` name and email, `[filter "lfs"]` |
 | `~/.ssh/config.local` | Host entries |
 | `~/.ssh/id_ed25519`, `.pub` | SSH key |
+
+To carry these between machines, keep them in a **private overlay**: a
+second (private) repo checked out at `~/src/dotfiles-private`, or wherever
+`PRIVATE_DOTFILES` points. Its `links.sh` sets `PRIVATE_LINKS` in the
+`LINKS` format, with paths relative to that checkout. `lib/links.sh` sources
+it when present, so `install.sh` links those files and `drift.sh` checks
+them. Secrets stay out of it too: a private repo is still a git history on
+every clone.
 
 <details>
 <summary>Examples</summary>
