@@ -235,6 +235,63 @@ else
     DRIFTED=1
 fi
 
+# Secrets belong in the Keychain, passed in by the claude() wrapper and
+# referenced as ${VAR} (GUIDE: "Secrets in the shell"). `claude mcp add
+# --header` writes a literal token into ~/.claude.json, so check after the
+# fact. Two layers: a literal credential-looking header or env value in any
+# mcpServers block or settings env (catches tokens of any format), then
+# gitleaks for known token formats anywhere else in the files (a token pasted
+# into a prompt). Only locations are printed, never values.
+echo ""
+header "Secrets in Claude Code config:"
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+CLAUDE_JSON="${CLAUDE_CONFIG_DIR:+$CLAUDE_CONFIG_DIR/.claude.json}"
+CLAUDE_JSON="${CLAUDE_JSON:-$HOME/.claude.json}"
+SECRET_FILES=()
+for f in "$CLAUDE_JSON" "$CLAUDE_DIR/settings.json" "$CLAUDE_DIR/settings.local.json"; do
+    [ -f "$f" ] && SECRET_FILES+=("$f")
+done
+SECRETS=""
+for f in ${SECRET_FILES[@]+"${SECRET_FILES[@]}"}; do
+    found="$(jq -r '
+        def credential: test("(?i)auth|token|key|secret|passw|cookie|credential|(^|_)pat$");
+        def literal: type == "string" and (test("\\$\\{") | not)
+            and (sub("^(?i)(bearer|basic|token) +"; "") | length >= 8);
+        [ ([], paths(objects)) as $p | getpath($p) as $o
+          | ( ($o.mcpServers? // {} | to_entries[] | .key as $s | .value
+                | ((.headers // {}) | to_entries[] | select(.key | credential) | select(.value | literal)
+                    | $p + ["mcpServers", $s, "headers", .key]),
+                  ((.env // {}) | to_entries[] | select(.key | credential) | select(.value | literal)
+                    | $p + ["mcpServers", $s, "env", .key])),
+              (if ($p | length) == 0 then ($o.env? // {}) | to_entries[]
+                  | select(.key | credential) | select(.value | literal) | ["env", .key]
+               else empty end) )
+        ] | unique[] | map(tostring) | join(".")' "$f" 2>/dev/null)" \
+        || found="(could not parse)"
+    while IFS= read -r loc; do
+        [ -n "$loc" ] && SECRETS+="${f/#$HOME/~}: $loc"$'\n'
+    done <<< "$found"
+done
+if command -v gitleaks &>/dev/null && [ ${#SECRET_FILES[@]} -gt 0 ]; then
+    report="$(mktemp)"
+    for f in "${SECRET_FILES[@]}"; do
+        gitleaks dir "$f" --no-banner --redact -f json -r "$report" >/dev/null 2>&1 || true
+        while IFS= read -r rule; do
+            [ -n "$rule" ] && SECRETS+="${f/#$HOME/~}: $rule (gitleaks)"$'\n'
+        done < <(jq -r '.[] | "line \(.StartLine): \(.RuleID)"' "$report" 2>/dev/null)
+    done
+    rm -f "$report"
+fi
+if [ -n "$SECRETS" ]; then
+    while IFS= read -r s; do
+        [ -n "$s" ] && echo -e "  ${RED}SECRET${RESET}   $s"
+    done <<< "$SECRETS"
+    echo -e "           move it to the Keychain and reference it as \${VAR} (GUIDE: Secrets in the shell)"
+    DRIFTED=1
+else
+    echo -e "  ${GREEN}OK${RESET}       no literal credentials in ${#SECRET_FILES[@]} files"
+fi
+
 # Check Neovim treesitter parsers actually got installed
 echo ""
 header "Neovim treesitter parsers:"

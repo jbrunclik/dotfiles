@@ -1071,6 +1071,16 @@ started without the wrapper. Claude Code keeps copies of `~/.claude.json`
 in `~/.claude/backups/`, so a token pasted there earlier sits in those
 copies too until they rotate out.
 
+`drift.sh` catches a token that slips back in, e.g. from `claude mcp add
+--header "Authorization: Bearer …"`, which writes the literal. It checks
+`~/.claude.json` and both settings files in two passes. First, any header or
+env value in an `mcpServers` block (or a settings `env`) whose name looks
+like a credential (auth, token, key, secret, password…) and that isn't a
+`${VAR}` reference. That catches tokens of any format, including custom
+prefixes gitleaks has no rule for. Second, gitleaks over the whole files,
+for known token formats elsewhere (a token pasted into a prompt lands in
+the project's history there). It prints where, never the value.
+
 Not an `export` at shell start: a lookup costs ~35 ms, which would turn an
 8 ms `.bash_profile.local` into 45 ms on every new shell. Scoping it also
 keeps the token out of every other process. Claude Code's own children
