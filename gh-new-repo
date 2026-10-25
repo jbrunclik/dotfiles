@@ -4,7 +4,8 @@ set -euo pipefail
 # Create a new GitHub repo with sane defaults:
 #   - Created from jbrunclik/template (MIT license, Dependabot, PR template)
 #   - Squash-merge only, delete branch on merge
-#   - Branch ruleset: owner bypasses, others need PRs
+#   - Branch ruleset: owner bypasses, others need PRs (skipped on a
+#     private repo without GitHub Pro)
 #
 # Usage:
 #   gh-new-repo my-project "Short description"
@@ -62,11 +63,13 @@ gh repo edit "${OWNER}/${REPO_NAME}" \
     --enable-merge-commit=false \
     --enable-rebase-merge=false
 
-# Create branch ruleset — owner can push/force-push, others need PRs
+# Create branch ruleset — owner can push/force-push, others need PRs.
+# GitHub Free has no rulesets on private repos (HTTP 403): say so and finish
+# rather than abort before the summary — nobody else pushes there anyway.
 echo "Creating branch ruleset..."
-gh api "repos/${OWNER}/${REPO_NAME}/rulesets" \
+if ! gh api "repos/${OWNER}/${REPO_NAME}/rulesets" \
     --method POST \
-    --input - <<'EOF'
+    --input - > /dev/null <<'EOF'
 {
   "name": "Protect main",
   "target": "branch",
@@ -100,6 +103,10 @@ gh api "repos/${OWNER}/${REPO_NAME}/rulesets" \
   ]
 }
 EOF
+then
+    [[ "$VISIBILITY" == "--private" ]] || exit 1
+    echo "  No ruleset: private repos need GitHub Pro for one — main is unprotected"
+fi
 
 echo "Done! Repo ready at https://github.com/${OWNER}/${REPO_NAME}"
 echo "  cd ${REPO_NAME} to get started"
