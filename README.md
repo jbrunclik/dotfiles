@@ -106,7 +106,8 @@ The install script:
    `mas` — sign in to the App Store first. A package that fails is reported,
    not fatal.
 2. Symlinks every config file. An existing file is moved to `*.bak`, or
-   `*.bak.<timestamp>` if a backup is already there.
+   `*.bak.<timestamp>` if a backup is already there. Clones and links the
+   private overlay, if you have one (below).
 3. Sets macOS defaults — accent color, key repeat, Dock and Spaces, Finder
    extensions, Touch ID for `sudo` — the Dock's apps and their order, and a
    few app preferences (see
@@ -138,8 +139,13 @@ second (private) repo checked out at `~/src/dotfiles-private`, or wherever
 `PRIVATE_DOTFILES` points. Its `links.sh` sets `PRIVATE_LINKS` in the
 `LINKS` format, with paths relative to that checkout. `lib/links.sh` sources
 it when present, so `install.sh` links those files and `drift.sh` checks
-them. Secrets stay out of it too: a private repo is still a git history on
-every clone.
+them. When the checkout is missing, `install.sh` clones
+`PRIVATE_DOTFILES_REPO` with `gh`, after linking the public files (so gh's
+config, with SSH remotes, is in place). Then it links the overlay and
+installs its `Brewfile.local`, which the first `brew bundle` ran too early to
+see. On a fresh Mac, gh isn't signed in yet: `gh auth login`, then re-run.
+Without access to the repo it warns and goes on. Secrets stay out of it
+too: a private repo is still a git history on every clone.
 
 <details>
 <summary>Examples</summary>

@@ -66,10 +66,25 @@ header "Linking config files"
 for entry in "${LINKS[@]}"; do
     link "$DOTFILES/${entry%%|*}" "${entry#*|}"
 done
+# The private overlay, cloned after the public links so gh already has its
+# config (SSH remotes). Its Brewfile.local missed the bundle above on a fresh
+# clone, so that one gets its own.
+cloned_private=0
+if [ ! -d "$PRIVATE_DOTFILES" ]; then
+    if clone_private; then
+        echo -e "  ${GREEN}✓${RESET} cloned $PRIVATE_DOTFILES_REPO into $PRIVATE_DOTFILES"
+        cloned_private=1
+    else
+        warn "no private overlay: couldn't clone $PRIVATE_DOTFILES_REPO into $PRIVATE_DOTFILES (gh auth login, then re-run; set PRIVATE_DOTFILES_REPO for another repo)"
+    fi
+fi
 for entry in ${PRIVATE_LINKS[@]+"${PRIVATE_LINKS[@]}"}; do
     link "$PRIVATE_DOTFILES/${entry%%|*}" "${entry#*|}"
 done
-[ -d "$PRIVATE_DOTFILES" ] || warn "no private overlay at $PRIVATE_DOTFILES — clone it and re-run if you have one"
+if [ "$cloned_private" -eq 1 ] && [ -f "$HOME/Brewfile.local" ]; then
+    brew bundle install --file="$HOME/Brewfile.local" \
+        || warn "some Brewfile.local entries failed (see above) — continuing; re-run after fixing"
+fi
 
 # Only the directory needs locking down. Don't chmod ~/.ssh/config — it's a
 # symlink, so chmod would follow it and change the mode of the file in the

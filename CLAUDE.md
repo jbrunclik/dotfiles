@@ -9,7 +9,8 @@ hostnames, or employer-specific detail in tracked files.
   `LOCAL_FILES`, the macOS settings (`DEFAULTS`) and the Dock's contents
   (`DOCK`). `install.sh` and
   `drift.sh` both source it. It also sources `links.sh` from the private
-  overlay (`~/src/dotfiles-private`, a private repo) when present:
+  overlay (`~/src/dotfiles-private`, a private repo; `install.sh` clones it
+  with gh when missing) when present:
   `PRIVATE_LINKS` for work config and personal hosts. A new `*.local` file
   worth carrying between machines goes there, never in this repo. Secrets
   never go in either repo.

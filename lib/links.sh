@@ -54,13 +54,18 @@ LINKS=(
 
 # A private overlay: a second checkout for what can't be public (work config,
 # personal hosts). Its links.sh sets PRIVATE_LINKS, in LINKS' format with paths
-# relative to that checkout. Absent (CI, a fresh machine), it's skipped.
+# relative to that checkout. Absent (CI, a fresh machine), it's skipped;
+# install.sh clones it from PRIVATE_DOTFILES_REPO when gh can.
 PRIVATE_DOTFILES="${PRIVATE_DOTFILES:-$HOME/src/dotfiles-private}"
-PRIVATE_LINKS=()
-if [ -f "$PRIVATE_DOTFILES/links.sh" ]; then
-    # shellcheck disable=SC1091
-    source "$PRIVATE_DOTFILES/links.sh"
-fi
+PRIVATE_DOTFILES_REPO="${PRIVATE_DOTFILES_REPO:-jbrunclik/dotfiles-private}"
+load_private() {
+    PRIVATE_LINKS=()
+    if [ -f "$PRIVATE_DOTFILES/links.sh" ]; then
+        # shellcheck disable=SC1091
+        source "$PRIVATE_DOTFILES/links.sh"
+    fi
+}
+load_private
 
 # Binaries the configs reference but that nothing else verifies. Neovim's
 # conform.nvim and nvim-lint shell out to these; when they're absent,
@@ -247,6 +252,17 @@ link() {
     fi
     ln -sfn "$src" "$dst"
     echo -e "  ${GREEN:-}✓${RESET:-} $dst -> $src"
+}
+
+# Clones the private overlay with gh (so its remote takes gh's git_protocol,
+# like every other repo), then loads its links. Fails when gh is missing or
+# signed out, or the repo isn't there or isn't yours: install.sh warns and
+# goes on without it.
+clone_private() {
+    command -v gh &>/dev/null && gh auth status &>/dev/null || return 1
+    mkdir -p "$(dirname "$PRIVATE_DOTFILES")"
+    gh repo clone "$PRIVATE_DOTFILES_REPO" "$PRIVATE_DOTFILES" -- --quiet || return 1
+    load_private
 }
 
 # Compiles config/finder/set-default-apps.swift into a temp dir and runs it
