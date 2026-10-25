@@ -1047,22 +1047,29 @@ the next gpg call. Only `gpg.conf` and `gpg-agent.conf` are linked:
 
 ### Secrets in the shell: the Keychain, not a file
 
-A token every shell needs (e.g. `ATLASSIAN_API_TOKEN`, which the Claude Code
-jira-plugin's curl calls read) lives in the login keychain. `~/.bash_profile.local`
-only looks it up:
+Tokens live in the login keychain, and `~/.bash_profile.local` looks each one
+up only for the command that needs it, in a wrapper function. E.g.
+`ATLASSIAN_API_TOKEN`, which only the Claude Code jira-plugin's curl calls
+read:
 
 ```bash
-export FOO="$(security find-generic-password -s FOO -a "$USER" -w 2>/dev/null)"
+claude() {
+    ATLASSIAN_API_TOKEN="$(security find-generic-password -s ATLASSIAN_API_TOKEN -a "$USER" -w 2>/dev/null)" \
+        command claude "$@"
+}
 ```
 
+Not an `export` at shell start: a lookup costs ~35 ms, which would turn an
+8 ms `.bash_profile.local` into 45 ms on every new shell. Scoping it also
+keeps the token out of every other process. Claude Code's own children
+(its Bash tool, the curl calls) still inherit it. Claude Code started some
+other way (an IDE extension, the desktop app) doesn't get it.
+
 Store or replace one with `security add-generic-password -U -s FOO -a "$USER" -w`
-(it prompts for the value, so the secret stays out of shell history). A lookup
-costs ~30 ms of shell start. That's why it isn't `op read`, which takes
-0.7–1 s even when 1Password is unlocked. `security` created the item, so it
-reads it back without a prompt. The value is still in every shell's
-environment, Claude Code included; a token only some commands need belongs
-in a per-command wrapper (`op run`) instead. Neither the public nor the
-private dotfiles repo ever holds the value.
+(it prompts for the value, so the secret stays out of shell history).
+`security` created the item, so it reads it back without a prompt. Not
+`op read`: 0.7–1 s per call, even with 1Password unlocked. Neither the public
+nor the private dotfiles repo ever holds the value.
 
 ### YubiKey: two identical keys, one carried, one kept at home
 
