@@ -128,7 +128,7 @@ created by hand:
 
 | File | Contents |
 |---|---|
-| `~/.bash_profile.local` | API tokens, machine-local env vars and `PATH` entries; sourced last |
+| `~/.bash_profile.local` | Machine-local env vars and `PATH` entries, tokens looked up from the Keychain; sourced last |
 | `~/Brewfile.local` | Work tools and this-machine-only apps; the `Brewfile` loads it if present |
 | `~/.gitconfig.local` | `[user]` name and email, `[filter "lfs"]` |
 | `~/.ssh/config.local` | Host entries |

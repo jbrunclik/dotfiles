@@ -202,7 +202,7 @@ header "Checking local config files"
 for entry in \
     "$HOME/.gitconfig.local|your [user] name/email and signingkey (the .pub path)" \
     "$HOME/.ssh/config.local|your Host entries" \
-    "$HOME/.bash_profile.local|machine-local env vars and secrets"
+    "$HOME/.bash_profile.local|machine-local env vars (secrets: Keychain lookups, see GUIDE.md)"
 do
     path="${entry%%|*}"
     [ -f "$path" ] || warn "$path not found — create it with ${entry#*|}"

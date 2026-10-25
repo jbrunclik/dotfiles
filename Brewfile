@@ -146,8 +146,8 @@ brew "difftastic"
 # gitconfig → config/git/hooks/pre-commit).
 brew "gitleaks"
 cask "1password"
-# Lets ~/.bash_profile.local pull secrets at shell start with `op read`
-# instead of storing them in plaintext.
+# `op run` / `op read` for secrets only some commands need (shell-start ones
+# come from the Keychain instead: op read takes ~1 s; see GUIDE.md).
 cask "1password-cli"
 brew "pwgen"
 # YubiKey CLI, and the GPG passphrase prompt for keys on it

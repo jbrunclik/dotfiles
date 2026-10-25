@@ -1045,6 +1045,25 @@ the next gpg call. Only `gpg.conf` and `gpg-agent.conf` are linked:
 `common.conf` (`use-keyboxd`) is gpg's own. `install.sh` keeps `~/.gnupg` at
 700 — anything looser makes gpg warn about unsafe permissions.
 
+### Secrets in the shell: the Keychain, not a file
+
+A token every shell needs (e.g. `ATLASSIAN_API_TOKEN`, which the Claude Code
+jira-plugin's curl calls read) lives in the login keychain. `~/.bash_profile.local`
+only looks it up:
+
+```bash
+export FOO="$(security find-generic-password -s FOO -a "$USER" -w 2>/dev/null)"
+```
+
+Store or replace one with `security add-generic-password -U -s FOO -a "$USER" -w`
+(it prompts for the value, so the secret stays out of shell history). A lookup
+costs ~30 ms of shell start. That's why it isn't `op read`, which takes
+0.7–1 s even when 1Password is unlocked. `security` created the item, so it
+reads it back without a prompt. The value is still in every shell's
+environment, Claude Code included; a token only some commands need belongs
+in a per-command wrapper (`op run`) instead. Neither the public nor the
+private dotfiles repo ever holds the value.
+
 ### YubiKey: two identical keys, one carried, one kept at home
 
 Both are YubiKey 5C NFCs set up the same way; the one at home is the
