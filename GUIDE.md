@@ -719,9 +719,32 @@ Weather to Always-Hidden, so more icons fit beside the notch.
   profile until the next display switch.
 - KeepingYouAwake is Visible: its cup shows at a glance whether the Mac is
   being kept awake (Hyper+0 toggles it).
-- **Before macOS 27:** the menu bar changes there broke this whole class of
-  tool; Thaw's 27 support is in its 3.0 betas (`thaw@beta`). Check the black
-  band still works afterwards too.
+- **macOS 27 needs Thaw 3.0**, still in beta: the menu bar changes there
+  broke this whole class of tool, so the Brewfile installs `thaw@beta`
+  (it updates itself within the beta channel). Switch back to `thaw` once
+  3.0 is stable — `brew uninstall --cask thaw@beta` first, both install
+  `Thaw.app`, and without `--zap` the profiles stay. 3.0 saves icon moves
+  to the active profile by itself (Settings > Profiles > Layout, "Keep
+  layout changes in this profile"); `thaw-layout` reads the profiles the
+  same way as before.
+- Three Thaw 3.0 settings to set by hand (they live in Thaw's preferences, not
+  `DEFAULTS` — the icon is a binary blob `drift.sh` can't compare):
+  - **Layout > Hiding method: Standard.** The default, Native, hides whole
+    apps through System Settings > Menu Bar: it leaves Apple's icons
+    (Bluetooth, Weather) on the bar where macOS puts them, Thaw's chevron
+    after them, and can bring up the screen-recording indicator. Standard
+    moves every icon, as 2.x did.
+  - **Layout > Item arrangement: Manual.** On Automatic Thaw re-sorts the
+    bar on its own, but macOS 27's MenuBarAgent ignores its moves of
+    Apple's icons (Thaw logs "Preferred-position write ignored"), so the
+    order ends up scrambled. On Manual the order is what you ⌘-drag, and
+    it holds; hiding and showing still work.
+  - **General > Thaw icon: Chevron.** 3.0's default is a cube.
+- macOS 27 renamed some icon IDs: Apple's items gained
+  `com.apple.MenuBarAgent:com.apple.menuextra.*` IDs, and Weather, Scroll
+  Reverser and 1Password are now `:Weather`, `:Scroll Reverser` and
+  `:Item-0`. A profile from 2.x holds the old ones, so check the layout once
+  on each display after the upgrade.
 
 ## macOS settings
 

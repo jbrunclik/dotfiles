@@ -47,8 +47,9 @@ cask "keepingyouawake"
 tap "jbrunclik/dotfiles", File.dirname(File.realpath(__FILE__))
 brew "jbrunclik/dotfiles/borders"
 # Menu bar manager: hides icons behind a divider. Free, open-source fork of
-# the abandoned Ice; replaces Bartender
-cask "thaw"
+# the abandoned Ice; replaces Bartender. The 3.0 beta: 2.x doesn't support
+# macOS 27's menu bar. Back to "thaw" once 3.0 is stable
+cask "thaw@beta"
 # Native mpv-based player; QuickTime cannot open .mkv/.webm/.ogg
 cask "iina"
 
