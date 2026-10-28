@@ -767,12 +767,22 @@ settings without saying so. (Touch ID for `sudo` is a file, checked separately.)
 | Click wallpaper to reveal desktop | Off | A near-miss on a window edge no longer hides every window |
 | `sudo` authentication | Touch ID | `pam_tid` in `/etc/pam.d/sudo_local`, which survives macOS updates; the password still works as a fallback |
 
-If `sudo` still asks for a password with Touch ID enabled, check the log:
+If `sudo` still asks for a password with Touch ID enabled, first check which
+one runs: `type -a sudo`. On macOS 27, Touch ID reaches `sudo` through authd's
+`com.apple.security.sudo` right, which authd grants only to Apple's
+`/usr/bin/sudo`. Another `sudo` earlier on PATH (a sudo.ws package in
+`/usr/local/bin`, say) falls back to the password. Use `/usr/bin/sudo`, or an
+alias to it in `~/.bash_profile.local`. Apple's dialog is also what you see
+when Homebrew asks, since it calls `/usr/bin/sudo` directly.
+
+Then check the log:
 `log show --last 5m --predicate 'process == "sudo"' | grep -i "interaction"`.
-"User interaction is required" (LocalAuthentication error -1004) in every terminal,
-while Touch ID works for apps, means something outside the dotfiles blocks
-biometric prompts for root processes — on a managed Mac, ask IT (endpoint
-security or MDM). `pam_reattach`, the tmux fix, doesn't help in that case.
+"User interaction is required" (LocalAuthentication error -1004) means
+`pam_tid` itself was refused. On macOS 27 that's normal (the authd dialog
+comes next); on macOS 26 and earlier, with Touch ID working for apps, it
+means something outside the dotfiles blocks biometric prompts for root
+processes — on a managed Mac, ask IT (endpoint security or MDM).
+`pam_reattach`, the tmux fix, doesn't help in that case.
 
 App preferences `install.sh` also sets (only the ones changed from default):
 
