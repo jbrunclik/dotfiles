@@ -99,6 +99,7 @@ local BUNDLE_IDS = {
     ["Music"] = "com.apple.Music",
     ["Signal"] = "org.whispersystems.signal-desktop",
     ["KeepingYouAwake"] = "info.marcel-dierkes.KeepingYouAwake",
+    ["Dock"] = "com.apple.dock",
 }
 
 local function getApp(name)
@@ -1998,6 +1999,74 @@ bandWallpaperWatcher = hs.pathwatcher.new(
 capsLockUnlockWatcher = hs.caffeinate.watcher.new(function(event)
     if event == hs.caffeinate.watcher.screensDidUnlock then
         hs.timer.doAfter(1, function() hs.hid.capslock.set(false) end)
+    end
+end):start()
+
+-- The focused-window border goes transparent while Mission Control is open.
+-- borders is patched onto layer 1 (Formula/borders.rb), and Mission Control
+-- only gathers layer-0 windows, so the border stayed where the window had
+-- been, full size, over the shrunken grid.
+--
+-- macOS 27 posts none of the Dock's Exposé notifications
+-- (AXExposeShowAllWindows…) and leaves its accessibility tree as it was. What
+-- does show is a full-screen Dock window on layer 20, there only while
+-- Mission Control is open. Reading the window list takes ~6 ms, too much to
+-- poll all the time, so the Dock's AXSelectedChildrenChanged — posted ~0.1 s
+-- before that window appears and again before it goes — sets off a few
+-- checks. While the border is hidden, it's checked again every 0.5 s, so it
+-- comes back even if the closing notification never came.
+local BORDERS = "/opt/homebrew/bin/borders"
+local BORDERSRC = os.getenv("HOME") .. "/.config/borders/bordersrc"
+local MISSION_CONTROL_LAYER = 20
+
+local function missionControlOpen()
+    local dock = getApp("Dock")
+    if not dock then return false end
+    for _, w in ipairs(hs.window.list(true) or {}) do
+        if w.kCGWindowOwnerPID == dock:pid() and w.kCGWindowLayer == MISSION_CONTROL_LAYER then return true end
+    end
+    return false
+end
+
+-- What borders was last told, not window state: borders can't be asked
+local borderHidden = false
+local recheck
+local function syncBorder()
+    local open = missionControlOpen()
+    if open ~= borderHidden then
+        borderHidden = open
+        if open then
+            hs.task.new(BORDERS, nil, { "active_color=0x00000000" }):start()
+        else
+            -- bordersrc runs `borders` by name; Hammerspoon's PATH lacks Homebrew
+            hs.task.new("/bin/bash", nil, { BORDERSRC })
+                :setEnvironment({ HOME = os.getenv("HOME"), PATH = "/opt/homebrew/bin:/usr/bin:/bin" })
+                :start()
+        end
+    end
+    if borderHidden and not recheck then
+        recheck = hs.timer.doAfter(0.5, function() recheck = nil syncBorder() end)
+    end
+end
+
+-- Globals, so the observer and watcher aren't garbage-collected. The Dock
+-- restarts after `killall Dock` (install.sh does one), and an observer
+-- belongs to one process, so it's set up again for the new Dock.
+local function watchDock()
+    if dockObserver then dockObserver:stop() dockObserver = nil end
+    local dock = getApp("Dock")
+    if not dock then return end
+    dockObserver = hs.axuielement.observer.new(dock:pid())
+    dockObserver:callback(function()
+        for _, delay in ipairs({ 0.1, 0.25, 0.5 }) do hs.timer.doAfter(delay, syncBorder) end
+    end)
+    dockObserver:addWatcher(hs.axuielement.applicationElement(dock), "AXSelectedChildrenChanged")
+    dockObserver:start()
+end
+watchDock()
+dockRestartWatcher = hs.application.watcher.new(function(_, event, app)
+    if event == hs.application.watcher.launched and app and app:bundleID() == BUNDLE_IDS.Dock then
+        watchDock()
     end
 end):start()
 

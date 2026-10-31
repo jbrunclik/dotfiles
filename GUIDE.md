@@ -1605,7 +1605,22 @@ the tiled layouts rarely produce. The patch also turns off capture for the
 border windows, so the border doesn't show up in screenshots, recordings
 or a full-screen share. Viewers see your windows without it.
 
-That's why the Brewfile takes borders from this repo instead of
+The layer move has a second catch: Mission Control only shrinks and
+arranges normal-layer windows, so the border used to stay where the window
+had been, full size, over the grid. Hammerspoon now turns the border
+transparent while Mission Control is open (`borders active_color=0x00000000`),
+then runs `bordersrc` to bring it back. macOS 27 doesn't announce Mission
+Control (the Dock's Exposé notifications never come), so Hammerspoon looks
+for the full-screen window the Dock shows on layer 20 only while it's open.
+Reading the window list costs ~6 ms, too much to poll all the time, so the
+check runs only after one of the Dock's accessibility notifications, which
+comes just before Mission Control opens and closes. While the border is
+hidden, it's checked every 0.5 s, so it can't stay hidden if the closing
+notification is missed. A brief flash of the border as Mission Control
+opens is the remaining delay. `hs.spaces.closeMissionControl()` doesn't
+close it on macOS 27, so don't rely on it when testing.
+
+The patch is why the Brewfile takes borders from this repo instead of
 felixkratz's tap. It taps the repo by its local path (`jbrunclik/dotfiles`),
 so a *committed* formula change arrives with the next `brew update`
 (uncommitted edits don't). Then run `brew reinstall borders`. Homebrew

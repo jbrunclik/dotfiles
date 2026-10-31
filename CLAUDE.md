@@ -125,7 +125,8 @@ A PostToolUse hook (`.claude/hooks/check-config.sh`) validates each edited file
   (`mock.lua`): window keys pressed against fake windows and screens
   (`windows_test.lua`), audio setups switched as fake devices come and go
   (`audio_test.lua`), the Studio layer's Shelly requests (`studio_test.lua`),
-  Slack parked on your own DM (`slack_test.lua`), and the Hyper layer
+  Slack parked on your own DM (`slack_test.lua`), the border hidden during
+  Mission Control (`missioncontrol_test.lua`), and the Hyper layer
   checked for collisions, the
   cheatsheet description form and a GUIDE.md row per key
   (`bindings_test.lua`). Run it after changing Hammerspoon, `karabiner.json`

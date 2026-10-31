@@ -252,6 +252,8 @@ local audioDevices, audioDefaults, audioCallback = {}, {}, nil
 local httpReply
 -- Application watcher callbacks (see hs.application.watcher)
 local appWatchers = {}
+-- Accessibility observers started (see hs.axuielement.observer)
+local observers = {}
 
 -- Reset the world between tests
 function M.reset()
@@ -260,6 +262,13 @@ function M.reset()
     audioDevices, audioDefaults, audioCallback = {}, {}, nil
     M.requests, M.files, httpReply = {}, {}, function() return 200, "{}" end
     appWatchers, M.urls, M.axPressed = {}, {}, {}
+    observers, M.windowList, M.tasks = {}, {}, {}
+end
+
+-- An app with no windows (the Dock), with process id `pid`
+function M.app(name, bid, pid)
+    apps[bid] = setmetatable({ n = name, bid = bid, p = pid, hidden = false }, App)
+    return apps[bid]
 end
 
 -- A screen; `name` "Built-in Retina Display" makes it the MacBook's
@@ -477,7 +486,7 @@ hs.json.decode = decodeJSON
 -- Application watcher: M.appEvent("activated" | "deactivated", app) calls
 -- every watcher started, as Hammerspoon would
 hs.application.watcher = {
-    activated = 5, deactivated = 6,
+    launched = 1, activated = 5, deactivated = 6,
     new = function(fn)
         local w = { start = function(self) table.insert(appWatchers, fn) return self end, stop = function() end }
         return w
@@ -512,9 +521,44 @@ function M.ax(attrs, children, press)
     return setmetatable({ attrs = attrs or {}, children = children or {}, press = press }, AXElement)
 end
 function M.axTree(app, windows) app.axWindows = windows end
+-- Observers: M.axNotify(pid, name) calls the callback of every started
+-- observer on that pid watching `name`
+function M.axNotify(pid, name)
+    for _, o in ipairs(observers) do
+        if o.pid == pid and o.started and o.watching[name] then o.fn(o, nil, name, {}) end
+    end
+end
 hs.axuielement = setmetatable({
     applicationElement = function(app)
         return M.ax({ AXWindows = app.axWindows or {} })
+    end,
+    observer = setmetatable({
+        new = function(pid)
+            local o = { pid = pid, watching = {} }
+            function o:callback(fn) self.fn = fn return self end
+            function o:addWatcher(_, name) self.watching[name] = true return self end
+            function o:start() self.started = true return self end
+            function o:stop() self.started = false return self end
+            table.insert(observers, o)
+            return o
+        end,
+    }, stubMeta),
+}, stubMeta)
+
+-- The window server's list (hs.window.list): M.windowList holds its entries,
+-- kCGWindow* keys as Hammerspoon returns them
+M.windowList = {}
+hs.window.list = function() return M.windowList end
+
+-- Processes started with hs.task land in M.tasks as { path, args, env }
+M.tasks = {}
+hs.task = setmetatable({
+    new = function(path, _, args)
+        local t = { path = path, args = args or {} }
+        table.insert(M.tasks, t)
+        function t:setEnvironment(env) self.env = env return self end
+        function t:start() self.started = true return self end
+        return t
     end,
 }, stubMeta)
 
