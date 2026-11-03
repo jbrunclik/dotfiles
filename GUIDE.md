@@ -693,6 +693,12 @@ each profile — lags behind the screen, which is why `thaw-layout` reads the
 profile instead: comparing against `savedSectionOrder` failed even with
 every icon in place. Where icons are is read back through each app's
 accessibility tree via `hs` — Thaw's three icons are the section dividers.
+On macOS 27 that no longer works: the hidden dividers report positions right
+of the chevron and hidden icons keep stale ones, so `thaw-layout` notices the
+dividers are out of order and skips the on-screen check (it says so) —
+look at the menu bar yourself. Thaw's chevron, Control Center and the clock
+are left out of the order comparison: macOS 27 profiles put them anywhere in
+Visible.
 
 Two limits are Thaw's. It restores which section an icon is in, **not the
 order within a section**, so `--apply` can't reorder: drag in Thaw's
@@ -742,9 +748,11 @@ Weather to Always-Hidden, so more icons fit beside the notch.
   - **General > Thaw icon: Chevron.** 3.0's default is a cube.
 - macOS 27 renamed some icon IDs: Apple's items gained
   `com.apple.MenuBarAgent:com.apple.menuextra.*` IDs, and Weather, Scroll
-  Reverser and 1Password are now `:Weather`, `:Scroll Reverser` and
-  `:Item-0`. A profile from 2.x holds the old ones, so check the layout once
-  on each display after the upgrade.
+  Reverser, Maccy and 1Password are now `:Weather`, `:Scroll Reverser`,
+  `:Maccy — clipboard history` and `:Item-0` — IDs can hold spaces now, and
+  the layout file takes them as written. A profile from 2.x holds the old
+  ones, so check the layout once on each display after the upgrade (the
+  Dell's was rebuilt from the MacBook's).
 
 ## macOS settings
 

@@ -78,7 +78,8 @@ def read_layout(path):
                 sys.exit(f"{path}:{n}: unknown section [{section}]")
         elif section is None:
             sys.exit(f"{path}:{n}: entry before any [section]")
-        elif m := re.fullmatch(r"(\S+)(?:\s+after\s+(\S+))?", line):
+        # IDs can contain spaces (macOS 27: `com.pilotmoon.scroll-reverser:Scroll Reverser`)
+        elif m := re.fullmatch(r"(\S.*?)(?:\s+after\s+(\S.*))?", line):
             layout[section].append((m.group(1), m.group(2)))
         else:
             sys.exit(f"{path}:{n}: expected `<id>` or `<id> after <other id>`")
@@ -166,10 +167,16 @@ def live_sections(ids):
         parts = row.split("\t")
         if len(parts) == 3:
             extras.setdefault(parts[0], []).append((parts[1], float(parts[2])))
-    dividers = sorted(x for _, x in extras.get(DOMAIN, []))
-    if len(dividers) < 2:
+    dividers = {label: x for label, x in extras.get(DOMAIN, [])}
+    chevron = dividers.get("Thaw.ControlItem.Visible")
+    hidden = dividers.get("Thaw.ControlItem.Hidden")
+    always = dividers.get("Thaw.ControlItem.AlwaysHidden")
+    if chevron is None or hidden is None:
         sys.exit("can't find Thaw's dividers — is Thaw running? (and Hammerspoon, for hs)")
-    chevron, always = dividers[-1], dividers[0] if len(dividers) == 3 else None
+    # macOS 27 reports the hidden dividers right of the chevron and stale
+    # positions for hidden icons, so the sections can't be read from screen
+    if not hidden < chevron or (always is not None and not always < hidden):
+        return None
     found = {}
     for i in ids:
         bundle, item = i.split(":", 1)
@@ -188,9 +195,13 @@ def live_sections(ids):
 
 def report(order, quiet=False):
     """Print where each icon is versus where the file wants it, order within
-    each section included; True if all match."""
+    each section included; True if all match, None if the screen can't tell."""
     want = {i: key for key, ids in order.items() for i in ids if i not in AUTOMATIC}
     live = live_sections(want)
+    if live is None:
+        quiet or print("  ?  can't tell the sections apart on screen (Thaw's dividers are out of"
+                       " order, as on macOS 27): look at the menu bar")
+        return None
     names = prefs().get("MenuBarItemResolvedNames", {})
     key_names = {key: name for name, key in SECTIONS.items()}
     ok = True
@@ -317,12 +328,15 @@ elif args in (["--apply"], ["--apply", "--force"]):
     for _ in range(10):  # Thaw settles within a few seconds; give it up to ~20
         time.sleep(2)
         try:
-            if report(order, quiet=True):
+            if report(order, quiet=True) is not False:
                 break
         except SystemExit:  # Thaw's dividers not up yet
             continue
-    if report(order):
+    result = report(order)
+    if result:
         print("Every icon is where the file says.")
+    elif result is None:
+        print("Written; check the menu bar by eye.")
     else:
         sys.exit("Some icons aren't where the file says — Thaw restores sections, not the order"
                  " within one, and won't move icons into Visible: drag those (see --help).")
@@ -334,14 +348,18 @@ elif not args:
         sys.exit(0)
     saved, profile_name = thaw_order()
     # Order counts too: the file lists each section left to right
-    same = all(saved.get(key, []) == ids for key, ids in order.items())
+    # …except Thaw's chevron, Control Center and the clock: the file can't place
+    # them, and macOS 27 profiles put them anywhere in Visible
+    def placed(ids):
+        return [i for i in ids if i not in AUTOMATIC]
+    same = all(placed(saved.get(key, [])) == placed(ids) for key, ids in order.items())
     where = f"Thaw's {profile_name} profile" if profile_name else "Thaw's saved layout"
     print(where + (" matches the file, in order." if same else
                    " differs from the file — after dragging: Profiles → Update, then --capture."))
     on_screen = report(order)
     if on_screen:
         print("Every icon on screen is where the file says.")
-    sys.exit(0 if same and on_screen else 1)
+    sys.exit(0 if same and on_screen is not False else 1)
 else:
     print(__doc__.strip())
     sys.exit(0 if args in (["-h"], ["--help"]) else 2)

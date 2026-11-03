@@ -3,26 +3,32 @@
 # ~/.config/thaw/layout.local (same format, untracked).
 
 [always-hidden]
-com.1password.1password:bb3cc23c-6950-4e96-8b40-850e09f46934   # 1Password
-com.apple.controlcenter:Bluetooth                              # Bluetooth
-com.pilotmoon.scroll-reverser:Item-0                           # Scroll Reverser
-com.anthropic.claudefordesktop:Item-0                          # Claude
-com.apple.controlcenter:NowPlaying                             # Now Playing
+org.hammerspoon.Hammerspoon:Item-0                             # Hammerspoon
+com.pilotmoon.scroll-reverser:Scroll Reverser
+cc.ffitch.shottr:Item-0                                        # Shottr
+us.zoom.xos:Item-0                                             # Zoom
+com.1password.1password:Item-0
+com.apple.MenuBarAgent:com.apple.menuextra.bluetooth
 com.apple.systemuiserver:Siri                                  # Siri
+com.anthropic.claudefordesktop:Item-0                          # Claude
 com.garmin.renu.service:Item-0                                 # Garmin Express Service
 notion.id:Item-0                                               # Notion
-us.zoom.xos:Item-0                                             # Zoom
-org.hammerspoon.Hammerspoon:Item-0                             # Hammerspoon
-cc.ffitch.shottr:Item-0                                        # Shottr
-org.p0deje.Maccy:Item-0                                        # Maccy
+org.p0deje.Maccy:Maccy — clipboard history
+com.apple.controlcenter:Bluetooth                              # Bluetooth
+com.apple.controlcenter:NowPlaying                             # Now Playing
 
 [hidden]
 io.tailscale.ipn.macsys:Item-0                                 # Tailscale
 
 [visible]
+org.pqrs.Karabiner-Console-User-Server:Item-0                  # Karabiner-Console-User-Server
 info.marcel-dierkes.KeepingYouAwake:Item-0                     # KeepingYouAwake
+com.apple.MenuBarAgent:com.apple.menuextra.wifi
+com.apple.MenuBarAgent:com.apple.menuextra.sound
 com.apple.controlcenter:WiFi                                   # WiFi
 com.apple.controlcenter:Sound                                  # Sound
-com.apple.weather.menu:Item-0                                  # Weather
-com.apphousekitchen.aldente-pro:Item-0                         # AlDente
 com.apple.TextInputMenuAgent:Item-0                            # Text Input
+com.apphousekitchen.aldente-pro:Item-0                         # AlDente
+com.apple.weather.menu:Weather
+com.apple.MenuBarAgent:com.apple.menuextra.controlcenter
+com.apple.MenuBarAgent:com.apple.menuextra.clock
