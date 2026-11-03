@@ -157,7 +157,9 @@ DEFAULTS=(
     "com.apphousekitchen.aldente-pro|automaticDischarge|bool|true"
     "com.apphousekitchen.aldente-pro|useTahoeNativeLimit|bool|true"
     "com.apphousekitchen.aldente-pro|heatProtectMode|bool|true"
-    "com.apphousekitchen.aldente-pro|showPercentage|bool|true"
+    # Percentage in the menu bar icon: menuBarIconStyle 2 since AlDente 1.40,
+    # which ignores the old showPercentage key
+    "com.apphousekitchen.aldente-pro|menuBarIconStyle|int|2"
     # Scroll Reverser: reverse the mouse (KensingtonWorks), not the trackpad
     "com.pilotmoon.scroll-reverser|InvertScrollingOn|bool|true"
     "com.pilotmoon.scroll-reverser|ReverseTrackpad|bool|false"
