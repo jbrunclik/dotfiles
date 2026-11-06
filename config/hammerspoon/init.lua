@@ -698,13 +698,13 @@ end)
 
 -- Hyper+Q = send the front app to the background, as Cmd+H does: macOS hands
 -- focus back to the app used before. Cmd+Q next to it is the real quit; a
--- stray Hyper+Q only hides, and Hyper+1–6 or the launcher bring it back.
+-- stray Hyper+Q only hides, and Hyper+1–7 or the launcher bring it back.
 bindHyper("q", "Windows", "Hide the front app (like Cmd+H)", function()
     local app = hs.application.frontmostApplication()
     if app then app:hide() end
 end)
 
--- Hyper+1-6 = focus app. Third field: cheatsheet label when the process name
+-- Hyper+1-7 = focus app. Third field: cheatsheet label when the process name
 -- isn't the one people say.
 local appKeys = {
     { "1", "Ghostty" },
@@ -713,6 +713,7 @@ local appKeys = {
     { "4", "Slack" },
     { "5", "Notion" },
     { "6", "zoom.us", "Zoom" },
+    { "7", "Claude" },
 }
 -- bestWindow, so Zoom in a call means the call window, never its meetings
 -- list ("Zoom Workplace"), and every app gets its real window rather than
@@ -1602,7 +1603,7 @@ end):start()
 
 -- Hyper+Space = launcher: a panel of one-key shortcuts for apps without a
 -- Hyper key of their own, plus the ones with (hinted), so it's a complete map.
--- Press the key with no modifiers and the app comes forward as with Hyper+1–6;
+-- Press the key with no modifiers and the app comes forward as with Hyper+1–7;
 -- if it's already in front, it hides instead.
 -- Escape, any other key, Hyper+Space again or 3 s of nothing closes it. Keys
 -- go through an eventtap that runs only while the panel is up and swallows
@@ -1618,9 +1619,9 @@ local launcherApps = {
     { "s", "Slack" },
     { "n", "Notion" },
     { "z", "zoom.us", "Zoom" },
+    { "c", "Claude" },
     { "t", "Messages" },
     { "1", "1Password" },
-    { "c", "Claude" },
     { "f", "Finder" },
     { "m", "Music" },
     { "v", "Visual Studio Code", "VS Code" },

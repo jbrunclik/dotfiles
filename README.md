@@ -14,7 +14,7 @@ same on a MacBook and a Keyboardio Model 100. Catppuccin Mocha everywhere.
   are bound to physical keys, so they stay put when switching to the Czech
   (QWERTZ) layout.
 - **Windows and apps on one hand.** Hyper+Z/X/C/V tile a pair of apps side by
-  side (press again to swap focus), Hyper+1–6 jump to an app,
+  side (press again to swap focus), Hyper+1–7 jump to an app,
   Hyper+Space then one letter
   reaches the rest (W WhatsApp, C Claude…; Shift+letter for "beside"),
   Hyper+A/S/D tile or maximize, and Hyper+R moves the split — one per

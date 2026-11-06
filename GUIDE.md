@@ -807,7 +807,7 @@ Key repeat needs a logout; Finder picks up the extension setting on restart
 (`killall Finder`). The Dock settings apply when `install.sh` restarts the Dock.
 
 Spaces aren't used on purpose: Hammerspoon layouts (Hyper+Z/X/C/V) and app
-focus (Hyper+1–6) already switch context in one key, and Hammerspoon's window
+focus (Hyper+1–7) already switch context in one key, and Hammerspoon's window
 queries only see the current Space, so layouts can't pull windows from another
 one. Native fullscreen (Hyper+F) is the only thing that creates a Space.
 
@@ -1310,7 +1310,7 @@ brightness 200/255):
   | U I — page up / down | lavender |
   | Backspace — forward delete | pink |
   | `,` `.` — previous / next tab | white |
-  | 1–6 — apps, each in its own color | Ghostty mauve (its Catppuccin accent), Dia yellow, Chrome green, Slack pink, Notion white, Zoom blue |
+  | 1–7 — apps, each in its own color | Ghostty mauve (its Catppuccin accent), Dia yellow, Chrome green, Slack pink, Notion white, Zoom blue, Claude orange |
   | Z X C V — layouts · ` ; Tab Q A S D E F G, left thumb arrows — windows | mauve · blue |
   | T Messages · M Return — Zoom mute, join | teal · red |
   | 0 — keep awake | yellow |
@@ -1659,7 +1659,7 @@ Every move is instant — Hammerspoon's default 0.2 s slide is off
 
 Hyper+Q sends an app to the background; `Cmd+Q` on the same key quits it for
 real (`Cmd+W` only closes the window — WhatsApp, Slack and Zoom keep running).
-A stray Hyper+Q is harmless: Hyper+1–6 or the launcher brings the app back.
+A stray Hyper+Q is harmless: Hyper+1–7 or the launcher brings the app back.
 
 Hyper+` is Cmd+` per spot instead of per app: it cycles the windows that sit
 exactly where the focused one is — Slack and Notion both tiled right, two
@@ -1738,6 +1738,7 @@ Hammerspoon.
 | Hyper + 4 | Slack |
 | Hyper + 5 | Notion |
 | Hyper + 6 | Zoom |
+| Hyper + 7 | Claude |
 
 A press brings up the app's main window (launching the app if it has no
 window). Pressing it again while the app is in front does nothing — it used
@@ -1751,19 +1752,20 @@ For Zoom that's the **call** window during a meeting, never the meetings list
 ### Launcher (Hammerspoon)
 
 `Hyper+Space` opens a panel of one-key shortcuts; press the key (no modifiers)
-and the app comes forward the same way as Hyper+1–6, launching it if needed.
+and the app comes forward the same way as Hyper+1–7, launching it if needed.
 For apps used often enough to want a key, not often enough to earn a Hyper
 number — everything else stays with Spotlight.
 
 | Key | App | Key | App |
 |---|---|---|---|
 | G | Ghostty (also Hyper+1) | 1 | 1Password |
-| D | Dia (Hyper+2) | C | Claude |
-| H | Chrome (Hyper+3) | F | Finder |
-| S | Slack (Hyper+4) | M | Music |
-| N | Notion (Hyper+5) | V | VS Code |
-| Z | Zoom (Hyper+6) | W | WhatsApp |
-| T | Messages (Hyper+T) | , | System Settings |
+| D | Dia (Hyper+2) | F | Finder |
+| H | Chrome (Hyper+3) | M | Music |
+| S | Slack (Hyper+4) | V | VS Code |
+| N | Notion (Hyper+5) | W | WhatsApp |
+| Z | Zoom (Hyper+6) | , | System Settings |
+| C | Claude (Hyper+7) | | |
+| T | Messages (Hyper+T) | | |
 
 The panel lists them in this order: Hyper apps first, the rest
 alphabetically, System Settings last.

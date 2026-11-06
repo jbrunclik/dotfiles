@@ -100,13 +100,14 @@ PALETTE = [
 BASE_GRADIENT = [11, 13, 14, 15]
 SECTION_COLORS = {"Layouts": 1, "Windows": 2, "Apps": 3, "Zoom": 4, "Messages": 5,
                   "Hammerspoon": 6, "Karabiner": 7, "Launcher": 3, "Utilities": 6}
-# Hyper+1–6: each app in its own theme/brand color (keyed by the cheatsheet label)
+# Hyper+1–7: each app in its own theme/brand color (keyed by the cheatsheet label)
 APP_COLORS = {"Ghostty": 1,  # its Catppuccin Mocha accent, mauve
               "Dia": 6,      # yellow icon
               "Chrome": 3,   # green, from the logo
               "Slack": 10,   # aubergine, as magenta-pink
               "Notion": 12,  # black and white
-              "Zoom": 2}     # Zoom blue
+              "Zoom": 2,     # Zoom blue
+              "Claude": 7}   # Claude orange, as peach
 # Karabiner remaps by kind (matched on the rule's action text): arrows are
 # their own category, the same sky as the Fn layer's arrows
 KARABINER_COLORS = [("Arrow", 9), ("Page", 8), ("Word", 7), ("Line", 7),
