@@ -696,7 +696,10 @@ accessibility tree via `hs` — Thaw's three icons are the section dividers.
 On macOS 27 that no longer works: the hidden dividers report positions right
 of the chevron and hidden icons keep stale ones, so `thaw-layout` notices the
 dividers are out of order and skips the on-screen check (it says so) —
-look at the menu bar yourself. Thaw's chevron, Control Center and the clock
+look at the menu bar yourself. Collapsed, Thaw parks its hidden dividers and
+icons below the bar (y ≈ 460) at an x that means nothing, so anything off the
+bar is left out ("not on screen") rather than given a section: Hammerspoon,
+parked next to the Hidden divider, read as hidden while it was always-hidden. Thaw's chevron, Control Center and the clock
 are left out of the order comparison: macOS 27 profiles put them anywhere in
 Visible.
 

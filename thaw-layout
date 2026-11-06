@@ -131,7 +131,7 @@ def write_layout(path, layout, names, header):
 # Thaw's own items are its dividers: always-hidden (if enabled), hidden, chevron.
 LIVE_LUA = r"""
 local out = {}
-local function add(bundle, label, x) table.insert(out, bundle .. "\t" .. label .. "\t" .. x) end
+local function add(bundle, label, x, y) table.insert(out, bundle .. "\t" .. label .. "\t" .. x .. "\t" .. y) end
 for bundle in (BUNDLES):gmatch("[^,]+") do
     for _, app in ipairs(hs.application.applicationsForBundleID(bundle)) do
         local ax = hs.axuielement.applicationElement(app)
@@ -140,7 +140,7 @@ for bundle in (BUNDLES):gmatch("[^,]+") do
         for _, item in ipairs(ok and bar and bar:attributeValue("AXChildren") or {}) do
             local p = item:attributeValue("AXPosition")
             local label = item:attributeValue("AXIdentifier") or item:attributeValue("AXDescription") or ""
-            if p then add(bundle, label, p.x) end
+            if p then add(bundle, label, p.x, p.y) end
         end
     end
 end
@@ -165,17 +165,31 @@ def live_sections(ids):
     extras = {}
     for row in out.splitlines():
         parts = row.split("\t")
-        if len(parts) == 3:
-            extras.setdefault(parts[0], []).append((parts[1], float(parts[2])))
-    dividers = {label: x for label, x in extras.get(DOMAIN, [])}
-    chevron = dividers.get("Thaw.ControlItem.Visible")
-    hidden = dividers.get("Thaw.ControlItem.Hidden")
-    always = dividers.get("Thaw.ControlItem.AlwaysHidden")
-    if chevron is None or hidden is None:
+        if len(parts) == 4:
+            extras.setdefault(parts[0], []).append((parts[1], float(parts[2]), float(parts[3])))
+    dividers = {label: (x, y) for label, x, y in extras.get(DOMAIN, [])}
+    if "Thaw.ControlItem.Visible" not in dividers or "Thaw.ControlItem.Hidden" not in dividers:
         sys.exit("can't find Thaw's dividers — is Thaw running? (and Hammerspoon, for hs)")
+    # The chevron is always on the bar. Thaw parks collapsed dividers and
+    # icons off it (y far below the bar) at an x that says nothing about their
+    # section: Hammerspoon parked just right of the parked Hidden divider read
+    # as hidden while the profile had it always-hidden.
+    chevron, bar_y = dividers["Thaw.ControlItem.Visible"]
+
+    def on_bar(y):
+        return abs(y - bar_y) < 10
+
+    def divider(label):
+        x, y = dividers.get(label, (None, None))
+        return x if x is not None and on_bar(y) else None
+    hidden = divider("Thaw.ControlItem.Hidden")
+    always = divider("Thaw.ControlItem.AlwaysHidden")
+    if hidden is None:
+        # Collapsed: only the visible section can be read off the screen
+        hidden = always = None
     # macOS 27 reports the hidden dividers right of the chevron and stale
     # positions for hidden icons, so the sections can't be read from screen
-    if not hidden < chevron or (always is not None and not always < hidden):
+    if (hidden is not None and not hidden < chevron) or (always is not None and not always < hidden):
         return None
     found = {}
     for i in ids:
@@ -187,7 +201,9 @@ def live_sections(ids):
             items = [e for e in items if e[0] == item]
         if len(items) != 1:
             continue  # not running, or ambiguous
-        x = items[0][1]
+        _, x, y = items[0]
+        if not on_bar(y) or (hidden is None and x < chevron):
+            continue  # parked off the bar: its section can't be read
         found[i] = ("visible" if x > chevron else "alwaysHidden" if always is not None and x < always
                     else "hidden", x)
     return found
