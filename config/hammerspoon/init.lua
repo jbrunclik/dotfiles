@@ -32,7 +32,6 @@ local cheatsheet = {}
 -- What pressing a key again does, shown once per cheatsheet section
 local sectionNotes = {
     Layouts = "again: swap focus",
-    Apps = "again: beside",
     Messages = "again: hide",
 }
 -- Counts Hyper presses, so a delayed follow-up (whenWindows' settling pass)
