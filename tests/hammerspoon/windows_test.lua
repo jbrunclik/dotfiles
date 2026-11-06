@@ -310,33 +310,17 @@ test("A layout's second press swaps focus and keeps the split", function()
     assertFocused(g)
 end)
 
--- Beside: an app key pressed twice ------------------------------------------------
+-- An app key pressed again -----------------------------------------------------
 
 -- appKeys in init.lua: Hyper+1 is Ghostty, Hyper+2 Dia
-test("An app key twice puts it beside a docked window at its split", function()
+test("An app key on the app already in front leaves the layout alone", function()
     setup()
     local d = win("Dia", 1 / 3, 2 / 3)
     local g = win("Ghostty", 0, 1)
     hs.press("1")
-    left(g, 1 / 3) right(d, 2 / 3)
+    assertFrame(g, at(0, 1), "Ghostty stays maximized")
+    assertFrame(d, at(1 / 3, 2 / 3), "Dia stays docked")
     assertFocused(g)
-end)
-
-test("An app key twice beside a maximized window: the screen's split", function()
-    setup()
-    local s, n = win("Slack", 0, 1 / 3), win("Notion", 1 / 3, 2 / 3)
-    local d = win("Dia", 0, 1)
-    local g = win("Ghostty", 0, 1)
-    hs.press("1")
-    left(d, 1 / 3) right(g, 2 / 3)
-end)
-
-test("An app key twice beside a maximized window, nothing docked: halves", function()
-    setup()
-    local d = win("Dia", 0, 1)
-    local g = win("Ghostty", 0, 1)
-    hs.press("1")
-    left(d, 1 / 2) right(g, 1 / 2)
 end)
 
 -- Gaps ------------------------------------------------------------------------

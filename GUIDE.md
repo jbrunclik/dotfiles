@@ -1643,8 +1643,8 @@ The rest of the window keys follow the split instead of assuming halves.
 Anything placed on a side takes **the screen's split**: the split of the
 topmost docked window, or a half when nothing's docked. That covers a first
 Hyper+A/D, a layout (Hyper+Z…), "beside" next to a maximized window, Hyper+S
-again, and Hyper+E with one side empty. "Beside" next to a docked window (a
-second Hyper+1–6 press, launcher Shift+key) takes the rest of its split. A
+again, and Hyper+E with one side empty. "Beside" next to a docked window
+(launcher Shift+key) takes the rest of its split. A
 layout's second press still cycles focus, and Hyper+Tab / Left / Right go by each window's
 **centre**: a two-thirds window flush right is a right window, though its
 left edge is past the middle (the MacBook messenger float). One definition
@@ -1736,20 +1736,11 @@ Hammerspoon.
 | Hyper + 5 | Notion |
 | Hyper + 6 | Zoom |
 
-The first press brings up the app's main window (launching the app if it has
-no window). The second puts it **beside the window you came from**, so
-`Hyper+4 4` from the terminal gives "terminal + Slack" without a fixed layout:
-
-- The window you came from keeps its side and width if it's tiled; if it was
-  maximized or floating, it takes the left side of the screen's split (a half
-  when nothing's docked). The app gets the other half and the
-  focus. Whatever was on that half stays underneath — Hyper+` reaches it.
-- "The window you came from" is the next window down in the stacking order
-  (skipping the app's own other windows), so nothing is remembered between
-  presses. With no other window it maximizes instead.
-- **A third press maximizes** — the undo for a second press made by mistake;
-  a fourth goes beside again. "Third" is read off the screen too: already
-  side by side with the window you came from means the next press maximizes.
+A press brings up the app's main window (launching the app if it has no
+window). Pressing it again while the app is in front does nothing — it used
+to put the app beside the window you came from, which retiled the screen on
+every accidental double-tap. To pair it with the window you were in, use the
+launcher's Shift+key (`Hyper+Space Shift+S` is "this + Slack"), or Hyper+A/D.
 
 For Zoom that's the **call** window during a meeting, never the meetings list
 ("Zoom Workplace"); the Zoom layouts (Hyper+X/C/V) pick the same way.
@@ -1776,14 +1767,16 @@ alphabetically, System Settings last.
 
 - If the app is already in front, its key hides it instead (like Hyper+Q), so
   `Hyper+Space W` both summons and dismisses WhatsApp.
-- **Shift+key puts the app beside the window you're in**, like a second
-  press of Hyper+1–6: `Hyper+Space Shift+C` is "this + Claude". Same rules —
-  a tiled window keeps its half, anything else takes the left — and a hidden
+- **Shift+key puts the app beside the window you're in**:
+  `Hyper+Space Shift+C` is "this + Claude". A tiled window keeps its side and
+  width; maximized or floating, it takes the left side of the screen's split
+  (a half when nothing's docked). The app gets the other half and the focus;
+  whatever was there stays underneath (Hyper+` reaches it). A hidden
   or not-yet-running app is unhidden or launched first. Shift+T tiles Messages
   as a half instead of floating it. With no window in front (the desktop
   focused), Shift+key just brings the app forward, as the plain key does;
-  on an app that's already beside you, it maximizes it (like a third
-  Hyper+1–6 press).
+  on an app that's already beside you, it maximizes it — one more press
+  undoes a mistaken one.
 - The panel shows straight away; typing the letter from memory just flashes it.
 - `Escape`, any key not in the list, `Hyper+Space` again or 3 s of nothing
   closes it without doing anything. Its keys only work while it's open — an

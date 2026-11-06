@@ -705,8 +705,8 @@ bindHyper("q", "Windows", "Hide the front app (like Cmd+H)", function()
     if app then app:hide() end
 end)
 
--- Hyper+1-6 = focus app (repeat to maximize). Third field: cheatsheet label
--- when the process name isn't the one people say.
+-- Hyper+1-6 = focus app. Third field: cheatsheet label when the process name
+-- isn't the one people say.
 local appKeys = {
     { "1", "Ghostty" },
     { "2", "Dia" },
@@ -715,26 +715,17 @@ local appKeys = {
     { "5", "Notion" },
     { "6", "zoom.us", "Zoom" },
 }
--- Both presses go through bestWindow, so Zoom in a call means the call window,
--- never its meetings list ("Zoom Workplace"), and every app gets its real
--- window rather than whichever one macOS last activated.
--- The second press puts the app beside the window you came from: the next
--- standard window below it in z-order, so nothing is remembered. A third
--- (already beside it) maximizes, the fourth goes beside again. With nothing
--- to pair with it maximizes, as Hyper+S does.
+-- bestWindow, so Zoom in a call means the call window, never its meetings
+-- list ("Zoom Workplace"), and every app gets its real window rather than
+-- whichever one macOS last activated.
+-- Pressing it again on the app already in front does nothing: a repeat press
+-- that put it beside the window below (and a third that maximized) retiled
+-- the screen on every accidental double-tap. "Beside" is the launcher's
+-- Shift+key, asked for on purpose.
 local function focusApp(name)
     local win = bestWindow(name)
     if win and win == hs.window.focusedWindow() then
-        -- Another window of the same app (a second Chrome) isn't "where you
-        -- came from". Already beside it (the second press's result, or any
-        -- side-by-side): maximize instead, so a mistaken second press is one
-        -- more press from undone — and the next press goes beside again.
-        local cameFrom = windowBelow(win)
-        if cameFrom and not besideEachOther(win, cameFrom) then
-            placeBeside(name, cameFrom)
-        else
-            moveWin(win, hs.geometry.rect(0, 0, 1, 1))
-        end
+        return
     elseif win then
         win:focus()
     else
@@ -1671,7 +1662,7 @@ for _, app in ipairs(launcherApps) do
         if anchor and app and anchor:application():pid() == app:pid() then anchor = windowBelow(anchor) end
         local win = bestWindow(name)
         if anchor and anchor:isStandard() and besideEachOther(win, anchor) then
-            -- Already beside it: maximize, as a third Hyper+1–6 press does
+            -- Already beside it: maximize, so a mistaken Shift+key is one more press from undone
             win:focus()
             moveWin(win, hs.geometry.rect(0, 0, 1, 1))
         elseif anchor and anchor:isStandard() then
